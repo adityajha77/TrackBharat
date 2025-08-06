@@ -25,7 +25,7 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="bg-foreground text-background">
+    <footer className="bg-muted dark:bg-card text-foreground">
       <div className="container mx-auto px-4 py-16">
         {/* Main Footer Content */}
         <div className="grid md:grid-cols-4 gap-8 mb-12">
@@ -40,12 +40,12 @@ const Footer = () => {
               </span>
             </div>
             
-            <p className="text-background/80 text-lg mb-6 leading-relaxed">
+            <p className="text-muted-foreground text-lg mb-6 leading-relaxed">
               Making democracy transparent and people-powered. Empowering every Indian citizen 
               to track political promises, vote on local issues, and hold representatives accountable.
             </p>
             
-            <div className="bg-background/10 rounded-lg p-4 border border-background/20">
+            <div className="bg-primary/10 rounded-lg p-4 border border-primary/20">
               <p className="text-golden italic font-medium">
                 {quotes[Math.floor(Math.random() * quotes.length)]}
               </p>
@@ -54,11 +54,11 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-lg font-semibold mb-6 text-background">Features</h3>
+            <h3 className="text-lg font-semibold mb-6 text-foreground">Features</h3>
             <ul className="space-y-3">
               {features.map((feature) => (
                 <li key={feature.name}>
-                  <a href="#" className="flex items-center gap-2 text-background/70 hover:text-background transition-colors">
+                  <a href="#" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
                     <feature.icon className="w-4 h-4" />
                     {feature.name}
                   </a>
@@ -69,10 +69,10 @@ const Footer = () => {
 
           {/* Contact & Legal */}
           <div>
-            <h3 className="text-lg font-semibold mb-6 text-background">Support</h3>
+            <h3 className="text-lg font-semibold mb-6 text-foreground">Support</h3>
             <ul className="space-y-3 mb-6">
               <li>
-                <a href="#" className="text-background/70 hover:text-background transition-colors">
+                <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
                   Help Center
                 </a>
               </li>
@@ -100,33 +100,33 @@ const Footer = () => {
           </div>
         </div>
 
-        <Separator className="bg-background/20 mb-8" />
+        <Separator className="bg-border mb-8" />
 
         {/* Impact Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8 text-center">
           <div>
             <div className="text-2xl font-bold text-golden mb-1">500+</div>
-            <div className="text-background/70 text-sm">Cities</div>
+            <div className="text-muted-foreground text-sm">Cities</div>
           </div>
           <div>
             <div className="text-2xl font-bold text-golden mb-1">10K+</div>
-            <div className="text-background/70 text-sm">Citizens</div>
+            <div className="text-muted-foreground text-sm">Citizens</div>
           </div>
           <div>
             <div className="text-2xl font-bold text-golden mb-1">25K+</div>
-            <div className="text-background/70 text-sm">Issues</div>
+            <div className="text-muted-foreground text-sm">Issues</div>
           </div>
           <div>
             <div className="text-2xl font-bold text-golden mb-1">85%</div>
-            <div className="text-background/70 text-sm">Resolved</div>
+            <div className="text-muted-foreground text-sm">Resolved</div>
           </div>
         </div>
 
-        <Separator className="bg-background/20 mb-8" />
+        <Separator className="bg-border mb-8" />
 
         {/* Bottom Footer */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="text-background/70 text-sm">
+          <div className="text-muted-foreground text-sm">
             <div className="flex items-center gap-2 mb-2">
               Made with <Heart className="w-4 h-4 text-red-500" /> for Indian Democracy
             </div>
@@ -140,7 +140,7 @@ const Footer = () => {
               <a 
                 key={link} 
                 href="#" 
-                className="text-background/70 hover:text-background transition-colors"
+                className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 {link}
               </a>
