@@ -14,13 +14,112 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      issues: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_resolved: boolean
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_resolved?: boolean
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_resolved?: boolean
+          title?: string
+        }
+        Relationships: []
+      }
+      suggestions: {
+        Row: {
+          created_at: string | null
+          id: string
+          suggestion: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          suggestion: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          suggestion?: string
+        }
+        Relationships: []
+      }
+      user_count: {
+        Row: {
+          count: number | null
+          id: number
+        }
+        Insert: {
+          count?: number | null
+          id: number
+        }
+        Update: {
+          count?: number | null
+          id?: number
+        }
+        Relationships: []
+      }
+      votes: {
+        Row: {
+          created_at: string
+          id: string
+          issue_id: string
+          user_id: string
+          vote_month: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          issue_id: string
+          user_id: string
+          vote_month?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          issue_id?: string
+          user_id?: string
+          vote_month?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "votes_issue_fkey"
+            columns: ["issue_id"]
+            isOneToOne: false
+            referencedRelation: "issues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      count_users: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      get_top_issues: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          title: string
+          votes_count: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

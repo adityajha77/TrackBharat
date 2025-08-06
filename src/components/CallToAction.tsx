@@ -57,15 +57,7 @@ const CallToAction = () => {
 
           {/* Main CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button variant="secondary" size="lg" className="text-lg px-8 py-4 animate-pulse-glow">
-              <UserPlus className="mr-2" />
-              Join TRACKBHARAT Now
-              <ArrowRight className="ml-2" />
-            </Button>
-            <Button variant="golden" size="lg" className="text-lg px-8 py-4">
-              <Vote className="mr-2" />
-              Start Your First Vote
-            </Button>
+            
           </div>
 
           {/* Trust Indicators */}

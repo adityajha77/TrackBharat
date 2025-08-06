@@ -32,8 +32,19 @@ const Auth = () => {
     } else {
       toast({
         title: "Success!",
-        description: "Please check your email to confirm your account.",
+        description: "Account created successfully! You can now sign in.",
       });
+      // To automatically sign in the user after sign up, uncomment the following lines
+      // const { error: signInError } = await signIn(email, password);
+      // if (signInError) {
+      //   toast({
+      //     title: "Sign in failed",
+      //     description: signInError.message,
+      //     variant: "destructive",
+      //   });
+      // } else {
+      //   navigate('/');
+      // }
     }
     setLoading(false);
   };

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, Vote, MapPin, Users, BarChart3, Shield, User, LogOut } from "lucide-react";
+import { Menu, Vote, MapPin, Users, BarChart3, Shield, User, LogOut, Home, Sun, Moon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 
@@ -9,8 +9,22 @@ const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [isDarkMode]);
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+  };
 
   const navigationItems = [
+    { name: "Home", href: "/", icon: Home },
     { name: "Vote", href: "/vote", icon: Vote },
     { name: "Your Rights", href: "/rights", icon: Shield },
     { name: "Contact", href: "/contact", icon: Users },
@@ -29,14 +43,14 @@ const Navigation = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center gap-2">
+          <button onClick={() => navigate("/")} className="flex items-center gap-2">
             <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
               <Vote className="w-5 h-5 text-primary-foreground" />
             </div>
             <span className="text-xl font-bold">
               TRACK<span className="text-primary">BHARAT</span>
             </span>
-          </div>
+          </button>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-6">
@@ -50,6 +64,11 @@ const Navigation = () => {
                 {item.name}
               </button>
             ))}
+            <Button variant="ghost" size="icon" onClick={toggleDarkMode}>
+              <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+              <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+              <span className="sr-only">Toggle theme</span>
+            </Button>
           </div>
 
           {/* Desktop CTA */}

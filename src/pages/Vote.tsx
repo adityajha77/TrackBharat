@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Vote as VoteIcon, TrendingUp, Users, CheckCircle } from 'lucide-react';
+import { Vote as VoteIcon, TrendingUp, Users, CheckCircle, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Textarea } from '@/components/ui/textarea';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 
@@ -24,24 +25,31 @@ const Vote = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [issues, setIssues] = useState<Issue[]>([]);
+  const [totalUsers, setTotalUsers] = useState(0);
   const [loading, setLoading] = useState(true);
   const [voting, setVoting] = useState<string | null>(null);
+  const [suggestion, setSuggestion] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetchIssues();
-    
-    // Set up real-time subscription
+  }, [user]);
+
+  useEffect(() => {
+    fetchTotalUsers();
+
     const channel = supabase
-      .channel('votes-realtime')
+      .channel('user-count-realtime')
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
-          table: 'votes'
+          table: 'user_count',
+          filter: 'id=eq.1'
         },
-        () => {
-          fetchIssues(); // Refresh issues when new votes come in
+        (payload) => {
+          setTotalUsers((payload.new as { count: number }).count);
         }
       )
       .subscribe();
@@ -49,12 +57,12 @@ const Vote = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, []);
 
   const fetchIssues = async () => {
     try {
       // Get issues with vote counts using raw SQL to avoid type issues
-      const { data: issuesData, error: issuesError } = await (supabase as any)
+      const { data: issuesData, error: issuesError } = await supabase
         .from('issues')
         .select(`
           *
@@ -65,13 +73,13 @@ const Vote = () => {
 
       // Get vote counts for each issue
       const issuesWithCounts = await Promise.all(
-        (issuesData || []).map(async (issue: any) => {
-          const { count } = await (supabase as any)
+        (issuesData || []).map(async (issue: Issue) => {
+          const { count } = await supabase
             .from('votes')
             .select('*', { count: 'exact' })
             .eq('issue_id', issue.id);
 
-          const userVoted = user ? await (supabase as any)
+          const userVoted = user ? await supabase
             .from('votes')
             .select('id')
             .eq('user_id', user.id)
@@ -99,6 +107,24 @@ const Vote = () => {
     }
   };
 
+  const fetchTotalUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_count')
+        .select('count')
+        .eq('id', 1)
+        .single();
+
+      if (error) throw error;
+      if (data) {
+        setTotalUsers(data.count);
+      }
+    } catch (error) {
+      console.error('Error fetching total users:', error);
+    }
+  };
+
+
   const handleVote = async (issueId: string) => {
     if (!user) {
       toast({
@@ -112,7 +138,7 @@ const Vote = () => {
     setVoting(issueId);
     
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('votes')
         .insert([{
           user_id: user.id,
@@ -120,15 +146,7 @@ const Vote = () => {
         }]);
 
       if (error) {
-        if (error.code === '23505') { // Unique constraint violation
-          toast({
-            title: "Already voted",
-            description: "You have already voted on this issue",
-            variant: "destructive",
-          });
-        } else {
-          throw error;
-        }
+        throw error;
       } else {
         toast({
           title: "Vote recorded!",
@@ -145,6 +163,49 @@ const Vote = () => {
       });
     } finally {
       setVoting(null);
+    }
+  };
+
+  const handleSuggestionSubmit = async () => {
+    if (!user) {
+      toast({
+        title: "Please log in",
+        description: "You need to be logged in to suggest an issue.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!suggestion.trim()) {
+      toast({
+        title: "Suggestion cannot be empty",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from('suggestions')
+        .insert([{ suggestion: suggestion.trim() }]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Suggestion submitted!",
+        description: "Thank you for your feedback.",
+      });
+      setSuggestion('');
+    } catch (error) {
+      console.error('Error submitting suggestion:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit your suggestion.",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -191,8 +252,8 @@ const Vote = () => {
           <Card>
             <CardContent className="p-6 text-center">
               <Users className="w-8 h-8 text-accent mx-auto mb-2" />
-              <div className="text-3xl font-bold text-foreground">{issues.length}</div>
-              <div className="text-sm text-muted-foreground">Active Issues</div>
+              <div className="text-3xl font-bold text-foreground">{totalUsers}</div>
+              <div className="text-sm text-muted-foreground">Registered Users</div>
             </CardContent>
           </Card>
           
@@ -301,6 +362,32 @@ const Vote = () => {
             </Card>
           </div>
         )}
+
+        {/* Suggestion Box */}
+        <div className="text-center mt-16">
+          <Card className="max-w-2xl mx-auto">
+            <CardHeader>
+              <CardTitle>Suggest a New Issue</CardTitle>
+              <CardDescription>
+                Have an idea for a new issue? Let us know!
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col gap-4">
+                <Textarea
+                  placeholder="Type your suggestion here..."
+                  value={suggestion}
+                  onChange={(e) => setSuggestion(e.target.value)}
+                  rows={4}
+                />
+                <Button onClick={handleSuggestionSubmit} disabled={submitting}>
+                  {submitting ? "Submitting..." : "Send Suggestion"}
+                  <Send className="ml-2 w-4 h-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
       
       <Footer />

@@ -103,34 +103,6 @@ const Features = () => {
           ))}
         </div>
 
-        {/* Engagement Stats */}
-        <div className="bg-gradient-primary rounded-2xl p-8 text-center text-primary-foreground">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <div className="text-3xl font-bold mb-2">500+</div>
-              <div className="text-primary-foreground/80">Cities Covered</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold mb-2">10K+</div>
-              <div className="text-primary-foreground/80">Active Users</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold mb-2">25K+</div>
-              <div className="text-primary-foreground/80">Issues Tracked</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold mb-2">85%</div>
-              <div className="text-primary-foreground/80">Resolution Rate</div>
-            </div>
-          </div>
-          
-          <div className="mt-8">
-            <Button variant="secondary" size="lg" className="animate-pulse-glow">
-              <Bell className="mr-2" />
-              Get Notified of Updates
-            </Button>
-          </div>
-        </div>
       </div>
     </section>
   );

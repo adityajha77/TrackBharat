@@ -209,12 +209,13 @@ const Rights = () => {
                 Use this information to hold your representatives accountable and participate 
                 meaningfully in democratic processes.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button variant="default">
+              <div className="flex justify-center">
+                <Button
+                  variant="default"
+                  className="w-full sm:w-auto px-8 py-6 text-lg"
+                  onClick={() => window.open('https://rtionline.gov.in/', '_blank')}
+                >
                   File RTI Request
-                </Button>
-                <Button variant="outline">
-                  Contact Representatives
                 </Button>
               </div>
             </CardContent>

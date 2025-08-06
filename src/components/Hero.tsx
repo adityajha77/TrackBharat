@@ -55,13 +55,13 @@ const Hero = () => {
           
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-            <Button variant="hero" size="lg" className="animate-pulse-glow" onClick={() => document.getElementById('search')?.scrollIntoView({ behavior: 'smooth' })}>
-              <Search className="mr-2" />
-              Search Your Area
-            </Button>
-            <Button variant="accent" size="lg" onClick={handleVoteAction}>
+            <Button variant="hero" size="lg" className="animate-pulse-glow" onClick={handleVoteAction}>
               <Vote className="mr-2" />
-              {user ? 'Start Voting' : 'Login to Vote'}
+              Start Your First Vote
+            </Button>
+            <Button variant="accent" size="lg" onClick={() => navigate('/auth')}>
+              <Users className="mr-2" />
+              Sign Up
             </Button>
           </div>
           
