@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,8 +8,53 @@ import { Badge } from '@/components/ui/badge';
 import { Mail, Linkedin, MessageSquare, Send, Heart, Code, Users } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
+import emailjs from 'emailjs-com';
+import { useToast } from '@/components/ui/use-toast';
 
 const Contact = () => {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [subject, setSubject] = useState('');
+  const [message, setMessage] = useState('');
+  const { toast } = useToast();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const serviceId = 'adityajha07';
+    const templateId = 'adityajha01';
+    const publicKey = '-f1qVjSP21yagp0Sd';
+
+    const templateParams = {
+      from_name: name,
+      from_email: email,
+      to_name: 'Aditya Jha', // Assuming this is the recipient's name
+      subject: subject,
+      message: message,
+    };
+
+    emailjs.send(serviceId, templateId, templateParams, publicKey)
+      .then((response) => {
+        console.log('SUCCESS!', response.status, response.text);
+        toast({
+          title: "Message Sent!",
+          description: "Your message has been successfully sent.",
+        });
+        setName('');
+        setEmail('');
+        setSubject('');
+        setMessage('');
+      })
+      .catch((err) => {
+        console.log('FAILED...', err);
+        toast({
+          title: "Error",
+          description: "Failed to send message. Please try again later.",
+          variant: "destructive",
+        });
+      });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -37,34 +83,39 @@ const Contact = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input id="name" placeholder="Your name" />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="your@email.com" />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="subject">Subject</Label>
-                <Input id="subject" placeholder="What's this about?" />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="message">Message</Label>
-                <Textarea 
-                  id="message" 
-                  placeholder="Your message here..."
-                  className="min-h-[120px]"
-                />
-              </div>
-              
-              <Button className="w-full">
-                <Send className="mr-2 w-4 h-4" />
-                Send Message
-              </Button>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name</Label>
+                  <Input id="name" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} required />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" type="email" placeholder="your@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="subject">Subject</Label>
+                  <Input id="subject" placeholder="What's this about?" value={subject} onChange={(e) => setSubject(e.target.value)} required />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="message">Message</Label>
+                  <Textarea 
+                    id="message" 
+                    placeholder="Your message here..."
+                    className="min-h-[120px]"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    required
+                  />
+                </div>
+                
+                <Button type="submit" className="w-full">
+                  <Send className="mr-2 w-4 h-4" />
+                  Send Message
+                </Button>
+              </form>
             </CardContent>
           </Card>
 

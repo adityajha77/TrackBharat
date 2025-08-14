@@ -334,7 +334,7 @@ const Vote = () => {
             </Card>
           ))}
           
-          {issues.length === 0 && (
+          {!loading && issues.length === 0 && (
             <Card>
               <CardContent className="p-12 text-center">
                 <VoteIcon className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
@@ -347,7 +347,7 @@ const Vote = () => {
           )}
         </div>
 
-        {!user && (
+        {!loading && !user && (
           <div className="text-center mt-12">
             <Card className="max-w-md mx-auto">
               <CardContent className="p-6">

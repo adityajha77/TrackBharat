@@ -1,7 +1,5 @@
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { MapPin, Vote, MessageSquare, Users, BarChart3, Shield, Bell, TrendingUp } from "lucide-react";
-import indiaConnectivity from "@/assets/india-connectivity.jpg";
+import { MapPin, Vote, MessageSquare, Users, BarChart3, Shield } from "lucide-react";
 
 const Features = () => {
   const features = [
@@ -44,47 +42,38 @@ const Features = () => {
   ];
 
   return (
-    <section className="py-20 bg-muted/30">
+    <section
+      className="py-20 bg-gradient-to-br 
+                 from-[#ffdfb3] via-[#fefefe] to-[#b4e0c3] 
+                 dark:from-[#2d2418] dark:via-[#1a1a1a] dark:to-[#183127] 
+                 transition-colors"
+    >
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-            Powerful Features for <span className="text-primary">Democratic Change</span>
+          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6 animate-fade-in">
+            Powerful Features for{" "}
+            <span className="text-primary bg-gradient-to-r from-primary to-blue-600 text-transparent bg-clip-text">
+              Democratic Change
+            </span>
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto animate-fade-in delay-100">
             Comprehensive tools to track, participate, and make a real difference in your local democracy.
           </p>
         </div>
 
-        {/* India Connectivity Visual */}
-        <div className="mb-16 relative">
-          <div className="max-w-4xl mx-auto">
-            <div 
-              className="rounded-2xl overflow-hidden shadow-card-hover h-64 bg-cover bg-center relative"
-              style={{ backgroundImage: `url(${indiaConnectivity})` }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/80 to-accent/60 flex items-center justify-center">
-                <div className="text-center text-primary-foreground">
-                  <TrendingUp className="w-16 h-16 mx-auto mb-4 animate-float" />
-                  <h3 className="text-2xl font-bold mb-2">Connected Democracy</h3>
-                  <p className="text-lg">Real-time data from across India</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Features Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
-            <Card 
-              key={index} 
-              className="group hover:shadow-card-hover transition-all duration-300 hover:scale-105 border-l-4 border-l-primary"
+            <Card
+              key={index}
+              className="group hover:shadow-card-hover transition-all duration-300 hover:scale-105 border-l-4 border-l-primary dark:border-l-primary animate-fade-in"
+              style={{ animationDelay: `${300 + index * 100}ms` }}
             >
               <CardHeader>
                 <div className="flex items-center gap-4 mb-4">
                   <div className="p-3 rounded-lg bg-gradient-primary group-hover:animate-pulse-glow">
-                    <feature.icon className="w-6 h-6 text-primary-foreground" />
+                    <feature.icon className="w-6 h-6 text-primary-foreground dark:text-foreground" />
                   </div>
                   <CardTitle className="text-xl">{feature.title}</CardTitle>
                 </div>
@@ -93,7 +82,7 @@ const Features = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="bg-muted/50 rounded-lg p-4 border-l-4 border-l-golden">
+                <div className="bg-muted/50 rounded-lg p-4 border-l-4 border-l-golden dark:bg-card/50">
                   <p className="text-sm italic text-golden font-semibold">
                     "{feature.quote}"
                   </p>
@@ -102,7 +91,6 @@ const Features = () => {
             </Card>
           ))}
         </div>
-
       </div>
     </section>
   );
