@@ -1,0 +1,17 @@
+{
+  "name": "@trackbharat/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "API contract shared by every TrackBharat app: Zod schemas + inferred TypeScript types.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
+  }
+}

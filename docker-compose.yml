@@ -1,0 +1,57 @@
+# Local development stack.
+#   pnpm db:up                     → only Postgres (run api/web with `pnpm dev` for hot reload)
+#   docker compose --profile full up --build   → everything in containers, prod-like
+services:
+  db:
+    # Postgres 17 + PostGIS (geospatial: "which constituency contains this point?", Phase 1)
+    image: postgis/postgis:17-3.5
+    environment:
+      POSTGRES_USER: trackbharat
+      POSTGRES_PASSWORD: trackbharat # local only, never reuse in production
+      POSTGRES_DB: trackbharat
+    ports:
+      - "5433:5432" # host 5433 → container 5432 (5432 is often taken by another local Postgres)
+    volumes:
+      - pgdata:/var/lib/postgresql/data # named volume: data survives `docker compose down`
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trackbharat -d trackbharat"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # One-shot job: applies migrations, then exits. The api waits for it to succeed.
+  migrate:
+    profiles: ["full"]
+    build: { context: ., dockerfile: apps/api/Dockerfile }
+    command: ["node", "dist/migrate.js"]
+    environment:
+      DATABASE_URL: postgres://trackbharat:trackbharat@db:5432/trackbharat
+    depends_on:
+      db: { condition: service_healthy }
+
+  api:
+    profiles: ["full"]
+    build: { context: ., dockerfile: apps/api/Dockerfile }
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://trackbharat:trackbharat@db:5432/trackbharat
+      CORS_ORIGINS: http://localhost:3000
+    ports:
+      - "4000:4000"
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+
+  web:
+    profiles: ["full"]
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    environment:
+      # Server-side calls go container-to-container over Docker's internal network
+      API_URL: http://api:4000
+    ports:
+      - "3000:3000"
+    depends_on: [api]
+
+volumes:
+  pgdata:
