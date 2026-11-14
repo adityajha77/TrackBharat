@@ -6,11 +6,11 @@ import { Logo } from "./logo";
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
-      {/* Tricolour hairline: identity without kitsch */}
-      <div aria-hidden className="flex h-0.5">
-        <span className="flex-1 bg-saffron" />
-        <span className="flex-1 bg-primary" />
-        <span className="flex-1 bg-green" />
+      {/* Tiranga stripe: saffron, white, green, on every page */}
+      <div aria-hidden className="flex h-1">
+        <span className="flex-1 bg-flag-saffron" />
+        <span className="flex-1 bg-flag-white dark:bg-white/85" />
+        <span className="flex-1 bg-flag-green" />
       </div>
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
         <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">

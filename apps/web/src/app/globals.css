@@ -22,6 +22,12 @@
   --danger: #c2362b; /* broken promises, errors */
 
   --ring: #1f3d99;
+
+  /* Exact national flag colours, used only for the flag & tricolour accents */
+  --flag-saffron: #ff9933;
+  --flag-white: #ffffff;
+  --flag-green: #138808;
+  --flag-navy: #000080;
 }
 
 .dark {
@@ -55,8 +61,13 @@
   --color-green: var(--green);
   --color-danger: var(--danger);
   --color-ring: var(--ring);
+  --color-flag-saffron: var(--flag-saffron);
+  --color-flag-white: var(--flag-white);
+  --color-flag-green: var(--flag-green);
+  --color-flag-navy: var(--flag-navy);
 
   --font-sans: var(--font-geist-sans);
+  --font-hindi: var(--font-devanagari);
   --font-mono: var(--font-geist-mono);
 }
 
@@ -77,6 +88,40 @@
     outline: 2px solid var(--ring);
     outline-offset: 2px;
   }
+}
+
+/* --- Tiranga (waving flag) — see components/india/waving-flag.tsx --------- */
+/* Registered custom property: unlike a normal CSS variable, the browser knows
+   it's a number, so it can be ANIMATED smoothly. Used as the fold shadow strength. */
+@property --shade {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+.tiranga-slice {
+  flex: 1;
+  /* 1px overlap hides the sub-pixel seams between animated slices */
+  margin-right: -1px;
+  /* Wave (movement) and shade (light in the folds) share timing, so they stay in sync */
+  animation:
+    tiranga-wave 2.6s ease-in-out infinite,
+    tiranga-shade 2.6s ease-in-out infinite;
+}
+@keyframes tiranga-wave {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(var(--amp, 4%)); }
+}
+@keyframes tiranga-shade {
+  0%, 100% { --shade: 0; }
+  50% { --shade: 0.1; }
+}
+
+/* Slow, almost subconscious rotation for the background chakra */
+.chakra-spin {
+  animation: chakra-spin 120s linear infinite;
+}
+@keyframes chakra-spin {
+  to { transform: rotate(360deg); }
 }
 
 /* Subtle grid texture used behind hero sections */

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { site } from "@/lib/site";
 import { Logo } from "./logo";
+import { IndiaFlag } from "./india/flag";
 
 export function SiteFooter() {
   return (
@@ -11,7 +12,13 @@ export function SiteFooter() {
             <Logo className="size-6" /> TrackBharat
           </div>
           <p className="max-w-sm text-sm text-muted">
-            An independent, non-partisan civic project. Every claim on this site links to a public source.
+            An independent, non-partisan civic project, not affiliated with any government body or political party. Every
+            claim on this site links to a public source.
+          </p>
+          <p className="flex items-center gap-2 pt-2 text-sm">
+            <IndiaFlag className="h-3.5 w-[21px]" />
+            Made in India, for the citizens of India
+            <span className="font-hindi text-muted" lang="hi">· जय हिन्द</span>
           </p>
         </div>
         <div className="space-y-2 text-sm">
