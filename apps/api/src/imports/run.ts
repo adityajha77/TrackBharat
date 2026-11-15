@@ -1,7 +1,8 @@
 import { createDb } from "../db/client";
 import { importAssembly } from "./assembly";
 import { importConstituencies } from "./constituencies";
-import { importMembers } from "./members";
+import { importMembers, importPreviousMembers } from "./members";
+import { importQuestions } from "./questions";
 import { importMlas } from "./mlas";
 import { importPinLocations } from "./pin-locations";
 
@@ -16,7 +17,9 @@ const steps = {
   constituencies: importConstituencies,
   assembly: importAssembly,
   pins: importPinLocations, // after all boundaries: rebuilds the PIN → seat mapping
-  members: importMembers,
+  members: (db: Parameters<typeof importMembers>[0]) => importMembers(db),
+  "previous-members": importPreviousMembers, // 17th Lok Sabha, for comparisons
+  questions: importQuestions, // slow (~10 min first run, then cached): parliamentary questions per MP
   mlas: importMlas,
 } as const;
 

@@ -16,6 +16,8 @@ import { createIssueService } from "./modules/issues/issue.service";
 import { createPhotoStore } from "./modules/issues/photo-store";
 import { createSubmissionRepository } from "./modules/submissions/submission.repository";
 import { createSubmissionService } from "./modules/submissions/submission.service";
+import { createReportCardRepository } from "./modules/report-cards/report-card.repository";
+import { createReportCardService } from "./modules/report-cards/report-card.service";
 
 /**
  * ENTRY POINT / composition root. The only file that creates real
@@ -42,6 +44,8 @@ const app = await buildApp({
   issueService,
   submissionService: createSubmissionService(createSubmissionRepository(db), promiseService),
   photoStore,
+  reportCardService: createReportCardService(createReportCardRepository(db)),
+  db,
   pingDb: async () => {
     await db.execute(sql`select 1`);
   },

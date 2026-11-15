@@ -36,6 +36,8 @@ export function deps(overrides: Partial<AppDeps> = {}): AppDeps {
     issueService: { create: notUsed, list: notUsed, highlights: notUsed, get: notUsed, vote: notUsed, report: notUsed, mine: notUsed, moderate: notUsed, reported: notUsed },
     submissionService: { submit: notUsed, review: notUsed, pending: notUsed, mine: notUsed },
     photoStore: { save: notUsed, open: () => null },
+    reportCardService: { reportCard: notUsed, insights: notUsed },
+    db: { execute: notUsed } as unknown as AppDeps["db"],
     pingDb: async () => {},
     corsOrigins: ["http://localhost:3000"],
     version: "test",

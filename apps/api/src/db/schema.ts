@@ -301,6 +301,34 @@ export const evidence = pgTable(
 );
 
 // ---------------------------------------------------------------------------
+// PHASE 3: PARLIAMENTARY ACTIVITY (for report cards)
+// ---------------------------------------------------------------------------
+/**
+ * One row per question an MP asked in the Lok Sabha (from sansad.in). A joint
+ * question appears once for each MP who asked it. Ministers and the Speaker
+ * don't ask questions, so "zero" doesn't automatically mean "inactive".
+ */
+export const parliamentQuestions = pgTable(
+  "parliament_questions",
+  {
+    id: serial("id").primaryKey(),
+    representativeId: integer("representative_id")
+      .notNull()
+      .references(() => representatives.id, { onDelete: "cascade" }),
+    legislature: smallint("legislature").notNull(),
+    questionNo: integer("question_no").notNull(),
+    askedOn: date("asked_on").notNull(),
+    ministry: text("ministry").notNull(),
+    type: text("type").notNull(), // STARRED (oral answer) | UNSTARRED (written answer)
+    subject: text("subject").notNull(),
+  },
+  (t) => [
+    uniqueIndex("parliament_questions_uq").on(t.representativeId, t.legislature, t.askedOn, t.questionNo, t.type),
+    index("parliament_questions_rep_idx").on(t.representativeId, t.legislature),
+  ],
+);
+
+// ---------------------------------------------------------------------------
 // PHASE 2: CITIZENS: accounts, issues, votes, moderation
 // ---------------------------------------------------------------------------
 export const userRoleEnum = pgEnum("user_role", ["CITIZEN", "VERIFIER", "MODERATOR", "ADMIN"]);

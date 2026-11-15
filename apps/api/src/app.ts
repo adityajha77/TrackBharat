@@ -20,6 +20,9 @@ import type { IssueService } from "./modules/issues/issue.service";
 import type { PhotoStore } from "./modules/issues/photo-store";
 import { submissionRoutes } from "./modules/submissions/submission.routes";
 import type { SubmissionService } from "./modules/submissions/submission.service";
+import { reportCardRoutes } from "./modules/report-cards/report-card.routes";
+import type { ReportCardService } from "./modules/report-cards/report-card.service";
+import type { Database } from "./db/client";
 
 /**
  * APP FACTORY. Builds a Fastify instance from its dependencies but does NOT
@@ -35,6 +38,9 @@ export interface AppDeps {
   issueService: IssueService;
   submissionService: SubmissionService;
   photoStore: PhotoStore;
+  reportCardService: ReportCardService;
+  /** Only used by the CSV export route (plain SQL → CSV). */
+  db: Pick<Database, "execute">;
   pingDb: () => Promise<void>;
   corsOrigins: string[];
   version: string;
@@ -111,6 +117,7 @@ export async function buildApp(deps: AppDeps) {
   await app.register(authRoutes(deps.authService), { prefix: "/v1" });
   await app.register(issueRoutes(deps.issueService, deps.photoStore), { prefix: "/v1" });
   await app.register(submissionRoutes(deps.submissionService, deps.issueService), { prefix: "/v1" });
+  await app.register(reportCardRoutes(deps.reportCardService, deps.db), { prefix: "/v1" });
 
   return app;
 }

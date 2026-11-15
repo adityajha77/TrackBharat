@@ -54,5 +54,20 @@ export const CONSTITUENCY_FIXES: ConstituencyFix[] = [
   { state: "Chhattisgarh", number: 3, name: "Janjgir-Champa", reason: "Official name on sansad.in." },
 ];
 
+/**
+ * Names used by the 17th Lok Sabha (2019–24) for seats that were RENAMED by the
+ * 2022/2023 re-delimitations, mapped to our current seat names. The areas changed
+ * too, so "previous MP" comparisons for these seats are approximate (flagged in the UI).
+ */
+export const FORMER_SEAT_NAMES: Record<string, string> = {
+  "Assam|Gauhati": "Guwahati",
+  "Assam|Tezpur": "Sonitpur",
+  "Assam|Mangaldoi": "Darrang-Udalguri",
+  "Assam|Nowgong": "Nagaon",
+  "Assam|Kaliabor": "Kaziranga",
+  "Assam|Autonomous District": "Diphu",
+  "Jammu and Kashmir|Anantnag": "Anantnag-Rajouri",
+};
+
 /** States whose remaining seats are all affected by re-delimitation. */
 export const OUTDATED_STATES = new Set(["Assam", "Jammu & Kashmir"]);
