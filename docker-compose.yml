@@ -36,10 +36,26 @@ services:
       NODE_ENV: production
       DATABASE_URL: postgres://trackbharat:trackbharat@db:5432/trackbharat
       CORS_ORIGINS: http://localhost:3000
+      UPLOADS_DIR: /data/uploads
     ports:
       - "4000:4000"
+    volumes:
+      - uploads:/data/uploads # issue photos survive container rebuilds
     depends_on:
       migrate: { condition: service_completed_successfully }
+
+  # Background jobs (weekly rankings). ONE instance, separate from the API,
+  # so scaling the API to N copies never runs a job N times.
+  worker:
+    profiles: ["full"]
+    build: { context: ., dockerfile: apps/api/Dockerfile }
+    command: ["node", "dist/worker.js"]
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://trackbharat:trackbharat@db:5432/trackbharat
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    restart: unless-stopped
 
   web:
     profiles: ["full"]
@@ -55,3 +71,4 @@ services:
 
 volumes:
   pgdata:
+  uploads:

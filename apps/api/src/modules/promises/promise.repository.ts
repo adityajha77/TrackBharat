@@ -2,6 +2,7 @@ import { and, asc, eq, sql } from "drizzle-orm";
 import type { PromiseDetail, PromiseStatus, SourceInput } from "@trackbharat/shared";
 import type { Database } from "../../db/client";
 import { upsertSource } from "../../db/helpers";
+import { recordAudit } from "../../lib/audit";
 import {
   constituencies,
   evidence,
@@ -108,7 +109,7 @@ export function createPromiseRepository(db: Database) {
     },
 
     /** Promise + its first history entry, atomically. */
-    async create(input: NewPromise): Promise<number> {
+    async create(input: NewPromise, actorId: number | null = null): Promise<number> {
       return db.transaction(async (tx) => {
         const sourceId = await upsertSource(tx, input.source);
         const [row] = await tx
@@ -126,25 +127,28 @@ export function createPromiseRepository(db: Database) {
           })
           .returning({ id: promises.id });
         await tx.insert(promiseStatusHistory).values({ promiseId: row!.id, status: "PENDING", note: "Promise recorded", sourceId });
+        await recordAudit(tx, { actorId, action: "promise.create", entityType: "promise", entityId: row!.id, details: { title: input.title, source: input.source.url } });
         return row!.id;
       });
     },
 
     /** Append a history row AND update the current status, atomically. */
-    async addStatus(promiseId: number, status: PromiseStatus, note: string, source: SourceInput): Promise<number> {
+    async addStatus(promiseId: number, status: PromiseStatus, note: string, source: SourceInput, actorId: number | null = null): Promise<number> {
       return db.transaction(async (tx) => {
         const sourceId = await upsertSource(tx, source);
         const [h] = await tx.insert(promiseStatusHistory).values({ promiseId, status, note, sourceId }).returning({ id: promiseStatusHistory.id });
         await tx.update(promises).set({ status, updatedAt: sql`now()` }).where(eq(promises.id, promiseId));
+        await recordAudit(tx, { actorId, action: "promise.status", entityType: "promise", entityId: promiseId, details: { status, note, source: source.url } });
         return h!.id;
       });
     },
 
-    async addEvidence(promiseId: number, summary: string, stance: PromiseDetail["evidence"][number]["stance"], source: SourceInput): Promise<number> {
+    async addEvidence(promiseId: number, summary: string, stance: PromiseDetail["evidence"][number]["stance"], source: SourceInput, actorId: number | null = null): Promise<number> {
       return db.transaction(async (tx) => {
         const sourceId = await upsertSource(tx, source);
         const [e] = await tx.insert(evidence).values({ promiseId, summary, stance, sourceId }).returning({ id: evidence.id });
         await tx.update(promises).set({ updatedAt: sql`now()` }).where(eq(promises.id, promiseId));
+        await recordAudit(tx, { actorId, action: "promise.evidence", entityType: "promise", entityId: promiseId, details: { stance, source: source.url } });
         return e!.id;
       });
     },

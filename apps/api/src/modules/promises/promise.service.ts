@@ -19,7 +19,7 @@ export function createPromiseService(repo: PromiseRepository) {
       return p;
     },
 
-    async create(input: CreatePromiseInput): Promise<number> {
+    async create(input: CreatePromiseInput, actorId: number | null = null): Promise<number> {
       const constituencyId = await repo.findConstituencyId(input.constituencySlug);
       if (!constituencyId) throw AppError.notFound(`No constituency called "${input.constituencySlug}"`);
 
@@ -44,17 +44,17 @@ export function createPromiseService(repo: PromiseRepository) {
         madeOn: input.madeOn ?? null,
         deadline: input.deadline ?? null,
         source: input.source,
-      });
+      }, actorId);
     },
 
-    async updateStatus(id: number, input: UpdatePromiseStatusInput): Promise<number> {
+    async updateStatus(id: number, input: UpdatePromiseStatusInput, actorId: number | null = null): Promise<number> {
       await mustExist(id);
-      return repo.addStatus(id, input.status, input.note, input.source);
+      return repo.addStatus(id, input.status, input.note, input.source, actorId);
     },
 
-    async addEvidence(id: number, input: AddEvidenceInput): Promise<number> {
+    async addEvidence(id: number, input: AddEvidenceInput, actorId: number | null = null): Promise<number> {
       await mustExist(id);
-      return repo.addEvidence(id, input.summary, input.stance, input.source);
+      return repo.addEvidence(id, input.summary, input.stance, input.source, actorId);
     },
   };
 }

@@ -68,7 +68,8 @@ describe("promise service: business rules", () => {
   it("attributes a representative's promise to the sitting term", async () => {
     const r = repo();
     await createPromiseService(r).create({ ...base, madeBy: { type: "REPRESENTATIVE" } });
-    expect(r.create).toHaveBeenCalledWith(expect.objectContaining({ termId: 3, partyId: null, constituencyId: 7 }));
+    // second argument = actor id for the audit log (null when not called on behalf of a user)
+    expect(r.create).toHaveBeenCalledWith(expect.objectContaining({ termId: 3, partyId: null, constituencyId: 7 }), null);
   });
 
   it("refuses when the seat is vacant (409)", async () => {

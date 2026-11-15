@@ -1,12 +1,14 @@
 import { relations, sql } from "drizzle-orm";
 import {
   type AnyPgColumn,
+  bigserial,
   boolean,
   check,
   customType,
   date,
   index,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   primaryKey,
@@ -296,6 +298,175 @@ export const evidence = pgTable(
     addedAt: timestamp("added_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("evidence_promise_idx").on(t.promiseId)],
+);
+
+// ---------------------------------------------------------------------------
+// PHASE 2: CITIZENS: accounts, issues, votes, moderation
+// ---------------------------------------------------------------------------
+export const userRoleEnum = pgEnum("user_role", ["CITIZEN", "VERIFIER", "MODERATOR", "ADMIN"]);
+export const issueStatusEnum = pgEnum("issue_status", ["OPEN", "ACKNOWLEDGED", "RESOLVED", "HIDDEN"]);
+export const submissionStatusEnum = pgEnum("submission_status", ["PENDING", "APPROVED", "REJECTED"]);
+
+/**
+ * Accounts. We store only what we need: a display name and an email to log in.
+ * Passwords are stored as Argon2id hashes, never in plain text, never reversibly encrypted.
+ */
+export const users = pgTable(
+  "users",
+  {
+    id: serial("id").primaryKey(),
+    email: text("email").notNull(), // stored lower-cased by the service
+    name: text("name").notNull(),
+    passwordHash: text("password_hash").notNull(),
+    role: userRoleEnum("role").notNull().default("CITIZEN"),
+    isBlocked: boolean("is_blocked").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("users_email_uq").on(t.email)],
+);
+
+/**
+ * Login sessions. The client holds a random token; we store only its SHA-256
+ * hash. If the database leaked, the hashes couldn't be used to log in.
+ * Logging out (or an admin blocking a user) = deleting rows here.
+ */
+export const sessions = pgTable(
+  "sessions",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    tokenHash: text("token_hash").notNull(),
+    userAgent: text("user_agent"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull().defaultNow(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  },
+  (t) => [uniqueIndex("sessions_token_hash_uq").on(t.tokenHash), index("sessions_user_idx").on(t.userId)],
+);
+
+/** A local problem reported by a citizen (pothole, broken street light, water supply…). */
+export const issues = pgTable(
+  "issues",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    /** The Lok Sabha seat, derived from the PIN code, so issues roll up to an MP. */
+    constituencyId: integer("constituency_id")
+      .notNull()
+      .references(() => constituencies.id),
+    pincode: varchar("pincode", { length: 6 }).notNull(),
+    title: text("title").notNull(),
+    description: text("description").notNull(),
+    category: promiseCategoryEnum("category").notNull(),
+    status: issueStatusEnum("status").notNull().default("OPEN"),
+    /** File name of the re-encoded photo in the uploads folder (never the user's original file). */
+    photoKey: text("photo_key"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+  },
+  (t) => [index("issues_constituency_idx").on(t.constituencyId, t.status), index("issues_user_idx").on(t.userId)],
+);
+
+/**
+ * One upvote per user, per issue, PER WEEK. The composite primary key makes the
+ * DATABASE reject a second vote in the same week: no race condition can beat it.
+ * week_start = the Monday of the week, in India time.
+ */
+export const issueVotes = pgTable(
+  "issue_votes",
+  {
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    issueId: integer("issue_id")
+      .notNull()
+      .references(() => issues.id, { onDelete: "cascade" }),
+    weekStart: date("week_start").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.issueId, t.weekStart] }), index("issue_votes_issue_week_idx").on(t.issueId, t.weekStart)],
+);
+
+/** "This post is spam / abusive / false". One report per user per issue. */
+export const issueReports = pgTable(
+  "issue_reports",
+  {
+    id: serial("id").primaryKey(),
+    issueId: integer("issue_id")
+      .notNull()
+      .references(() => issues.id, { onDelete: "cascade" }),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    reason: text("reason").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+  },
+  (t) => [uniqueIndex("issue_reports_issue_user_uq").on(t.issueId, t.userId)],
+);
+
+/**
+ * Written by the weekly background job: the top issues of each constituency
+ * for a finished week. A frozen snapshot: later votes don't change history.
+ */
+export const weeklyIssueRankings = pgTable(
+  "weekly_issue_rankings",
+  {
+    weekStart: date("week_start").notNull(),
+    constituencyId: integer("constituency_id")
+      .notNull()
+      .references(() => constituencies.id, { onDelete: "cascade" }),
+    rank: smallint("rank").notNull(),
+    issueId: integer("issue_id")
+      .notNull()
+      .references(() => issues.id, { onDelete: "cascade" }),
+    votes: integer("votes").notNull(),
+    computedAt: timestamp("computed_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.weekStart, t.constituencyId, t.rank] })],
+);
+
+/** A promise submitted by a citizen, waiting for a verifier to check its source. */
+export const promiseSubmissions = pgTable(
+  "promise_submissions",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    /** The exact CreatePromiseInput, validated with the shared schema before storing. */
+    payload: jsonb("payload").notNull(),
+    status: submissionStatusEnum("status").notNull().default("PENDING"),
+    reviewerId: integer("reviewer_id").references(() => users.id),
+    reviewNote: text("review_note"),
+    promiseId: integer("promise_id").references(() => promises.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+  },
+  (t) => [index("promise_submissions_status_idx").on(t.status)],
+);
+
+/**
+ * AUDIT LOG: who did what, when. Every moderator/verifier/admin action is
+ * recorded here and never edited. Accountability applies to us too.
+ */
+export const auditLog = pgTable(
+  "audit_log",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    actorId: integer("actor_id").references(() => users.id), // null = the system (e.g. auto-hide)
+    action: text("action").notNull(), // e.g. "issue.hide", "submission.approve"
+    entityType: text("entity_type").notNull(),
+    entityId: text("entity_id").notNull(),
+    details: jsonb("details"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("audit_log_entity_idx").on(t.entityType, t.entityId), index("audit_log_created_idx").on(t.createdAt)],
 );
 
 // ---------------------------------------------------------------------------

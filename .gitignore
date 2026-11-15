@@ -37,3 +37,6 @@ apps/web/CLAUDE.md
 
 # Downloaded public datasets (re-downloadable; sources are recorded in code)
 .data/
+
+# Uploaded photos (re-encoded, user content)
+.uploads/

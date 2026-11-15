@@ -11,6 +11,7 @@ import { DemoNotice, OutdatedBoundaryNote, SourceLink } from "@/components/civic
 import { PromiseList } from "@/components/civic/promise-list";
 import { PromiseProgress } from "@/components/civic/promise-progress";
 import { RepresentativeCard } from "@/components/civic/representative-card";
+import { IssuesSection } from "@/components/issues/issues-section";
 
 /**
  * /constituency/bangalore-south: the heart of TrackBharat.
@@ -164,8 +165,8 @@ async function Details({ slug }: { slug: string }) {
             <p className="mt-2 max-w-2xl text-sm text-muted">
               We only publish a promise when it comes with a public source: a manifesto, an official speech, a gazette or a news
               report. Know of one for {c.name}?{" "}
-              <Link href="/contact" className="text-primary underline underline-offset-2">
-                Send it to us with the link
+              <Link href={`/promises/submit?seat=${c.slug}`} className="text-primary underline underline-offset-2">
+                Submit it with the link
               </Link>
               .{" "}
               <Link href="/constituency/demo-nagar" className="text-primary underline underline-offset-2">
@@ -175,7 +176,19 @@ async function Details({ slug }: { slug: string }) {
             </p>
           </Card>
         )}
+        {c.promises.length > 0 && (
+          <Link href={`/promises/submit?seat=${c.slug}`} className="inline-block text-sm font-medium text-primary">
+            Know of another promise? Submit it with a source →
+          </Link>
+        )}
       </section>
+
+      {/* Citizen issues roll up to Lok Sabha seats (an MP's constituency) */}
+      {isLs && (
+        <Suspense fallback={<div className="h-64 animate-pulse rounded-2xl bg-surface-muted" aria-busy="true" />}>
+          <IssuesSection slug={c.slug} name={c.name} />
+        </Suspense>
+      )}
     </div>
   );
 }

@@ -29,6 +29,13 @@
       "when": 1794742057341,
       "tag": "0003_assembly_segments",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794742444259,
+      "tag": "0004_citizens_issues_moderation",
+      "breakpoints": true
     }
   ]
 }

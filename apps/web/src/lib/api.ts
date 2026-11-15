@@ -7,6 +7,7 @@ import {
   PincodeConstituenciesResponse,
   PincodeLookupResponse,
   PromiseDetail,
+  WeeklyHighlights,
 } from "@trackbharat/shared";
 import type { z } from "zod";
 
@@ -78,6 +79,14 @@ export async function getConstituency(slug: string) {
   cacheLife("minutes");
   cacheTag(`constituency:${slug}`);
   return request(`/v1/constituencies/${slug}`, ConstituencyDetail);
+}
+
+/** Last finished week's top issues: frozen by the weekly job, so cache for an hour. */
+export async function getHighlights(slug: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(`highlights:${slug}`);
+  return request(`/v1/constituencies/${slug}/issues/highlights`, WeeklyHighlights);
 }
 
 export async function getPromise(id: number) {

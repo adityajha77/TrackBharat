@@ -11,6 +11,7 @@ export const ErrorCode = z.enum([
   "UPSTREAM_UNAVAILABLE",
   "UNAUTHORIZED",
   "CONFLICT",
+  "FORBIDDEN",
   "INTERNAL_ERROR",
 ]);
 export type ErrorCode = z.infer<typeof ErrorCode>;

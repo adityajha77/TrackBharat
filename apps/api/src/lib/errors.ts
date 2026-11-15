@@ -31,4 +31,11 @@ export class AppError extends Error {
   static conflict(message: string) {
     return new AppError("CONFLICT", message, 409);
   }
+  /** Logged in, but not allowed (wrong role). 401 = "who are you?", 403 = "I know you, and no". */
+  static forbidden(message: string) {
+    return new AppError("FORBIDDEN", message, 403);
+  }
+  static tooMany(message: string) {
+    return new AppError("RATE_LIMITED", message, 429);
+  }
 }

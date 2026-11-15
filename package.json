@@ -18,7 +18,10 @@
     "db:migrate": "pnpm --filter @trackbharat/api db:migrate",
     "db:seed": "pnpm --filter @trackbharat/api db:seed",
     "db:studio": "pnpm --filter @trackbharat/api db:studio",
-    "db:import": "pnpm --filter @trackbharat/api db:import"
+    "db:import": "pnpm --filter @trackbharat/api db:import",
+    "worker": "pnpm --filter @trackbharat/api worker",
+    "job:weekly-rankings": "pnpm --filter @trackbharat/api job:weekly-rankings",
+    "user:role": "pnpm --filter @trackbharat/api user:role"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",

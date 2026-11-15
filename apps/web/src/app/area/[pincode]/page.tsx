@@ -8,6 +8,7 @@ import { Badge, Card } from "@/components/ui/card";
 import { PincodeSearch } from "@/components/pincode-search";
 import { OutdatedBoundaryNote } from "@/components/civic/bits";
 import { SeatGroup } from "@/components/civic/seat-group";
+import { IssuesSection } from "@/components/issues/issues-section";
 
 /**
  * /area/560034, the "your constituency" page.
@@ -70,6 +71,13 @@ async function AreaDetails({ pincode }: { pincode: string }) {
       <SeatGroup house="LOK_SABHA" seats={seats.filter((s) => s.house === "LOK_SABHA")} />
       <SeatGroup house="VIDHAN_SABHA" seats={seats.filter((s) => s.house === "VIDHAN_SABHA")} />
       {seats.some((s) => s.boundaryOutdated) && <OutdatedBoundaryNote />}
+
+      {/* Top local issues this week in the main Lok Sabha seat (personalised → own Suspense) */}
+      {seats.some((s) => s.house === "LOK_SABHA") && (
+        <Suspense fallback={<div className="h-48 animate-pulse rounded-2xl bg-surface-muted" />}>
+          <IssuesSection slug={seats.find((s) => s.house === "LOK_SABHA")!.slug} name={seats.find((s) => s.house === "LOK_SABHA")!.name} compact />
+        </Suspense>
+      )}
 
 
       {area && <Card>

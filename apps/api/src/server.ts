@@ -9,6 +9,13 @@ import { createConstituencyRepository } from "./modules/constituencies/constitue
 import { createConstituencyService } from "./modules/constituencies/constituency.service";
 import { createPromiseRepository } from "./modules/promises/promise.repository";
 import { createPromiseService } from "./modules/promises/promise.service";
+import { createAuthRepository } from "./modules/auth/auth.repository";
+import { createAuthService } from "./modules/auth/auth.service";
+import { createIssueRepository } from "./modules/issues/issue.repository";
+import { createIssueService } from "./modules/issues/issue.service";
+import { createPhotoStore } from "./modules/issues/photo-store";
+import { createSubmissionRepository } from "./modules/submissions/submission.repository";
+import { createSubmissionService } from "./modules/submissions/submission.service";
 
 /**
  * ENTRY POINT / composition root. The only file that creates real
@@ -23,11 +30,18 @@ const pincodeService = createPincodeService({
   cacheTtlDays: config.PINCODE_CACHE_TTL_DAYS,
 });
 
+const promiseService = createPromiseService(createPromiseRepository(db));
+const photoStore = createPhotoStore(config.UPLOADS_DIR);
+const issueService = createIssueService(createIssueRepository(db), photoStore);
+
 const app = await buildApp({
   pincodeService,
   constituencyService: createConstituencyService(createConstituencyRepository(db)),
-  promiseService: createPromiseService(createPromiseRepository(db)),
-  adminToken: config.ADMIN_API_TOKEN,
+  promiseService,
+  authService: createAuthService(createAuthRepository(db)),
+  issueService,
+  submissionService: createSubmissionService(createSubmissionRepository(db), promiseService),
+  photoStore,
   pingDb: async () => {
     await db.execute(sql`select 1`);
   },

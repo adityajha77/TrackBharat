@@ -1,8 +1,11 @@
 import { eq } from "drizzle-orm";
 import { createDb } from "./client";
 import { upsertSource } from "./helpers";
-import { constituencies, evidence, parties, promiseStatusHistory, promises, representatives, states, terms } from "./schema";
+import { constituencies, evidence, issues, issueVotes, parties, promiseStatusHistory, promises, representatives, states, terms, users } from "./schema";
 import { createPincodeRepository } from "../modules/pincodes/pincode.repository";
+import { hashPassword } from "../modules/auth/password";
+import { computeWeeklyRankings } from "../jobs/weekly-rankings";
+import { previousWeek, weekStartIST } from "../lib/time";
 
 /**
  * SEED: sample data for local development. Safe to re-run.
@@ -50,6 +53,7 @@ async function seedDemoPromiseTracker() {
     // Re-running the seed must not duplicate anything: wipe the previous demo constituency first.
     const old = await tx.select({ id: constituencies.id }).from(constituencies).where(eq(constituencies.slug, "demo-nagar"));
     if (old[0]) {
+      await tx.delete(issues).where(eq(issues.constituencyId, old[0].id));
       await tx.delete(promises).where(eq(promises.constituencyId, old[0].id));
       await tx.delete(terms).where(eq(terms.constituencyId, old[0].id));
       await tx.delete(constituencies).where(eq(constituencies.id, old[0].id));
@@ -158,10 +162,73 @@ async function seedDemoPromiseTracker() {
   });
 }
 
+/**
+ * LOCAL DEVELOPMENT ACCOUNTS: one per role, so every screen can be tried.
+ * Never created when NODE_ENV=production.
+ *
+ *   citizen@trackbharat.local    CITIZEN
+ *   verifier@trackbharat.local   VERIFIER   (reviews promise submissions, edits promises)
+ *   moderator@trackbharat.local  MODERATOR  (handles reported issues)
+ *   admin@trackbharat.local      ADMIN
+ *
+ * Password for all of them (local only): trackbharat-dev-password
+ */
+export const DEV_PASSWORD = "trackbharat-dev-password";
+const DEV_USERS = [
+  { email: "citizen@trackbharat.local", name: "Demo Citizen", role: "CITIZEN" },
+  { email: "verifier@trackbharat.local", name: "Demo Verifier", role: "VERIFIER" },
+  { email: "moderator@trackbharat.local", name: "Demo Moderator", role: "MODERATOR" },
+  { email: "admin@trackbharat.local", name: "Demo Admin", role: "ADMIN" },
+] as const;
+
+async function seedDevAccountsAndIssues() {
+  if (process.env.NODE_ENV === "production") return console.log("  ↳ production: dev accounts skipped");
+  const passwordHash = await hashPassword(DEV_PASSWORD);
+  const ids: Record<string, number> = {};
+  for (const u of DEV_USERS) {
+    const [row] = await db.insert(users).values({ ...u, passwordHash }).onConflictDoUpdate({ target: users.email, set: { role: u.role, passwordHash } }).returning({ id: users.id });
+    ids[u.role] = row!.id;
+  }
+  // A few voters so the demo has realistic vote counts
+  const voters: number[] = [];
+  for (let i = 1; i <= 6; i++) {
+    const [row] = await db
+      .insert(users)
+      .values({ email: `voter${i}@trackbharat.local`, name: `Demo Voter ${i}`, passwordHash })
+      .onConflictDoUpdate({ target: users.email, set: { passwordHash } })
+      .returning({ id: users.id });
+    voters.push(row!.id);
+  }
+  console.log(`  ✓ Dev accounts: ${DEV_USERS.map((u) => u.email).join(", ")} (+6 voters), password "${DEV_PASSWORD}"`);
+
+  // Demo issues in the fictional Demo Nagar, with votes this week and last week
+  const [seat] = await db.select({ id: constituencies.id }).from(constituencies).where(eq(constituencies.slug, "demo-nagar"));
+  const thisWeek = weekStartIST();
+  const lastWeek = previousWeek(thisWeek);
+  const demo = [
+    { title: "Deep potholes on Station Road near the bus depot", description: "Three large potholes have been there since the monsoon. Two-wheelers fall every week.", category: "ROADS_INFRASTRUCTURE", votes: [5, 3] },
+    { title: "No water supply in Ward 7 for four days", description: "Taps in Ward 7 have been dry since Monday; tankers come only once a day.", category: "WATER", votes: [2, 6] },
+    { title: "Street lights not working on Canal Road", description: "The whole 1 km stretch of Canal Road is dark after 7 pm; it is unsafe for women walking home.", category: "SAFETY", votes: [4, 1] },
+    { title: "Primary health centre has no doctor on Sundays", description: "The PHC is closed on Sundays and there is no emergency cover for the 20 surrounding villages.", category: "HEALTH", votes: [1, 2] },
+  ] as const;
+  for (const d of demo) {
+    const [issue] = await db
+      .insert(issues)
+      .values({ userId: ids.CITIZEN!, constituencyId: seat!.id, pincode: "999999", title: `[DEMO] ${d.title}`, description: d.description, category: d.category })
+      .returning({ id: issues.id });
+    const [lastW, thisW] = d.votes;
+    for (const v of voters.slice(0, lastW)) await db.insert(issueVotes).values({ userId: v, issueId: issue!.id, weekStart: lastWeek }).onConflictDoNothing();
+    for (const v of voters.slice(0, thisW)) await db.insert(issueVotes).values({ userId: v, issueId: issue!.id, weekStart: thisWeek }).onConflictDoNothing();
+  }
+  const ranked = await computeWeeklyRankings(db, lastWeek);
+  console.log(`  ✓ Demo issues: ${demo.length} in Demo Nagar, with votes; last week's highlights computed (${ranked.rows} rows)`);
+}
+
 try {
   console.log("Seeding…");
   await seedPincodeCache();
   await seedDemoPromiseTracker();
+  await seedDevAccountsAndIssues();
 } finally {
   await pool.end();
 }

@@ -18,7 +18,7 @@ the tracker before real promises are curated.
 3. **Parties are never created from free text** on write paths; an unknown party name is a 404, not a new row.
 4. **Demo data is fictional and labelled.** The seed creates "Demo Nagar" (fictional state, person and party), all
    flagged `is_demo` and shown with a "Demo data" banner. **Invented promises are never attached to real people, even locally.**
-5. **Admin writes use a temporary bearer token** (`ADMIN_API_TOKEN`; unset = disabled), compared in constant time.
+5. **(Superseded by ADR-0010 in Phase 2: roles VERIFIER/ADMIN.)** Admin writes used a temporary bearer token (`ADMIN_API_TOKEN`; unset = disabled), compared in constant time.
    Phase 2 replaces it with accounts, roles (citizen / verifier / moderator / admin) and an audit log.
 
 ## Consequences

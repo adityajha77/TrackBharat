@@ -1,6 +1,7 @@
 import Fastify, { type FastifyServerOptions } from "fastify";
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
+import multipart from "@fastify/multipart";
 import rateLimit from "@fastify/rate-limit";
 import type { ApiErrorBody } from "@trackbharat/shared";
 import { AppError } from "./lib/errors";
@@ -11,6 +12,14 @@ import { constituencyRoutes } from "./modules/constituencies/constituency.routes
 import type { ConstituencyService } from "./modules/constituencies/constituency.service";
 import { promiseRoutes } from "./modules/promises/promise.routes";
 import type { PromiseService } from "./modules/promises/promise.service";
+import { authPlugin } from "./modules/auth/auth.plugin";
+import { authRoutes } from "./modules/auth/auth.routes";
+import type { AuthService } from "./modules/auth/auth.service";
+import { issueRoutes } from "./modules/issues/issue.routes";
+import type { IssueService } from "./modules/issues/issue.service";
+import type { PhotoStore } from "./modules/issues/photo-store";
+import { submissionRoutes } from "./modules/submissions/submission.routes";
+import type { SubmissionService } from "./modules/submissions/submission.service";
 
 /**
  * APP FACTORY. Builds a Fastify instance from its dependencies but does NOT
@@ -22,7 +31,10 @@ export interface AppDeps {
   pincodeService: PincodeService;
   constituencyService: ConstituencyService;
   promiseService: PromiseService;
-  adminToken?: string;
+  authService: AuthService;
+  issueService: IssueService;
+  submissionService: SubmissionService;
+  photoStore: PhotoStore;
   pingDb: () => Promise<void>;
   corsOrigins: string[];
   version: string;
@@ -52,6 +64,12 @@ export async function buildApp(deps: AppDeps) {
       return { statusCode: 429, ...body };
     },
   });
+
+  // Uploads: hard limits so nobody can fill our disk or memory with one request
+  await app.register(multipart, { limits: { fileSize: 8 * 1024 * 1024, files: 1, fields: 10, fieldSize: 4096 } });
+
+  // Authentication: attaches req.user on every request that carries a valid bearer token
+  await app.register(authPlugin, { auth: deps.authService });
 
   // --- Uniform error responses --------------------------------------------
   app.setErrorHandler((err, req, reply) => {
@@ -89,7 +107,10 @@ export async function buildApp(deps: AppDeps) {
   // alive, because the mobile app can't be force-updated on every phone overnight.
   await app.register(pincodeRoutes(deps.pincodeService), { prefix: "/v1" });
   await app.register(constituencyRoutes(deps.constituencyService), { prefix: "/v1" });
-  await app.register(promiseRoutes(deps.promiseService, { adminToken: deps.adminToken }), { prefix: "/v1" });
+  await app.register(promiseRoutes(deps.promiseService), { prefix: "/v1" });
+  await app.register(authRoutes(deps.authService), { prefix: "/v1" });
+  await app.register(issueRoutes(deps.issueService, deps.photoStore), { prefix: "/v1" });
+  await app.register(submissionRoutes(deps.submissionService, deps.issueService), { prefix: "/v1" });
 
   return app;
 }

@@ -1,5 +1,7 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { site } from "@/lib/site";
+import { UserMenu } from "./auth/user-menu";
 import { ThemeToggle } from "./theme";
 import { Logo } from "./logo";
 
@@ -30,7 +32,13 @@ export function SiteHeader() {
             </Link>
           ))}
         </nav>
-        <ThemeToggle />
+        <div className="flex items-center gap-1">
+          <ThemeToggle />
+          {/* Reads the session cookie → its own Suspense boundary, so the header shell stays static */}
+          <Suspense fallback={<span className="inline-block h-9 w-16 animate-pulse rounded-lg bg-surface-muted" />}>
+            <UserMenu />
+          </Suspense>
+        </div>
       </div>
       <nav className="flex gap-1 overflow-x-auto px-3 pb-2 [scrollbar-width:none] md:hidden" aria-label="Main mobile">
         {site.nav.map((item) => (
