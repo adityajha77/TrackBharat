@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: PageProps<"/constituency/[slu
     const c = await getConstituency(slug);
     const mp = c.representatives[0];
     return {
-      title: `${c.name} Lok Sabha constituency`,
+      title: `${c.name} ${c.house === "LOK_SABHA" ? "Lok Sabha" : "Vidhan Sabha"} constituency`,
       description: `${c.name}, ${c.state}: ${mp ? `MP ${mp.name}${mp.party ? ` (${mp.party.shortName ?? mp.party.name})` : ""}, ` : ""}promises made and what happened to them.`,
     };
   } catch {
@@ -56,6 +56,7 @@ async function Details({ slug }: { slug: string }) {
   }
 
   const reservation = RESERVATION[c.reservation];
+  const isLs = c.house === "LOK_SABHA";
 
   return (
     <div className="mt-6 space-y-8">
@@ -65,7 +66,7 @@ async function Details({ slug }: { slug: string }) {
       <header className="grid items-center gap-6 md:grid-cols-[1fr_auto]">
         <div>
           <p className="flex items-center gap-2 text-sm text-muted">
-            <Landmark className="size-4" aria-hidden /> Lok Sabha constituency · {c.state}
+            <Landmark className="size-4" aria-hidden /> {isLs ? "Lok Sabha" : "Vidhan Sabha (assembly)"} constituency · {c.state}
           </p>
           <h1 className="mt-2 text-4xl font-semibold tracking-tight sm:text-5xl">{c.name}</h1>
           {c.nameHi && (
@@ -87,6 +88,9 @@ async function Details({ slug }: { slug: string }) {
       </header>
 
       {c.boundaryOutdated && <OutdatedBoundaryNote />}
+      {!isLs && !c.boundaryOutdated && (
+        <p className="text-xs text-muted">Assembly boundaries come from scraped ECI polling-station maps and may be slightly shifted; treat them as approximate.</p>
+      )}
 
       {/* Representative */}
       <section aria-labelledby="rep-heading" className="space-y-4">
@@ -94,14 +98,50 @@ async function Details({ slug }: { slug: string }) {
           Representative
         </h2>
         {c.representatives.length ? (
-          c.representatives.map((r) => <RepresentativeCard key={r.name} rep={r} />)
-        ) : (
+          c.representatives.map((r) => <RepresentativeCard key={r.name} rep={r} house={c.house} />)
+        ) : isLs ? (
           <Card className="border-dashed text-sm text-muted">This seat is currently vacant. A by-election is due.</Card>
+        ) : (
+          <Card className="border-dashed text-sm text-muted">
+            MLA data for {c.state} isn&apos;t available yet. We add MLAs state by state from official sources only.{" "}
+            <Link href="/contact" className="text-primary underline underline-offset-2">
+              Help us add {c.state}
+            </Link>
+            .
+          </Card>
         )}
         {c.formerRepresentatives.map((r) => (
-          <RepresentativeCard key={r.name} rep={r} title="Earlier this term" />
+          <RepresentativeCard key={r.name} rep={r} house={c.house} title="Earlier this term" />
         ))}
       </section>
+
+      {/* MP ⇄ MLA navigation: a Lok Sabha seat is made of several assembly segments */}
+      {c.parent && (
+        <Card className="flex flex-wrap items-center justify-between gap-3 py-4">
+          <p className="text-sm text-muted">
+            Part of the <strong className="text-foreground">{c.parent.name}</strong> Lok Sabha constituency
+          </p>
+          <Link href={`/constituency/${c.parent.slug}`} className="text-sm font-medium text-primary">
+            See the MP →
+          </Link>
+        </Card>
+      )}
+      {c.segments.length > 0 && (
+        <section aria-labelledby="segments-heading">
+          <h2 id="segments-heading" className="text-sm font-medium uppercase tracking-widest text-muted">
+            Assembly segments ({c.segments.length})
+          </h2>
+          <ul className="mt-3 flex flex-wrap gap-2">
+            {c.segments.map((s) => (
+              <li key={s.slug}>
+                <Link href={`/constituency/${s.slug}`} className="inline-block rounded-full border border-border px-3 py-1 text-sm hover:border-primary hover:text-primary">
+                  {s.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* Promises */}
       <section aria-labelledby="promises-heading" className="space-y-5">

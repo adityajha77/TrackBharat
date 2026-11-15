@@ -1,14 +1,13 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight, Building2, Landmark, Mail, Megaphone, MapPin, Users } from "lucide-react";
+import { Building2, Mail, MapPin } from "lucide-react";
 import { Pincode } from "@trackbharat/shared";
 import { ApiError, getPincode, getPincodeConstituencies } from "@/lib/api";
 import { Badge, Card } from "@/components/ui/card";
 import { PincodeSearch } from "@/components/pincode-search";
 import { OutdatedBoundaryNote } from "@/components/civic/bits";
-import { RepresentativePhoto } from "@/components/civic/representative-photo";
+import { SeatGroup } from "@/components/civic/seat-group";
 
 /**
  * /area/560034, the "your constituency" page.
@@ -67,53 +66,11 @@ async function AreaDetails({ pincode }: { pincode: string }) {
         <PincodeSearch className="sm:max-w-xs" />
       </header>
 
-      {/* Your Lok Sabha constituency (one, or several when the PIN straddles a boundary) */}
-      <section aria-labelledby="your-mp" className="space-y-4">
-        <h2 id="your-mp" className="flex items-center gap-2 text-lg font-semibold">
-          <Landmark className="size-5 text-primary" aria-hidden />
-          {seats.length > 1 ? "This PIN code spans more than one constituency" : "Your Lok Sabha constituency"}
-        </h2>
-        {seats.length ? (
-          <div className={seats.length > 1 ? "grid gap-4 md:grid-cols-2" : ""}>
-            {seats.map((s) => (
-              <Link key={s.slug} href={`/constituency/${s.slug}`} className="group block">
-                <Card className="flex items-center gap-5 transition-colors group-hover:border-primary">
-                  {s.representative && <RepresentativePhoto name={s.representative.name} src={s.representative.imageUrl} className="size-16 shrink-0 text-lg" />}
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs uppercase tracking-widest text-muted">
-                      {s.name} · {s.state}
-                      {seats.length > 1 && <> · {Math.round(s.share * 100)}% of post offices</>}
-                    </p>
-                    <p className="mt-1 text-xl font-semibold">{s.representative ? s.representative.name : "Seat vacant"}</p>
-                    {s.representative?.party && <p className="text-sm text-muted">Member of Parliament · {s.representative.party}</p>}
-                  </div>
-                  <span className="hidden items-center gap-1 text-sm font-medium text-primary sm:inline-flex">
-                    Promises <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
-                  </span>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <Card className="border-dashed text-sm text-muted">We couldn&apos;t match this PIN code to a constituency yet.</Card>
-        )}
-        {seats.some((s) => s.boundaryOutdated) && <OutdatedBoundaryNote />}
-      </section>
+      {/* A PIN has a Lok Sabha seat (MP) AND a Vidhan Sabha seat (MLA), sometimes several of each */}
+      <SeatGroup house="LOK_SABHA" seats={seats.filter((s) => s.house === "LOK_SABHA")} />
+      <SeatGroup house="VIDHAN_SABHA" seats={seats.filter((s) => s.house === "VIDHAN_SABHA")} />
+      {seats.some((s) => s.boundaryOutdated) && <OutdatedBoundaryNote />}
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <ComingSoon
-          icon={Users}
-          title="Your MLA (Vidhan Sabha)"
-          phase="Phase 1b"
-          body="Your state assembly representative, from each state legislature's records."
-        />
-        <ComingSoon
-          icon={Megaphone}
-          title="Top local issues this week"
-          phase="Phase 2"
-          body="Problems reported by residents, ranked by upvotes and highlighted every week."
-        />
-      </div>
 
       {area && <Card>
         <div className="flex items-center justify-between gap-4">
@@ -145,18 +102,6 @@ async function AreaDetails({ pincode }: { pincode: string }) {
   );
 }
 
-function ComingSoon({ icon: Icon, title, body, phase }: { icon: typeof Landmark; title: string; body: string; phase: string }) {
-  return (
-    <Card className="border-dashed">
-      <div className="flex items-start justify-between gap-2">
-        <Icon className="size-5 text-muted" aria-hidden />
-        <Badge tone="soon">{phase}</Badge>
-      </div>
-      <h2 className="mt-5 font-semibold">{title}</h2>
-      <p className="mt-2 text-sm leading-relaxed text-muted">{body}</p>
-    </Card>
-  );
-}
 
 function ErrorState({ message }: { message: string }) {
   return (

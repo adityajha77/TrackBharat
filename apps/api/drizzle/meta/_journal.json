@@ -22,6 +22,13 @@
       "when": 1794740417171,
       "tag": "0002_constituencies_people_promises",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794742057341,
+      "tag": "0003_assembly_segments",
+      "breakpoints": true
     }
   ]
 }

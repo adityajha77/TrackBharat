@@ -14,5 +14,6 @@ That history is what lets someone (including future you, or an interviewer) unde
 | [0006](./0006-public-data-sources-and-privacy.md) | Public data sources, licensing and privacy | Accepted |
 | [0007](./0007-pincode-to-constituency-by-spatial-majority.md) | PIN code → constituency by spatial majority of post offices | Accepted |
 | [0008](./0008-sourced-promises-only.md) | Promises only with a source, enforced by the database | Accepted |
+| [0009](./0009-assembly-seats-and-curated-mla-data.md) | Assembly seats from open boundaries; MLAs only from curated, sourced files | Accepted |
 
 Template for new ADRs: copy any file, keep the headings: **Context → Decision → Alternatives considered → Consequences**.

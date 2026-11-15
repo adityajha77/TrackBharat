@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { CONSTITUENCY_FIXES } from "../src/imports/corrections";
 import { canonicalState } from "../src/imports/constituencies";
 import { looseName, normalizeName, parseCsvLine, slugify } from "../src/imports/lib/text";
+import { parseMlaCsv } from "../src/imports/mlas";
 
 // Pure functions from the data pipeline: fast, no DB, and they encode the
 // tricky real-world cases we hit while importing.
@@ -37,6 +38,19 @@ describe("corrections file", () => {
     const keys = CONSTITUENCY_FIXES.map((f) => `${f.state}#${f.number}`);
     expect(new Set(keys).size).toBe(keys.length);
     for (const f of CONSTITUENCY_FIXES) expect(f.reason.length).toBeGreaterThan(10);
+  });
+});
+
+describe("MLA CSV format", () => {
+  const header = "state,ac_number,ac_name,mla_name,party,election_year,source_url,source_title,source_publisher";
+
+  it("parses a valid, sourced row (and ignores # comments)", () => {
+    const rows = parseMlaCsv(`# comment\n${header}\nKarnataka,174,Seat,Full Name,Some Party,2023,https://example.org/r,Results,ECI\n`);
+    expect(rows[0]).toMatchObject({ state: "Karnataka", ac_number: 174, election_year: 2023 });
+  });
+
+  it("rejects a row without an https source, naming the row", () => {
+    expect(() => parseMlaCsv(`${header}\nKarnataka,174,Seat,Full Name,Party,2023,http://example.org/r,Results,ECI`, "ka.csv")).toThrow(/ka\.csv, data row 1: source_url/);
   });
 });
 

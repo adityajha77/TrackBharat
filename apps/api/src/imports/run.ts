@@ -1,6 +1,8 @@
 import { createDb } from "../db/client";
+import { importAssembly } from "./assembly";
 import { importConstituencies } from "./constituencies";
 import { importMembers } from "./members";
+import { importMlas } from "./mlas";
 import { importPinLocations } from "./pin-locations";
 
 /**
@@ -12,8 +14,10 @@ import { importPinLocations } from "./pin-locations";
  */
 const steps = {
   constituencies: importConstituencies,
-  pins: importPinLocations,
+  assembly: importAssembly,
+  pins: importPinLocations, // after all boundaries: rebuilds the PIN → seat mapping
   members: importMembers,
+  mlas: importMlas,
 } as const;
 
 const databaseUrl = process.env.DATABASE_URL;
@@ -36,7 +40,10 @@ try {
   for (const step of toRun) await steps[step](db);
   console.log(`\nDone in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 } catch (err) {
-  console.error("\n✗ Import failed:", err instanceof Error ? err.message : err);
+  // Drizzle wraps Postgres errors ("Failed query: <huge SQL>"); the useful part is in `cause`.
+  const cause = err instanceof Error && err.cause instanceof Error ? err.cause : null;
+  const message = err instanceof Error ? err.message.split("\nparams:")[0]!.slice(0, 500) : String(err);
+  console.error("\n✗ Import failed:", cause ? `${cause.message}\n  (while running: ${message.slice(0, 200)}…)` : message);
   process.exitCode = 1;
 } finally {
   await pool.end();

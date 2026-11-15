@@ -1,5 +1,6 @@
 import { relations, sql } from "drizzle-orm";
 import {
+  type AnyPgColumn,
   boolean,
   check,
   customType,
@@ -123,8 +124,14 @@ export const constituencies = pgTable(
     boundaryOutdated: boolean("boundary_outdated").notNull().default(false),
     wikidataQid: text("wikidata_qid"),
     isDemo: boolean("is_demo").notNull().default(false),
+    /**
+     * SELF-REFERENCE: an assembly seat (Vidhan Sabha) lies inside a Lok Sabha seat.
+     * Computed spatially at import. Lets the UI link MLA ⇄ MP.
+     */
+    parentId: integer("parent_id").references((): AnyPgColumn => constituencies.id, { onDelete: "set null" }),
   },
   (t) => [
+    index("constituencies_parent_idx").on(t.parentId),
     uniqueIndex("constituencies_house_state_number_uq").on(t.house, t.stateId, t.number),
     // GiST = the index type for geometry. Makes "which polygon contains this point?" fast.
     index("constituencies_boundary_gist").using("gist", t.boundary),
@@ -330,6 +337,8 @@ export const postOfficesRelations = relations(postOffices, ({ one }) => ({
 export const statesRelations = relations(states, ({ many }) => ({ constituencies: many(constituencies) }));
 export const constituenciesRelations = relations(constituencies, ({ one, many }) => ({
   state: one(states, { fields: [constituencies.stateId], references: [states.id] }),
+  parent: one(constituencies, { fields: [constituencies.parentId], references: [constituencies.id], relationName: "segments" }),
+  segments: many(constituencies, { relationName: "segments" }),
   boundarySource: one(sources, { fields: [constituencies.boundarySourceId], references: [sources.id] }),
   terms: many(terms),
   promises: many(promises),

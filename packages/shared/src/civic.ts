@@ -99,7 +99,13 @@ export const PromiseSummary = z.object({
 });
 export type PromiseSummary = z.infer<typeof PromiseSummary>;
 
+const SeatLink = z.object({ slug: z.string(), name: z.string(), number: z.number().int() });
+
 export const ConstituencyDetail = ConstituencySummary.extend({
+  /** For a Vidhan Sabha seat: the Lok Sabha seat it lies in. */
+  parent: SeatLink.nullable(),
+  /** For a Lok Sabha seat: its assembly segments (Vidhan Sabha seats). */
+  segments: z.array(SeatLink),
   /** Outline of the constituency as an SVG path (from PostGIS ST_AsSVG). */
   outline: z.object({ path: z.string(), viewBox: z.string() }).nullable(),
   boundarySource: Source.nullable(),

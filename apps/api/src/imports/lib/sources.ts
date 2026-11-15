@@ -20,7 +20,9 @@ export async function refreshPincodeConstituencies(db: Database): Promise<number
       SELECT pl.pincode,
              c.id,
              count(*)                                                      AS office_count,
-             count(*)::real / sum(count(*)) OVER (PARTITION BY pl.pincode) AS share
+             -- share WITHIN each house: a PIN is 100% in some Lok Sabha seat(s)
+             -- AND 100% in some Vidhan Sabha seat(s); they must not dilute each other
+             count(*)::real / sum(count(*)) OVER (PARTITION BY pl.pincode, c.house) AS share
       FROM pin_locations pl
       JOIN constituencies c
         ON c.boundary IS NOT NULL

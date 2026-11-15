@@ -12,8 +12,11 @@ export const MIN_PINCODE_SHARE = 0.2;
 export function createConstituencyService(repo: ConstituencyRepository) {
   return {
     async forPincode(pincode: string): Promise<PincodeConstituenciesResponse> {
-      const all = await repo.forPincode(pincode);
-      const constituencies = all.filter((c, i) => i === 0 || c.share >= MIN_PINCODE_SHARE);
+      const all = await repo.forPincode(pincode); // sorted by share, highest first
+      // Apply the threshold separately per house: a PIN has its own Lok Sabha AND Vidhan Sabha seats.
+      const constituencies = (["LOK_SABHA", "VIDHAN_SABHA"] as const).flatMap((house) =>
+        all.filter((c) => c.house === house).filter((c, i) => i === 0 || c.share >= MIN_PINCODE_SHARE),
+      );
       return { pincode, constituencies };
     },
 
@@ -22,11 +25,12 @@ export function createConstituencyService(repo: ConstituencyRepository) {
       if (!c) throw AppError.notFound(`No constituency called "${slug}"`);
 
       // Independent queries → run them in parallel
-      const [outline, boundarySource, reps, promises] = await Promise.all([
+      const [outline, boundarySource, reps, promises, family] = await Promise.all([
         repo.outline(c.id),
         repo.boundarySource(c.id),
         repo.representatives(c.id),
         repo.promises(c.id),
+        repo.family(c.id),
       ]);
 
       const promiseCounts = Object.fromEntries(PromiseStatus.options.map((s) => [s, 0])) as ConstituencyDetail["promiseCounts"];
@@ -35,6 +39,7 @@ export function createConstituencyService(repo: ConstituencyRepository) {
       const { id: _id, ...summary } = c;
       return {
         ...summary,
+        ...family,
         outline,
         boundarySource,
         representatives: reps.filter((r) => r.status === "SITTING"),

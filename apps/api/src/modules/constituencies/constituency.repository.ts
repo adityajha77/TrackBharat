@@ -50,6 +50,17 @@ export function createConstituencyRepository(db: Database) {
       return row ?? null;
     },
 
+    /** Parent Lok Sabha seat (for an assembly seat) and assembly segments (for a Lok Sabha seat). */
+    async family(id: number) {
+      const link = { slug: constituencies.slug, name: constituencies.name, number: constituencies.number };
+      const [parentRows, segments] = await Promise.all([
+        db.execute<{ slug: string; name: string; number: number }>(sql`
+          SELECT p.slug, p.name, p.number FROM constituencies c JOIN constituencies p ON p.id = c.parent_id WHERE c.id = ${id}`),
+        db.select(link).from(constituencies).where(eq(constituencies.parentId, id)).orderBy(asc(constituencies.number)),
+      ]);
+      return { parent: parentRows.rows[0] ?? null, segments };
+    },
+
     async boundarySource(id: number): Promise<Source | null> {
       const [row] = await db
         .select(sourceColumns)

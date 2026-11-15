@@ -32,6 +32,16 @@ describe("constituency service: PIN → constituency threshold", () => {
     expect(res.constituencies).toHaveLength(2);
   });
 
+  it("applies the threshold separately to Lok Sabha and Vidhan Sabha seats", async () => {
+    const vs = (name: string, share: number) => ({ ...seat(name, share), house: "VIDHAN_SABHA" as const });
+    const res = await svc([seat("Bangalore South", 1), vs("B.T.M Layout", 0.75), vs("Bommanahalli", 0.25), vs("Noise", 0.05)]).forPincode("560034");
+    expect(res.constituencies.map((c) => `${c.house}:${c.name}`)).toEqual([
+      "LOK_SABHA:Bangalore South",
+      "VIDHAN_SABHA:B.T.M Layout",
+      "VIDHAN_SABHA:Bommanahalli",
+    ]);
+  });
+
   it("always keeps the top match, even below the threshold", async () => {
     const res = await svc([seat("A", MIN_PINCODE_SHARE - 0.05), seat("B", 0.1)]).forPincode("123456");
     expect(res.constituencies.map((c) => c.name)).toEqual(["A"]);

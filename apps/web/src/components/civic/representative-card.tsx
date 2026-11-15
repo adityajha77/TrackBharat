@@ -11,13 +11,16 @@ function ordinal(n: number) {
   return n + (suffixes[(v - 20) % 10] ?? suffixes[v] ?? suffixes[0]);
 }
 
-export function RepresentativeCard({ rep, title = "Member of Parliament" }: { rep: Representative; title?: string }) {
+export function RepresentativeCard({ rep, title, house = "LOK_SABHA" }: { rep: Representative; title?: string; house?: "LOK_SABHA" | "VIDHAN_SABHA" }) {
+  const role = title ?? (house === "LOK_SABHA" ? "Member of Parliament" : "Member of the Legislative Assembly");
+  // Lok Sabha terms are numbered (18th); state assemblies are stored by election year.
+  const term = house === "LOK_SABHA" ? `${ordinal(rep.legislature)} Lok Sabha` : `elected ${rep.legislature}`;
   return (
     <Card className="flex flex-col gap-5 sm:flex-row">
       <RepresentativePhoto name={rep.name} src={rep.imageUrl} className="size-24 shrink-0 text-2xl sm:size-28" />
       <div className="min-w-0 flex-1">
         <p className="text-xs font-medium uppercase tracking-widest text-muted">
-          {title} · {ordinal(rep.legislature)} Lok Sabha
+          {role} · {term}
         </p>
         <h2 className="mt-1 text-2xl font-semibold tracking-tight">{rep.name}</h2>
         <div className="mt-2 flex flex-wrap gap-2">
