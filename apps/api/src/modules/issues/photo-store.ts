@@ -1,5 +1,5 @@
 import { createReadStream, existsSync, mkdirSync } from "node:fs";
-import { writeFile } from "node:fs/promises";
+import { rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 import { AppError } from "../../lib/errors";
@@ -21,6 +21,7 @@ import { AppError } from "../../lib/errors";
 export interface PhotoStore {
   save(upload: Buffer): Promise<string>;
   open(key: string): ReturnType<typeof createReadStream> | null;
+  remove(key: string): Promise<void>;
 }
 
 export const PHOTO_KEY = /^[0-9a-f-]{36}\.webp$/;
@@ -53,6 +54,10 @@ export function createPhotoStore(dir: string): PhotoStore {
       if (!PHOTO_KEY.test(key)) return null; // also blocks path traversal like "../../etc/passwd"
       const file = path.join(dir, key);
       return existsSync(file) ? createReadStream(file) : null;
+    },
+
+    async remove(key) {
+      if (PHOTO_KEY.test(key)) await rm(path.join(dir, key), { force: true });
     },
   };
 }

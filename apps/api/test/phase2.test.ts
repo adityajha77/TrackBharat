@@ -75,7 +75,7 @@ describe("issue service rules", () => {
       findDetail: vi.fn(),
       ...o,
     }) as unknown as IssueRepository;
-  const photos = { save: vi.fn(), open: () => null };
+  const photos = { save: vi.fn(), open: () => null, remove: vi.fn() };
   const input = { title: "Broken street light", description: "Dark for two weeks, unsafe at night.", category: "SAFETY" as const, pincode: "560034" };
 
   it(`limits reports to ${MAX_ISSUES_PER_DAY} per day`, async () => {
@@ -85,7 +85,7 @@ describe("issue service rules", () => {
 
   it("doesn't save the photo if the PIN code can't be matched (no orphan files)", async () => {
     const save = vi.fn();
-    const svc = createIssueService(base({ seatForPincode: vi.fn().mockResolvedValue(null) }), { save, open: () => null });
+    const svc = createIssueService(base({ seatForPincode: vi.fn().mockResolvedValue(null) }), { save, open: () => null, remove: vi.fn() });
     await expect(svc.create(citizen, input, Buffer.from("x"))).rejects.toMatchObject({ statusCode: 400 });
     expect(save).not.toHaveBeenCalled();
   });

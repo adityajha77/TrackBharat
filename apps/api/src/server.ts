@@ -16,6 +16,8 @@ import { createIssueService } from "./modules/issues/issue.service";
 import { createPhotoStore } from "./modules/issues/photo-store";
 import { createSubmissionRepository } from "./modules/submissions/submission.repository";
 import { createSubmissionService } from "./modules/submissions/submission.service";
+import { createAccountService } from "./modules/auth/account";
+import { createLeaderboardService } from "./modules/leaderboard/leaderboard.service";
 import { createReportCardRepository } from "./modules/report-cards/report-card.repository";
 import { createReportCardService } from "./modules/report-cards/report-card.service";
 
@@ -41,6 +43,8 @@ const app = await buildApp({
   constituencyService: createConstituencyService(createConstituencyRepository(db)),
   promiseService,
   authService: createAuthService(createAuthRepository(db)),
+  accountService: createAccountService(db, photoStore),
+  leaderboardService: createLeaderboardService(db),
   issueService,
   submissionService: createSubmissionService(createSubmissionRepository(db), promiseService),
   photoStore,

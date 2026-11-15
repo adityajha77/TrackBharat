@@ -31,11 +31,13 @@ export function createReportCardRepository(db: Database) {
     },
 
     async byMinistry(repId: number | null, legislature: number, limit: number) {
-      return rows<{ ministry: string; count: number }>(sql`
+      // initcap gives "Health And Family Welfare"; lower-case the small words afterwards
+      const tidy = (m: { ministry: string; count: number }) => ({ ...m, ministry: m.ministry.replace(/\b(And|Of|The|For)\b/g, (w) => w.toLowerCase()).replace(/^./, (c) => c.toUpperCase()) });
+      return (await rows<{ ministry: string; count: number }>(sql`
         SELECT initcap(lower(ministry)) AS ministry, count(*)::int AS count
         FROM parliament_questions
         WHERE legislature = ${legislature} ${repId === null ? sql`` : sql`AND representative_id = ${repId}`}
-        GROUP BY 1 ORDER BY 2 DESC, 1 LIMIT ${limit}`);
+        GROUP BY 1 ORDER BY 2 DESC, 1 LIMIT ${limit}`)).map(tidy);
     },
 
     async byQuarter(repId: number, legislature: number) {
@@ -67,7 +69,8 @@ export function createReportCardRepository(db: Database) {
     // ---- National insights (demo data excluded everywhere) ----------------
     async nationalPromiseStatus() {
       return rows<{ status: string; n: number }>(sql`
-        SELECT p.status, count(*)::int AS n FROM promises p WHERE NOT p.is_demo GROUP BY 1`);
+        SELECT p.status, count(*)::int AS n FROM promises p LEFT JOIN constituencies c ON c.id = p.constituency_id
+        WHERE NOT p.is_demo AND coalesce(NOT c.is_demo, true) GROUP BY 1`);
     },
     async nationalIssues(weekStart: string) {
       const [r] = await rows<{ total: number; resolved: number; votes: number }>(sql`

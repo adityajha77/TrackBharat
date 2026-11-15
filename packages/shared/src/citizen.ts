@@ -121,3 +121,40 @@ export const MyActivity = z.object({
   submissions: z.array(PromiseSubmissionView),
 });
 export type MyActivity = z.infer<typeof MyActivity>;
+
+// ---- National leaderboard: "what is India asking for?" ----------------------
+export const LeaderboardPeriod = z.enum(["day", "week"]);
+export type LeaderboardPeriod = z.infer<typeof LeaderboardPeriod>;
+
+export const Leaderboard = z.object({
+  period: LeaderboardPeriod,
+  /** Start of the window, in India time (midnight today, or Monday 00:00 this week). */
+  since: z.iso.datetime(),
+  totals: z.object({ newIssues: z.number().int(), votes: z.number().int(), constituencies: z.number().int() }),
+  /** Which kinds of problems are being raised and voted on most. */
+  categories: z.array(z.object({ category: PromiseCategory, newIssues: z.number().int(), votes: z.number().int() })),
+  topIssues: z.array(
+    z.object({
+      id: z.number().int(),
+      title: z.string(),
+      category: PromiseCategory,
+      status: IssueStatus,
+      votes: z.number().int(),
+      isDemo: z.boolean(),
+      constituency: z.object({ slug: z.string(), name: z.string(), state: z.string() }),
+    }),
+  ),
+  topConstituencies: z.array(z.object({ slug: z.string(), name: z.string(), state: z.string(), newIssues: z.number().int(), votes: z.number().int(), isDemo: z.boolean() })),
+  topStates: z.array(z.object({ state: z.string(), newIssues: z.number().int(), votes: z.number().int() })),
+});
+export type Leaderboard = z.infer<typeof Leaderboard>;
+
+// ---- Account management ---------------------------------------------------
+export const ChangePasswordInput = z.object({
+  currentPassword: z.string().min(1).max(200),
+  newPassword: z.string().min(10, "Use at least 10 characters").max(200),
+});
+export type ChangePasswordInput = z.infer<typeof ChangePasswordInput>;
+
+export const DeleteAccountInput = z.object({ password: z.string().min(1).max(200) });
+export type DeleteAccountInput = z.infer<typeof DeleteAccountInput>;

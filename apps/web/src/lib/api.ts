@@ -6,7 +6,10 @@ import {
   ConstituencyIndexResponse,
   PincodeConstituenciesResponse,
   PincodeLookupResponse,
+  Insights,
+  Leaderboard,
   PromiseDetail,
+  ReportCard,
   WeeklyHighlights,
 } from "@trackbharat/shared";
 import type { z } from "zod";
@@ -47,51 +50,129 @@ async function request<T extends z.ZodType>(path: string, schema: T): Promise<z.
 }
 
 /**
+ * ERRORS AND "use cache". An error thrown INSIDE a cached function crosses the
+ * cache boundary as a plain Error: it loses its class (`instanceof ApiError` is
+ * false) and its status, so a missing constituency would render a crash page
+ * instead of a 404. (Found by the Playwright tests.)
+ *
+ * So cached functions never throw expected errors. They RETURN them as plain
+ * data (capture), and the exported wrapper re-throws a real ApiError OUTSIDE the
+ * cache (unwrap). Only 4xx answers are captured: they are stable facts about the
+ * request ("no such seat") and fine to cache. 5xx / API-down errors still throw
+ * inside the cache, so an outage is never remembered for hours.
+ */
+type Wrapped<T> = { ok: true; data: T } | { ok: false; status: number; code: string; message: string };
+
+async function capture<T>(run: () => Promise<T>): Promise<Wrapped<T>> {
+  try {
+    return { ok: true, data: await run() };
+  } catch (e) {
+    if (e instanceof ApiError && e.status >= 400 && e.status < 500) return { ok: false, status: e.status, code: e.code, message: e.message };
+    throw e;
+  }
+}
+
+function unwrap<T>(w: Wrapped<T>): T {
+  if (w.ok) return w.data;
+  throw new ApiError(w.status, w.code, w.message);
+}
+
+/**
  * `"use cache"` memoises the result across requests on the Next.js server:
  * 1000 people opening /area/560034 → 1 API call per cache lifetime.
  * `cacheTag` lets us purge one PIN code later with `revalidateTag("pincode:560034")`.
  */
-export async function getPincode(pincode: string) {
+async function cachedGetPincode(pincode: string) {
   "use cache";
   cacheLife("hours");
   cacheTag(`pincode:${pincode}`);
-  return request(`/v1/pincodes/${pincode}`, PincodeLookupResponse);
+  return capture(() => request(`/v1/pincodes/${pincode}`, PincodeLookupResponse));
+}
+export async function getPincode(pincode: string) {
+  return unwrap(await cachedGetPincode(pincode));
 }
 
-export async function getPincodeConstituencies(pincode: string) {
+async function cachedGetPincodeConstituencies(pincode: string) {
   "use cache";
   cacheLife("hours");
   cacheTag(`pincode:${pincode}`);
-  return request(`/v1/pincodes/${pincode}/constituencies`, PincodeConstituenciesResponse);
+  return capture(() => request(`/v1/pincodes/${pincode}/constituencies`, PincodeConstituenciesResponse));
+}
+export async function getPincodeConstituencies(pincode: string) {
+  return unwrap(await cachedGetPincodeConstituencies(pincode));
 }
 
 /** The 543-seat index changes only when boundaries do: cache for days. */
-export async function getConstituencyIndex() {
+async function cachedGetConstituencyIndex() {
   "use cache";
   cacheLife("days");
   cacheTag("constituencies");
-  return request(`/v1/constituencies`, ConstituencyIndexResponse);
+  return capture(() => request(`/v1/constituencies`, ConstituencyIndexResponse));
+}
+export async function getConstituencyIndex() {
+  return unwrap(await cachedGetConstituencyIndex());
 }
 
 /** Promises change through admin edits; minutes-long cache, purgeable per seat. */
-export async function getConstituency(slug: string) {
+async function cachedGetConstituency(slug: string) {
   "use cache";
   cacheLife("minutes");
   cacheTag(`constituency:${slug}`);
-  return request(`/v1/constituencies/${slug}`, ConstituencyDetail);
+  return capture(() => request(`/v1/constituencies/${slug}`, ConstituencyDetail));
+}
+export async function getConstituency(slug: string) {
+  return unwrap(await cachedGetConstituency(slug));
 }
 
 /** Last finished week's top issues: frozen by the weekly job, so cache for an hour. */
-export async function getHighlights(slug: string) {
+async function cachedGetHighlights(slug: string) {
   "use cache";
   cacheLife("hours");
   cacheTag(`highlights:${slug}`);
-  return request(`/v1/constituencies/${slug}/issues/highlights`, WeeklyHighlights);
+  return capture(() => request(`/v1/constituencies/${slug}/issues/highlights`, WeeklyHighlights));
+}
+export async function getHighlights(slug: string) {
+  return unwrap(await cachedGetHighlights(slug));
 }
 
-export async function getPromise(id: number) {
+async function cachedGetPromise(id: number) {
   "use cache";
   cacheLife("minutes");
   cacheTag(`promise:${id}`);
-  return request(`/v1/promises/${id}`, PromiseDetail);
+  return capture(() => request(`/v1/promises/${id}`, PromiseDetail));
+}
+export async function getPromise(id: number) {
+  return unwrap(await cachedGetPromise(id));
+}
+
+/** Report cards change slowly (questions are imported weekly; promises by edits). */
+async function cachedGetReportCard(slug: string) {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag(`constituency:${slug}`);
+  return capture(() => request(`/v1/constituencies/${slug}/report-card`, ReportCard));
+}
+export async function getReportCard(slug: string) {
+  return unwrap(await cachedGetReportCard(slug));
+}
+
+async function cachedGetInsights() {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("insights");
+  return capture(() => request("/v1/insights", Insights));
+}
+export async function getInsights() {
+  return unwrap(await cachedGetInsights());
+}
+
+/** The leaderboard is near-live: a one-minute cache keeps the API cheap under load. */
+async function cachedGetLeaderboard(period: "day" | "week") {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag(`leaderboard:${period}`);
+  return capture(() => request(`/v1/leaderboard?period=${period}`, Leaderboard));
+}
+export async function getLeaderboard(period: "day" | "week") {
+  return unwrap(await cachedGetLeaderboard(period));
 }

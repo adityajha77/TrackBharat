@@ -61,22 +61,42 @@ async function questionsFor(ls: number, mpsno: number): Promise<Row[]> {
   }
 }
 
+/**
+ * RESUMABLE crawl. Progress is saved to a "partial" file as we go, keyed by
+ * member. If the run dies (network blip, laptop sleeps), the next run skips the
+ * members already fetched. A member that still fails after retries is skipped
+ * and reported, so one bad request can't throw away 20 minutes of work.
+ */
 async function crawl(ls: number, mpsnos: number[]): Promise<Row[]> {
   const cache = path.join(DATA_DIR, `questions-ls${ls}.json`);
+  const partial = path.join(DATA_DIR, `questions-ls${ls}.partial.json`);
   const maxAgeDays = ls === 18 ? 7 : 3650; // the 17th Lok Sabha is finished: its record never changes
   if (existsSync(cache) && (Date.now() - statSync(cache).mtimeMs) / 86_400_000 < maxAgeDays) {
     console.log(`  ↳ using cached ${path.basename(cache)}`);
     return JSON.parse(readFileSync(cache, "utf8")) as Row[];
   }
-  const all: Row[] = [];
-  let done = 0;
-  for (let i = 0; i < mpsnos.length; i += CONCURRENCY) {
-    const batch = await Promise.all(mpsnos.slice(i, i + CONCURRENCY).map((id) => questionsFor(ls, id)));
-    for (const rows of batch) all.push(...rows);
-    done += batch.length;
-    if (done % 40 < CONCURRENCY) process.stdout.write(`  ↳ LS${ls}: ${done}/${mpsnos.length} members, ${all.length} questions\n`);
+  const byMember: Record<string, Row[]> = existsSync(partial) ? JSON.parse(readFileSync(partial, "utf8")) : {};
+  const todo = mpsnos.filter((id) => !(id in byMember));
+  if (todo.length < mpsnos.length) console.log(`  ↳ resuming LS${ls}: ${mpsnos.length - todo.length} members already fetched`);
+  const failed: number[] = [];
+
+  for (let i = 0; i < todo.length; i += CONCURRENCY) {
+    const ids = todo.slice(i, i + CONCURRENCY);
+    const results = await Promise.allSettled(ids.map((id) => questionsFor(ls, id)));
+    results.forEach((r, j) => (r.status === "fulfilled" ? (byMember[ids[j]!] = r.value) : failed.push(ids[j]!)));
+    const done = Object.keys(byMember).length;
+    if ((i / CONCURRENCY) % 10 === 9) {
+      writeFileSync(partial, JSON.stringify(byMember)); // checkpoint
+      console.log(`  ↳ LS${ls}: ${done}/${mpsnos.length} members`);
+    }
     await sleep(250);
   }
+  writeFileSync(partial, JSON.stringify(byMember));
+  if (failed.length) {
+    console.log(`  ! ${failed.length} member(s) failed (${failed.slice(0, 5).join(", ")}…). Re-run the import to retry just those.`);
+    return Object.values(byMember).flat(); // use what we have; the cache file is NOT written, so a re-run resumes
+  }
+  const all = Object.values(byMember).flat();
   writeFileSync(cache, JSON.stringify(all));
   return all;
 }

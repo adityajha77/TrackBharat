@@ -18,3 +18,14 @@ export function previousWeek(weekStart: string): string {
   d.setUTCDate(d.getUTCDate() - 7);
   return d.toISOString().slice(0, 10);
 }
+
+/** The instant (a real Date) at which an India-time calendar day or week began. */
+export function dayStartIST(at: Date = new Date()): Date {
+  const ist = new Date(at.getTime() + IST_OFFSET_MS);
+  const ymd = ist.toISOString().slice(0, 10);
+  return new Date(`${ymd}T00:00:00+05:30`);
+}
+
+export function periodStartIST(period: "day" | "week", at: Date = new Date()): Date {
+  return period === "day" ? dayStartIST(at) : new Date(`${weekStartIST(at)}T00:00:00+05:30`);
+}

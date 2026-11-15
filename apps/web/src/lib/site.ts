@@ -11,6 +11,7 @@ export const site = {
   },
   nav: [
     { href: "/constituencies", label: "Constituencies" },
+    { href: "/leaderboard", label: "What India asks" },
     { href: "/#how-it-works", label: "How it works" },
     { href: "/rights", label: "Know your rights" },
     { href: "/roadmap", label: "Roadmap" },

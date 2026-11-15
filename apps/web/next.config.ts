@@ -18,7 +18,12 @@ const nextConfig: NextConfig = {
   // Issue photos are served by the API; the browser fetches them from our own
   // origin (/media/…) and Next.js proxies the request, so the API can stay private.
   async rewrites() {
-    return [{ source: "/media/:path*", destination: `${process.env.API_URL ?? "http://localhost:4000"}/v1/media/:path*` }];
+    const api = process.env.API_URL ?? "http://localhost:4000";
+    return [
+      { source: "/media/:path*", destination: `${api}/v1/media/:path*` },
+      // Open-data CSV downloads: /downloads/promises.csv → API
+      { source: "/downloads/:file", destination: `${api}/v1/export/:file` },
+    ];
   },
 
   // Allow photo uploads through Server Actions (the default body limit is 1 MB)

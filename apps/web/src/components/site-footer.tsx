@@ -31,6 +31,9 @@ export function SiteFooter() {
         </div>
         <div className="space-y-2 text-sm">
           <p className="font-medium">Project</p>
+          <Link href="/insights" className="block text-muted hover:text-foreground">India at a glance</Link>
+          <Link href="/methodology" className="block text-muted hover:text-foreground">How scores work</Link>
+          <Link href="/data" className="block text-muted hover:text-foreground">Open data</Link>
           <a href={site.repo} className="block text-muted hover:text-foreground">
             Source code
           </a>

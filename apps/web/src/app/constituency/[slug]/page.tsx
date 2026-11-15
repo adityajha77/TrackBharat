@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, FileCheck2, Landmark } from "lucide-react";
-import { ApiError, getConstituency } from "@/lib/api";
+import { ApiError, getConstituency, getReportCard } from "@/lib/api";
 import { RESERVATION } from "@/lib/labels";
 import { Badge, Card } from "@/components/ui/card";
 import { ConstituencyOutline } from "@/components/civic/constituency-outline";
@@ -12,6 +12,7 @@ import { PromiseList } from "@/components/civic/promise-list";
 import { PromiseProgress } from "@/components/civic/promise-progress";
 import { RepresentativeCard } from "@/components/civic/representative-card";
 import { IssuesSection } from "@/components/issues/issues-section";
+import { ReportCard } from "@/components/civic/report-card";
 
 /**
  * /constituency/bangalore-south: the heart of TrackBharat.
@@ -183,6 +184,13 @@ async function Details({ slug }: { slug: string }) {
         )}
       </section>
 
+      {/* Report card: Lok Sabha seats only. Cached, but fetched separately so a slow card never blocks the page. */}
+      {isLs && (
+        <Suspense fallback={<div className="h-80 animate-pulse rounded-2xl bg-surface-muted" aria-busy="true" />}>
+          <ReportCardSection slug={c.slug} />
+        </Suspense>
+      )}
+
       {/* Citizen issues roll up to Lok Sabha seats (an MP's constituency) */}
       {isLs && (
         <Suspense fallback={<div className="h-64 animate-pulse rounded-2xl bg-surface-muted" aria-busy="true" />}>
@@ -191,6 +199,11 @@ async function Details({ slug }: { slug: string }) {
       )}
     </div>
   );
+}
+
+async function ReportCardSection({ slug }: { slug: string }) {
+  const data = await getReportCard(slug).catch(() => null);
+  return data ? <ReportCard data={data} /> : null;
 }
 
 function Skeleton() {

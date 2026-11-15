@@ -70,3 +70,6 @@ export const getModerationQueue = () => call("/v1/moderation/queue", ModerationQ
 export const moderateIssue = (id: number, body: unknown) => call(`/v1/moderation/issues/${id}`, Nothing, { method: "POST", body: json(body) });
 export const reviewSubmission = (id: number, body: unknown) =>
   call(`/v1/moderation/submissions/${id}`, z.object({ promiseId: z.number().int().nullable() }), { method: "POST", body: json(body) });
+
+export const changePassword = (body: unknown) => call("/v1/auth/change-password", Nothing, { method: "POST", body: json(body) });
+export const deleteAccount = (body: unknown) => call("/v1/auth/delete-account", Nothing, { method: "POST", body: json(body) });

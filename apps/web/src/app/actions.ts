@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { refresh, updateTag } from "next/cache";
-import { LoginInput, SignupInput } from "@trackbharat/shared";
+import { ChangePasswordInput, DeleteAccountInput, LoginInput, SignupInput } from "@trackbharat/shared";
 import { ApiError } from "@/lib/api";
 import * as api from "@/lib/api-user";
 import { clearSessionCookie, setSessionCookie } from "@/lib/session";
@@ -15,7 +15,15 @@ import { clearSessionCookie, setSessionCookie } from "@/lib/session";
  * Pattern: validate → call the API with the user's token → return a small
  * result for the UI (errors as data, not exceptions) → refresh what changed.
  */
-export type ActionState = { error?: string; ok?: boolean };
+export type ActionState = { error?: string; ok?: boolean; values?: Record<string, string> };
+
+/**
+ * React 19 RESETS a form after its Server Action finishes. On an error that would
+ * wipe everything the person typed, so we send the text fields back with the
+ * error and the form restores them via defaultValue. Passwords and files are never echoed.
+ */
+const fieldsOf = (form: FormData): Record<string, string> =>
+  Object.fromEntries([...form.entries()].filter(([k, v]) => typeof v === "string" && !/password|confirm|next/i.test(k)) as [string, string][]);
 
 const message = (e: unknown) => (e instanceof ApiError ? e.message : "Something went wrong. Please try again.");
 /** Only allow same-site relative redirects (blocks "open redirect" tricks like ?next=https://evil.example). */
@@ -24,24 +32,24 @@ const safeNext = (v: FormDataEntryValue | null) => (typeof v === "string" && v.s
 // ---- Accounts ----------------------------------------------------------------
 export async function signupAction(_prev: ActionState, form: FormData): Promise<ActionState> {
   const parsed = SignupInput.safeParse({ name: form.get("name"), email: form.get("email"), password: form.get("password") });
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message };
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message, values: fieldsOf(form) };
   try {
     const res = await api.signup(parsed.data);
     await setSessionCookie(res.token);
   } catch (e) {
-    return { error: message(e) };
+    return { error: message(e), values: fieldsOf(form) };
   }
   redirect(safeNext(form.get("next"))); // redirect() throws, so it must be outside try/catch
 }
 
 export async function loginAction(_prev: ActionState, form: FormData): Promise<ActionState> {
   const parsed = LoginInput.safeParse({ email: form.get("email"), password: form.get("password") });
-  if (!parsed.success) return { error: "Enter your email and password" };
+  if (!parsed.success) return { error: "Enter your email and password", values: fieldsOf(form) };
   try {
     const res = await api.login(parsed.data);
     await setSessionCookie(res.token);
   } catch (e) {
-    return { error: message(e) };
+    return { error: message(e), values: fieldsOf(form) };
   }
   redirect(safeNext(form.get("next")));
 }
@@ -61,7 +69,7 @@ export async function createIssueAction(_prev: ActionState, form: FormData): Pro
   try {
     ({ id } = await api.createIssue(form));
   } catch (e) {
-    return { error: message(e) };
+    return { error: message(e), values: fieldsOf(form) }; // the photo has to be re-chosen; the text is kept
   }
   redirect(`/issues/${id}?new=1`);
 }
@@ -101,7 +109,7 @@ export async function submitPromiseAction(_prev: ActionState, form: FormData): P
       source: { url: String(form.get("sourceUrl") ?? ""), title: String(form.get("sourceTitle") ?? ""), publisher: String(form.get("sourcePublisher") ?? ""), kind: String(form.get("sourceKind") ?? "NEWS") },
     });
   } catch (e) {
-    return { error: message(e) };
+    return { error: message(e), values: fieldsOf(form) };
   }
   redirect("/me?submitted=1");
 }
@@ -128,4 +136,28 @@ export async function reviewSubmissionAction(_prev: ActionState, form: FormData)
   }
   refresh();
   return { ok: true };
+}
+
+// ---- Account settings ----------------------------------------------------------
+export async function changePasswordAction(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const parsed = ChangePasswordInput.safeParse({ currentPassword: form.get("currentPassword"), newPassword: form.get("newPassword") });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message };
+  try {
+    await api.changePassword(parsed.data);
+  } catch (e) {
+    return { error: message(e) };
+  }
+  return { ok: true };
+}
+
+export async function deleteAccountAction(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const parsed = DeleteAccountInput.safeParse({ password: form.get("password") });
+  if (!parsed.success || form.get("confirm") !== "DELETE") return { error: "Type DELETE and enter your password to confirm" };
+  try {
+    await api.deleteAccount(parsed.data);
+  } catch (e) {
+    return { error: message(e) };
+  }
+  await clearSessionCookie();
+  redirect("/?deleted=1");
 }

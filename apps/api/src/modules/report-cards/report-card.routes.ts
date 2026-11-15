@@ -16,7 +16,7 @@ const DATASETS: Record<string, { description: string; header: string[]; query: R
     description: "All Lok Sabha and Vidhan Sabha constituencies",
     header: ["house", "state", "number", "name", "name_hi", "reservation", "lok_sabha_seat", "boundary_approximate", "slug"],
     query: sql`
-      SELECT c.house, s.name, c.number, c.name, c.name_hi, c.reservation, p.name, c.boundary_outdated, c.slug
+      SELECT c.house, s.name AS state, c.number, c.name AS name, c.name_hi, c.reservation, p.name AS lok_sabha_seat, c.boundary_outdated, c.slug
       FROM constituencies c JOIN states s ON s.id = c.state_id LEFT JOIN constituencies p ON p.id = c.parent_id
       WHERE NOT c.is_demo ORDER BY c.house, s.name, c.number`,
   },
@@ -24,9 +24,9 @@ const DATASETS: Record<string, { description: string; header: string[]; query: R
     description: "Members of the current Lok Sabha and curated MLAs, with questions asked",
     header: ["house", "state", "constituency", "name", "party", "legislature", "status", "terms_served", "questions_asked", "source_url"],
     query: sql`
-      SELECT c.house, s.name, c.name, r.full_name, p.name, t.legislature, t.status, t.terms_served,
-             (SELECT count(*) FROM parliament_questions q WHERE q.representative_id = r.id AND q.legislature = t.legislature),
-             src.url
+      SELECT c.house, s.name AS state, c.name AS constituency, r.full_name AS name, p.name AS party, t.legislature, t.status, t.terms_served,
+             (SELECT count(*) FROM parliament_questions q WHERE q.representative_id = r.id AND q.legislature = t.legislature) AS questions_asked,
+             src.url AS source_url
       FROM terms t JOIN representatives r ON r.id = t.representative_id JOIN constituencies c ON c.id = t.constituency_id
       JOIN states s ON s.id = c.state_id LEFT JOIN parties p ON p.id = t.party_id JOIN sources src ON src.id = t.source_id
       WHERE NOT r.is_demo AND (c.house = 'VIDHAN_SABHA' OR t.legislature = ${CURRENT_LOK_SABHA})
@@ -36,18 +36,18 @@ const DATASETS: Record<string, { description: string; header: string[]; query: R
     description: "Every tracked promise with its current status and source",
     header: ["id", "constituency", "state", "made_by", "title", "category", "status", "made_on", "deadline", "source_url", "source_publisher", "updated_at"],
     query: sql`
-      SELECT pr.id, c.name, s.name, coalesce(r.full_name, pa.name), pr.title, pr.category, pr.status, pr.made_on, pr.deadline, src.url, src.publisher, pr.updated_at
+      SELECT pr.id, c.name AS constituency, s.name AS state, coalesce(r.full_name, pa.name) AS made_by, pr.title, pr.category, pr.status, pr.made_on, pr.deadline, src.url AS source_url, src.publisher AS source_publisher, pr.updated_at
       FROM promises pr JOIN sources src ON src.id = pr.source_id
       LEFT JOIN constituencies c ON c.id = pr.constituency_id LEFT JOIN states s ON s.id = c.state_id
       LEFT JOIN terms t ON t.id = pr.term_id LEFT JOIN representatives r ON r.id = t.representative_id
       LEFT JOIN parties pa ON pa.id = pr.party_id
-      WHERE NOT pr.is_demo ORDER BY pr.id`,
+      WHERE NOT pr.is_demo AND coalesce(NOT c.is_demo, true) ORDER BY pr.id`,
   },
   "weekly-highlights": {
     description: "Top citizen issues per constituency, frozen every week",
     header: ["week_start", "constituency", "state", "rank", "votes", "issue_title", "category", "issue_status"],
     query: sql`
-      SELECT w.week_start, c.name, s.name, w.rank, w.votes, i.title, i.category, i.status
+      SELECT w.week_start, c.name AS constituency, s.name AS state, w.rank, w.votes, i.title AS issue_title, i.category, i.status AS issue_status
       FROM weekly_issue_rankings w JOIN issues i ON i.id = w.issue_id JOIN constituencies c ON c.id = w.constituency_id
       JOIN states s ON s.id = c.state_id
       WHERE NOT c.is_demo AND i.status <> 'HIDDEN' ORDER BY w.week_start DESC, c.name, w.rank`,
@@ -74,7 +74,12 @@ export const reportCardRoutes =
       const ds = DATASETS[name];
       if (!ds) throw AppError.notFound(`No dataset called "${name}"`);
       const { rows } = await db.execute(ds.query);
-      const body = toCsv(ds.header, rows.map((r) => Object.values(r) as Cell[]));
+      // GUARD: if two SELECT columns share a name, the driver silently merges them and
+      // columns shift. A wrong-width row is a bug in the query: fail loudly, never ship bad data.
+      const body = toCsv(ds.header, rows.map((r) => {
+        if (Object.keys(r).length !== ds.header.length) throw new Error(`Export "${name}": query returns ${Object.keys(r).length} columns but the header has ${ds.header.length}`);
+        return Object.values(r) as Cell[];
+      }));
       return reply
         .header("content-type", "text/csv; charset=utf-8")
         .header("content-disposition", `attachment; filename="trackbharat-${name}.csv"`)

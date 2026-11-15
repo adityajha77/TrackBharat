@@ -17,5 +17,7 @@ That history is what lets someone (including future you, or an interviewer) unde
 | [0009](./0009-assembly-seats-and-curated-mla-data.md) | Assembly seats from open boundaries; MLAs only from curated, sourced files | Accepted |
 | [0010](./0010-session-auth-and-roles.md) | Session-token authentication with roles, owned by the API | Accepted |
 | [0011](./0011-citizen-issues-votes-and-moderation.md) | Citizen issues, weekly votes, community moderation and an audit log | Accepted |
+| [0012](./0012-report-cards-and-published-methodology.md) | Report cards with a published, data-honest methodology | Accepted |
+| [0013](./0013-national-leaderboard-live-windows.md) | National leaderboard from live windows | Accepted |
 
 Template for new ADRs: copy any file, keep the headings: **Context → Decision → Alternatives considered → Consequences**.

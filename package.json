@@ -21,9 +21,11 @@
     "db:import": "pnpm --filter @trackbharat/api db:import",
     "worker": "pnpm --filter @trackbharat/api worker",
     "job:weekly-rankings": "pnpm --filter @trackbharat/api job:weekly-rankings",
-    "user:role": "pnpm --filter @trackbharat/api user:role"
+    "user:role": "pnpm --filter @trackbharat/api user:role",
+    "test:e2e": "playwright test --config e2e/playwright.config.ts"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.1",
     "@types/node": "^22.20.5",
     "typescript": "^5.9.3",
     "vitest": "^5.1.0"

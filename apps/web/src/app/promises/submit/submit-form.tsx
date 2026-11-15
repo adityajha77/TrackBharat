@@ -14,7 +14,7 @@ export function SubmitPromiseForm({ defaultSeat }: { defaultSeat: string }) {
   return (
     <form action={action} className="space-y-5">
       <Field label="Constituency" hint="Its id from the constituency page address, e.g. “bangalore-south” in /constituency/bangalore-south">
-        <Input name="constituencySlug" required defaultValue={defaultSeat} placeholder="bangalore-south" className="font-mono" />
+        <Input name="constituencySlug" required defaultValue={state.values?.constituencySlug ?? defaultSeat} placeholder="bangalore-south" className="font-mono" />
       </Field>
       <Field label="Who made the promise?">
         <Select name="madeBy" value={madeBy} onChange={(e) => setMadeBy(e.target.value as typeof madeBy)}>
@@ -24,18 +24,18 @@ export function SubmitPromiseForm({ defaultSeat }: { defaultSeat: string }) {
       </Field>
       {madeBy === "PARTY" && (
         <Field label="Party name" hint="As it appears on the constituency page, e.g. “Bharatiya Janata Party” or “INC”.">
-          <Input name="partyName" required minLength={2} />
+          <Input name="partyName" required minLength={2} defaultValue={state.values?.partyName} />
         </Field>
       )}
       <Field label="The promise, in one line">
-        <Input name="title" required minLength={10} maxLength={200} placeholder="e.g. A 100-bed government hospital in the district" />
+        <Input name="title" required minLength={10} maxLength={200} defaultValue={state.values?.title} placeholder="e.g. A 100-bed government hospital in the district" />
       </Field>
       <Field label="Details (optional)">
-        <Textarea name="description" maxLength={2000} />
+        <Textarea name="description" maxLength={2000} defaultValue={state.values?.description} />
       </Field>
       <div className="grid gap-5 sm:grid-cols-3">
         <Field label="Category">
-          <Select name="category" required defaultValue="">
+          <Select name="category" required defaultValue={state.values?.category ?? ""}>
             <option value="" disabled>
               Choose…
             </option>
@@ -47,24 +47,24 @@ export function SubmitPromiseForm({ defaultSeat }: { defaultSeat: string }) {
           </Select>
         </Field>
         <Field label="Made on (optional)">
-          <Input name="madeOn" type="date" />
+          <Input name="madeOn" type="date" defaultValue={state.values?.madeOn} />
         </Field>
         <Field label="Deadline (optional)">
-          <Input name="deadline" type="date" />
+          <Input name="deadline" type="date" defaultValue={state.values?.deadline} />
         </Field>
       </div>
 
       <fieldset className="space-y-4 rounded-xl border border-border p-4">
         <legend className="px-1 text-sm font-semibold">Source (required)</legend>
         <Field label="Link" hint="Must start with https://">
-          <Input name="sourceUrl" type="url" required pattern="https://.*" placeholder="https://…" />
+          <Input name="sourceUrl" type="url" required pattern="https://.*" defaultValue={state.values?.sourceUrl} placeholder="https://…" />
         </Field>
         <div className="grid gap-4 sm:grid-cols-3">
           <Field label="Title" className="sm:col-span-2">
-            <Input name="sourceTitle" required minLength={3} />
+            <Input name="sourceTitle" required minLength={3} defaultValue={state.values?.sourceTitle} />
           </Field>
           <Field label="Type">
-            <Select name="sourceKind" defaultValue="NEWS">
+            <Select name="sourceKind" defaultValue={state.values?.sourceKind ?? "NEWS"}>
               <option value="NEWS">News report</option>
               <option value="MANIFESTO">Manifesto</option>
               <option value="OFFICIAL">Official / government</option>
@@ -73,7 +73,7 @@ export function SubmitPromiseForm({ defaultSeat }: { defaultSeat: string }) {
           </Field>
         </div>
         <Field label="Publisher">
-          <Input name="sourcePublisher" required minLength={2} placeholder="e.g. The Hindu, PIB, party website" />
+          <Input name="sourcePublisher" required minLength={2} defaultValue={state.values?.sourcePublisher} placeholder="e.g. The Hindu, PIB, party website" />
         </Field>
       </fieldset>
 

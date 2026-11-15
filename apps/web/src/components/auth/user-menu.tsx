@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LogOut, ShieldCheck, UserRound } from "lucide-react";
+import { LogOut, Settings, ShieldCheck, UserRound } from "lucide-react";
 import { getMe } from "@/lib/api-user";
 import { logoutAction } from "@/app/actions";
 
@@ -31,6 +31,9 @@ export async function UserMenu() {
         </p>
         <Link href="/me" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-surface-muted">
           <UserRound className="size-4 text-muted" aria-hidden /> My activity
+        </Link>
+        <Link href="/me/settings" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-surface-muted">
+          <Settings className="size-4 text-muted" aria-hidden /> Settings
         </Link>
         {staff && (
           <Link href="/moderation" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-surface-muted">

@@ -20,11 +20,11 @@ export function AuthForm({ mode, next }: { mode: "login" | "signup"; next?: stri
       {next && <input type="hidden" name="next" value={next} />}
       {signup && (
         <Field label="Your name" hint="Shown as first name + initial, e.g. “Priya S.”">
-          <Input name="name" autoComplete="name" required minLength={2} maxLength={80} />
+          <Input name="name" autoComplete="name" required minLength={2} maxLength={80} defaultValue={state.values?.name} />
         </Field>
       )}
       <Field label="Email">
-        <Input name="email" type="email" autoComplete="email" required />
+        <Input name="email" type="email" autoComplete="email" required defaultValue={state.values?.email} />
       </Field>
       <Field label="Password" hint={signup ? "At least 10 characters. A short sentence works well." : undefined}>
         <Input name="password" type="password" autoComplete={signup ? "new-password" : "current-password"} required minLength={signup ? 10 : 1} />

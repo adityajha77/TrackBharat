@@ -384,9 +384,9 @@ The **testing pyramid**: many fast unit tests, fewer integration tests, a few en
 |---|---|---|
 | 0 | Foundation: monorepo, API, DB, migrations, Docker, CI, PIN lookup | ✅ Done |
 | 1 | Lok Sabha constituencies (PostGIS), PIN → seat, 540 MPs, **promise tracker** with sources, timeline & evidence, admin API | ✅ Done |
-| 1b | Vidhan Sabha boundaries & MLAs, candidate affidavits | Next |
-| 2 | Auth & roles, citizen issue reporting, **weekly top issues** (scheduled job), moderation, audit log | |
-| 3 | Report cards with a public formula, history comparison, charts, open-data export, E2E tests | |
+| 1b | Vidhan Sabha boundaries ✅; MLAs state by state from sourced CSVs; candidate affidavits | In progress |
+| 2 | Auth & roles, citizen issues, **weekly top issues** (scheduled worker), moderation, audit log, account deletion | ✅ Done |
+| 3 | Report cards with a public formula, previous-MP comparison, **national leaderboard** (today / this week), India insights, open-data CSV, Playwright E2E tests | ✅ Done |
 | 4 | Deploy staging/prod, monitoring, backups, Hindi + regional languages, PWA | |
 | 5 | Mobile app (Expo / React Native) on the same `/v1` API | |
 
@@ -414,6 +414,18 @@ Read the code **in this order**; each file is short and commented.
 - [ ] Add a `GET /v1/pincodes?district=Bangalore` endpoint (route → service → repository + a test).
 - [ ] Add a column `circle text` to `post_offices`, run `pnpm db:generate`, read the SQL, migrate.
 - [ ] Break a test on purpose, push to a branch, and watch CI go red.
+
+### Study guide: Phases 2 and 3
+
+Phase 2: `modules/auth/*` (sessions, Argon2, guards, account deletion), `modules/issues/*` (photo store, votes, auto-hide), `jobs/weekly-rankings.ts` + `worker.ts`, `lib/audit.ts`.
+Phase 3: `modules/report-cards/scoring.ts` (the formula), `report-card.repository.ts` (aggregates), `modules/leaderboard/*`, `lib/csv.ts`, `imports/questions.ts` (resumable crawler), `apps/web/src/lib/api.ts` (errors across `use cache`), `e2e/*.spec.ts`.
+
+Exercises:
+- [ ] Change a weight in `METHODOLOGY` and watch `/methodology` and a report card change together.
+- [ ] Make three accounts report one issue and watch it auto-hide; restore it as the moderator; find both entries in `audit_log`.
+- [ ] Run `pnpm job:weekly-rankings` twice. Why is it safe?
+- [ ] Add a `GET /v1/leaderboard?period=month` (service, route, schema, test).
+- [ ] Break the CSV header order on purpose and see which guard fires.
 
 ### Study guide: Phase 1
 

@@ -15,12 +15,16 @@ export function createReportCardService(repo: ReportCardRepository, now: () => D
     const hit = memo.get(ls);
     if (hit && Date.now() - hit.at < 600_000) return hit.totals;
     const t = await repo.allTotals(ls);
-    memo.set(ls, { at: Date.now(), totals: t });
+    // Never remember an EMPTY answer: it usually means "not imported yet", and caching it
+    // would keep reporting "no data" for 10 minutes after the import finishes.
+    if (t.length > 0) memo.set(ls, { at: Date.now(), totals: t });
     return t;
   }
 
-  async function questionStats(repId: number, ls: number): Promise<QuestionStats> {
+  /** null = we have NO question data for that Lok Sabha (not imported yet). Never report that as "0". */
+  async function questionStats(repId: number, ls: number): Promise<QuestionStats | null> {
     const [total, byMinistry, byQuarter, all] = await Promise.all([repo.questionTotal(repId, ls), repo.byMinistry(repId, ls, 8), repo.byQuarter(repId, ls), totals(ls)]);
+    if (all.length === 0) return null;
     const months = monthsSat(ls, now());
     return {
       legislature: ls,

@@ -470,7 +470,7 @@ export const promiseSubmissions = pgTable(
     /** The exact CreatePromiseInput, validated with the shared schema before storing. */
     payload: jsonb("payload").notNull(),
     status: submissionStatusEnum("status").notNull().default("PENDING"),
-    reviewerId: integer("reviewer_id").references(() => users.id),
+    reviewerId: integer("reviewer_id").references(() => users.id, { onDelete: "set null" }),
     reviewNote: text("review_note"),
     promiseId: integer("promise_id").references(() => promises.id),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -487,7 +487,8 @@ export const auditLog = pgTable(
   "audit_log",
   {
     id: bigserial("id", { mode: "number" }).primaryKey(),
-    actorId: integer("actor_id").references(() => users.id), // null = the system (e.g. auto-hide)
+    // ON DELETE SET NULL: deleting an account keeps the audit entry but forgets who it was
+    actorId: integer("actor_id").references(() => users.id, { onDelete: "set null" }), // null = the system (e.g. auto-hide)
     action: text("action").notNull(), // e.g. "issue.hide", "submission.approve"
     entityType: text("entity_type").notNull(),
     entityId: text("entity_id").notNull(),

@@ -40,3 +40,7 @@ apps/web/CLAUDE.md
 
 # Uploaded photos (re-encoded, user content)
 .uploads/
+
+# Playwright output
+test-results/
+playwright-report/

@@ -15,6 +15,9 @@ import type { PromiseService } from "./modules/promises/promise.service";
 import { authPlugin } from "./modules/auth/auth.plugin";
 import { authRoutes } from "./modules/auth/auth.routes";
 import type { AuthService } from "./modules/auth/auth.service";
+import type { AccountService } from "./modules/auth/account";
+import { leaderboardRoutes } from "./modules/leaderboard/leaderboard.routes";
+import type { LeaderboardService } from "./modules/leaderboard/leaderboard.service";
 import { issueRoutes } from "./modules/issues/issue.routes";
 import type { IssueService } from "./modules/issues/issue.service";
 import type { PhotoStore } from "./modules/issues/photo-store";
@@ -35,6 +38,8 @@ export interface AppDeps {
   constituencyService: ConstituencyService;
   promiseService: PromiseService;
   authService: AuthService;
+  accountService: AccountService;
+  leaderboardService: LeaderboardService;
   issueService: IssueService;
   submissionService: SubmissionService;
   photoStore: PhotoStore;
@@ -114,10 +119,11 @@ export async function buildApp(deps: AppDeps) {
   await app.register(pincodeRoutes(deps.pincodeService), { prefix: "/v1" });
   await app.register(constituencyRoutes(deps.constituencyService), { prefix: "/v1" });
   await app.register(promiseRoutes(deps.promiseService), { prefix: "/v1" });
-  await app.register(authRoutes(deps.authService), { prefix: "/v1" });
+  await app.register(authRoutes(deps.authService, deps.accountService), { prefix: "/v1" });
   await app.register(issueRoutes(deps.issueService, deps.photoStore), { prefix: "/v1" });
   await app.register(submissionRoutes(deps.submissionService, deps.issueService), { prefix: "/v1" });
   await app.register(reportCardRoutes(deps.reportCardService, deps.db), { prefix: "/v1" });
+  await app.register(leaderboardRoutes(deps.leaderboardService), { prefix: "/v1" });
 
   return app;
 }

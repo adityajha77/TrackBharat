@@ -12,15 +12,16 @@ they made, and what actually happened.
 | **API** | Fastify 5, TypeScript, Zod, Drizzle ORM |
 | **Data** | PostgreSQL 17 + PostGIS (spatial joins, GiST indexes), versioned SQL migrations, an idempotent import pipeline |
 | **DevOps** | pnpm monorepo, Docker multi-stage builds, Docker Compose, GitHub Actions CI |
-| **Tests** | Vitest: unit, HTTP contract & security tests, PostGIS integration tests |
+| **Tests** | Vitest (unit, HTTP contract, security, PostGIS/SQL integration) · Playwright end-to-end |
 
 📐 **How it's built and why:** [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) · decisions in [`docs/adr/`](docs/adr)
 
 ## Status
 
-**Phase 1 is done.** Enter any of 19,000+ PIN codes to see your Lok Sabha constituency (mapped with a PostGIS spatial
-join), its boundary, your MP (all 540 sitting MPs, from sansad.in) and the promises tracked for it, each with a source,
-a status timeline and evidence. Next: **Phase 1b**, Vidhan Sabha seats and MLAs. See the [roadmap](docs/ARCHITECTURE.md#11-roadmap).
+**Phases 0–3 are built.** PIN code → Lok Sabha seat and assembly seat, your MP, a sourced promise tracker, **report cards** with a
+published formula and a comparison with the previous MP, citizen problem reports with weekly votes, and a **national leaderboard of
+what India is asking for** (today / this week). Accounts, roles, moderation, open-data CSVs and end-to-end tests are in. Next:
+state-by-state MLA data, then going live (Phase 4) and the mobile app (Phase 5). See the [roadmap](docs/ARCHITECTURE.md#11-roadmap).
 
 ## Run it locally
 
@@ -33,10 +34,14 @@ cp apps/web/.env.example apps/web/.env.local
 
 pnpm db:up        # Postgres + PostGIS in Docker, on localhost:5433
 pnpm db:migrate   # create the tables
-pnpm db:import    # download & load public data: 543 constituencies, 144k post offices, MPs (~1 min)
+pnpm db:import    # public data: constituencies, assembly seats, post offices, MPs, previous MPs (~1 min)
+pnpm db:import questions   # parliamentary questions per MP (slow, ~20 min once; resumable, then cached)
 pnpm db:seed      # sample data incl. the fictional "Demo Nagar" promise-tracker demo
 pnpm dev          # API → http://localhost:4000 · web → http://localhost:3000
+pnpm worker       # (optional) the weekly-highlights scheduler
 ```
+
+Log in locally with `citizen@`, `verifier@`, `moderator@` or `admin@trackbharat.local` (the password is in `apps/api/src/db/seed.ts`).
 
 Try it: open http://localhost:3000 and search `560034`, or open http://localhost:3000/constituency/demo-nagar.
 
@@ -47,7 +52,8 @@ Whole stack in containers (production-like): `docker compose --profile full up -
 | Command | What it does |
 |---|---|
 | `pnpm dev` | API + web with hot reload |
-| `pnpm test` | All tests |
+| `pnpm test` | Unit, HTTP and integration tests (set `TEST_DATABASE_URL` for the PostGIS/SQL ones) |
+| `pnpm test:e2e` | Playwright browser tests against a running **production** build (`E2E_BASE_URL`) |
 | `pnpm lint` / `pnpm typecheck` | Static checks (same as CI) |
 | `pnpm build` | Production builds |
 | `pnpm db:generate` | Generate a SQL migration after editing `apps/api/src/db/schema.ts` |
@@ -64,7 +70,12 @@ Whole stack in containers (production-like): `docker compose --profile full up -
 | GET | `/v1/constituencies` | All 543 seats grouped by state |
 | GET | `/v1/constituencies/:slug` | Seat detail: outline, MP, promises and status counts |
 | GET | `/v1/promises/:id` | Promise with source, status timeline and evidence |
-| POST | `/v1/admin/promises`, `…/:id/status`, `…/:id/evidence` | Admin writes (bearer `ADMIN_API_TOKEN`); every write requires an https source |
+| GET | `/v1/constituencies/:slug/report-card` | Score, components, questions asked, previous-MP comparison |
+| GET | `/v1/leaderboard?period=day` or `week` | National problems by category, issue, constituency and state |
+| GET | `/v1/insights`, `/v1/export/:dataset.csv` | India-wide totals; open-data downloads |
+| POST | `/v1/auth/signup`, `login`, `logout`, `change-password`, `delete-account` | Accounts (Argon2 passwords, opaque session tokens) |
+| GET / POST | `/v1/constituencies/:slug/issues`, `/v1/issues`, `…/vote`, `…/report` | Citizen issues, weekly votes, community reports |
+| POST | `/v1/admin/promises…`, `/v1/moderation/…` | Verifier / moderator actions (role-checked and audited); every promise needs an https source |
 
 Errors always look like `{ "error": { "code": "NOT_FOUND", "message": "...", "requestId": "..." } }`.
 

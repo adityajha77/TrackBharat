@@ -1,5 +1,7 @@
 import { BarChart3, FileCheck2, Landmark, Megaphone, MapPin, Scale, ShieldCheck, Database } from "lucide-react";
+import { Suspense } from "react";
 import { PincodeSearch } from "@/components/pincode-search";
+import { TodayTeaser } from "@/components/issues/today-teaser";
 import { Badge, Card } from "@/components/ui/card";
 import { ButtonLink } from "@/components/ui/button";
 import { WavingFlag } from "@/components/india/waving-flag";
@@ -125,6 +127,11 @@ export default function HomePage() {
           ))}
         </dl>
       </section>
+
+      {/* Live: what citizens across India are raising today (renders nothing if there is no data) */}
+      <Suspense fallback={null}>
+        <TodayTeaser />
+      </Suspense>
 
       {/* ---------------- How it works ---------------- */}
       <section id="how-it-works" className="mx-auto max-w-6xl scroll-mt-24 px-4 py-16 sm:py-20">

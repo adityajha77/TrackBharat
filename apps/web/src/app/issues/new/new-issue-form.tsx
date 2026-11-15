@@ -19,14 +19,14 @@ export function NewIssueForm({ defaultPincode }: { defaultPincode: string }) {
     // encType is set automatically for Server Actions; the File travels as multipart form data
     <form action={action} className="space-y-5">
       <Field label="What's the problem?" hint="Be specific: what, and where exactly.">
-        <Input name="title" required minLength={8} maxLength={120} placeholder="e.g. Deep potholes on Station Road near the bus depot" />
+        <Input name="title" required minLength={8} maxLength={120} defaultValue={state.values?.title} placeholder="e.g. Deep potholes on Station Road near the bus depot" />
       </Field>
       <Field label="Details">
-        <Textarea name="description" required minLength={20} maxLength={2000} placeholder="Since when? Who is affected? Has it been reported before?" />
+        <Textarea name="description" required minLength={20} maxLength={2000} defaultValue={state.values?.description} placeholder="Since when? Who is affected? Has it been reported before?" />
       </Field>
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="Category">
-          <Select name="category" required defaultValue="">
+          <Select name="category" required defaultValue={state.values?.category ?? ""}>
             <option value="" disabled>
               Choose…
             </option>
@@ -38,7 +38,7 @@ export function NewIssueForm({ defaultPincode }: { defaultPincode: string }) {
           </Select>
         </Field>
         <Field label="PIN code where it is" hint="Used to find the constituency.">
-          <Input name="pincode" required inputMode="numeric" pattern="[1-9][0-9]{5}" maxLength={6} defaultValue={defaultPincode} className="font-mono tracking-widest" />
+          <Input name="pincode" required inputMode="numeric" pattern="[1-9][0-9]{5}" maxLength={6} defaultValue={state.values?.pincode ?? defaultPincode} className="font-mono tracking-widest" />
         </Field>
       </div>
 
