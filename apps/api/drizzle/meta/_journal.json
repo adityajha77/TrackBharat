@@ -15,6 +15,13 @@
       "when": 1794686799050,
       "tag": "0001_pincode_cache",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794740417171,
+      "tag": "0002_constituencies_people_promises",
+      "breakpoints": true
     }
   ]
 }

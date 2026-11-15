@@ -175,6 +175,8 @@ createPincodeService({ repo, directory, cacheTtlDays, now })
 - **Config is validated at startup** (`config.ts`): a missing `DATABASE_URL` crashes immediately with a clear message.
 - **Graceful shutdown**: on `SIGTERM` (sent on every deploy) we finish in-flight requests, close DB connections, then exit.
 - **Security plugins**: `helmet` (security headers), `cors` (only our web origin), `rate-limit` (120 req/min/IP).
+- **Admin writes** (`/v1/admin/*`) sit in a nested Fastify plugin with a `preHandler` hook that checks a bearer token
+  in constant time (`timingSafeEqual`). Public reads are unaffected. Temporary until Phase 2 adds accounts and roles.
 
 ---
 
@@ -207,46 +209,40 @@ pnpm db:studio     # browse the data in a web UI
 > **The lesson from v1:** the old Supabase tables were created by clicking in a dashboard. When the project was
 > deleted, the schema was gone. **Schema in git as migrations** means any machine can rebuild the database from zero.
 
-### Current schema (Phase 0)
-```mermaid
-erDiagram
-  pincodes ||--o{ post_offices : "has"
-  pincodes { varchar6 pincode PK
-             text district
-             text state
-             timestamptz fetched_at }
-  post_offices { serial id PK
-                 varchar6 pincode FK
-                 text name
-                 text branch_type
-                 text delivery_status
-                 text block }
-```
-
-### Planned schema (Phases 1–2)
+### Current schema (Phase 1)
 ```mermaid
 erDiagram
   states ||--o{ constituencies : contains
-  constituencies ||--o{ terms : "elected for"
-  representatives ||--o{ terms : serves
-  parties ||--o{ terms : "member of"
-  terms ||--o{ promises : makes
-  promises ||--o{ promise_status_history : "changes over time"
-  promises ||--o{ evidence : "supported by"
-  sources ||--o{ evidence : cites
-  constituencies ||--o{ issues : "reported in"
-  users ||--o{ issues : reports
-  users ||--o{ issue_votes : casts
-  issues ||--o{ issue_votes : receives
-  pincodes }o--o{ constituencies : "overlaps (PostGIS)"
+  constituencies ||--o{ pincode_constituencies : "covers (share)"
+  pin_locations }o--|| pincode_constituencies : "spatial join builds"
+  representatives ||--o{ terms : "serves as"
+  constituencies ||--o{ terms : "seat for"
+  parties ||--o{ terms : "elected from"
+  terms ||--o{ promises : "makes (MP)"
+  parties ||--o{ promises : "makes (manifesto)"
+  promises ||--o{ promise_status_history : "append-only timeline"
+  promises ||--o{ evidence : "supported / contradicted by"
+  sources ||--o{ promises : "cited by"
+  sources ||--o{ terms : "cited by"
+  pincodes ||--o{ post_offices : "India Post cache"
 ```
 
-Design choices to notice when we build it:
-- `kind` on constituencies: `LOK_SABHA` (MP) vs `VIDHAN_SABHA` (MLA); boundaries stored as `geometry(MultiPolygon, 4326)`.
-- `terms` separates *the person* from *the seat for a period*, which enables "compare with the previous MP".
-- `promise_status_history` is **append-only**: we never overwrite a status, we add a row. That's an audit trail.
-- `issue_votes` has a `UNIQUE (user_id, issue_id, week_start)` constraint, so the *database* blocks double voting.
-- Weekly highlights come from a scheduled job that writes `weekly_issue_rankings`; pages read the precomputed table.
+Design choices to notice in [`apps/api/src/db/schema.ts`](../apps/api/src/db/schema.ts):
+- **Geometry:** `constituencies.boundary` is `geometry(MultiPolygon, 4326)` and `pin_locations.location` is
+  `geometry(Point, 4326)`, both with **GiST indexes**. SRID 4326 = latitude/longitude (GPS). *We caught Drizzle dropping
+  the SRID by reading the generated SQL before applying it. That's why you always read migrations.*
+- **`terms` separates the person from the seat-for-a-period**: handles by-elections (died/resigned MPs stay as history),
+  party switches, and "compare with the previous MP".
+- **Enums** (`promise_status`, `house`, …) make Postgres reject invalid values.
+- **Provenance:** `source_id` is `NOT NULL` on promises, history and evidence ([ADR-0008](./adr/0008-sourced-promises-only.md)).
+- **CHECK constraints:** a promise must have a maker; a deadline can't be before the promise date.
+- **Append-only history:** a status change inserts a row and updates `promises.status` in one transaction.
+- **Precomputed answers:** `pincode_constituencies` is rebuilt by the import, so requests never run heavy geometry.
+- **Privacy by schema:** `representatives` has no columns for phone, address or DOB, so they can't be stored by accident.
+
+### Planned (Phase 2)
+`users`, `issues` (location-tagged, with photos), `issue_votes` with `UNIQUE (user_id, issue_id, week_start)` so the
+*database* blocks double voting, and `weekly_issue_rankings` written by a scheduled job.
 
 ---
 
@@ -281,23 +277,37 @@ hand-written and small, so there's no UI kit to fight.
 A PIN code is a **postal** zone; a constituency is an **electoral** zone. They were drawn by different
 departments and **don't line up**: one PIN can span two constituencies.
 
-**Plan (Phase 1):**
-1. Load constituency **boundary polygons** (post-2008 delimitation, from public GIS datasets) into PostGIS.
-2. Geocode each PIN to a point/area (post office locations).
-3. `ST_Intersects(pin_area, constituency.boundary)` → 1 or more constituencies.
-4. If more than one, the UI asks *"Which area are you in?"* instead of guessing.
+**How it works (implemented in Phase 1, see [ADR-0007](./adr/0007-pincode-to-constituency-by-spatial-majority.md)):**
+1. Load the 543 constituency **polygons** into PostGIS.
+2. Load ~144k **post office points** (with their PIN codes).
+3. **Spatial join**: `ST_Contains(constituency.boundary, office.location)` for every office, grouped by PIN →
+   how many offices (and what share) fall in each constituency. Stored in `pincode_constituencies`.
+4. At read time, show seats holding ≥ 20% of the PIN's offices. If several qualify, the UI says the PIN spans them.
 
-**Data we will import** (all public; each row stores its `source_url`):
+### The data pipeline (`pnpm db:import`)
 
-| Data | Source |
-|---|---|
-| PIN → post offices | India Post (live) ✅ |
-| Candidates' affidavits: assets, cases, education | Election Commission of India / ADR (MyNeta) |
-| MP attendance, questions, debates | Lok Sabha / PRS Legislative Research |
-| Constituency development funds | MPLADS portal |
-| Manifestos & promises | Party manifestos, official speeches, gazettes |
+```
+ download (cached in .data/) → validate with Zod → apply corrections.ts → upsert in a transaction → fail loudly
+```
 
-Licences differ per source; every import script will record the licence and attribute the source in the UI.
+| Step | File | Source | Result |
+|---|---|---|---|
+| `constituencies` | `src/imports/constituencies.ts` | DataMeet boundaries (CC0) | 543 seats, 36 states/UTs |
+| `pins` | `src/imports/pin-locations.ts` | Dept. of Posts directory | 143,609 points → 19,141 PINs mapped |
+| `members` | `src/imports/members.ts` | sansad.in (official) | 545 members, 540 sitting |
+
+Concepts to notice:
+- **Idempotent upserts** (`ON CONFLICT … DO UPDATE`): re-running never duplicates.
+- **Bulk insert**: 10,000 rows per statement via `json_to_recordset`, instead of 144,000 round trips.
+- **Documented corrections** instead of editing raw files (renamed states, the map's duplicate "Mumbai South", Assam/J&K
+  re-delimitation). See [`corrections.ts`](../apps/api/src/imports/corrections.ts).
+- **Fail loudly**: if any MP can't be matched to a seat, the whole import rolls back with a list of what failed.
+- **Privacy filter**: the Zod schema for sansad.in drops phones, addresses, emails and DOB before the database.
+
+Sources, licences and what we rejected (and why): [ADR-0006](./adr/0006-public-data-sources-and-privacy.md).
+
+**Still to import:** Vidhan Sabha boundaries and MLAs (Phase 1b), candidate affidavits (ECI / ADR), MP attendance and
+questions (PRS / Lok Sabha), MPLADS spending.
 
 ---
 
@@ -359,7 +369,9 @@ The **testing pyramid**: many fast unit tests, fewer integration tests, a few en
 | Unit | Cache-aside rules with fakes (`pincode.service.test.ts`) | Vitest |
 | HTTP / contract | `app.inject()` + parse responses with shared schemas (`app.test.ts`) | Vitest + Fastify inject |
 | Schema | PIN validation (`packages/shared/src/pincode.test.ts`) | Vitest |
-| Repository vs real DB | *(Phase 1)* run against the CI Postgres | Vitest |
+| Security | Admin endpoints: no token / wrong token / disabled → 401, service never reached (`admin.test.ts`) | Vitest + inject |
+| Data pipeline | Name matching, corrections, CSV parsing (`imports.test.ts`) | Vitest |
+| Integration (real PostGIS) | Spatial join + SVG outline against a real database (`test/integration/`) | Vitest + `TEST_DATABASE_URL` |
 | End-to-end | *(Phase 3)* type a PIN in a real browser | Playwright |
 
 `pnpm test` runs all of them.
@@ -371,7 +383,8 @@ The **testing pyramid**: many fast unit tests, fewer integration tests, a few en
 | Phase | Theme | Status |
 |---|---|---|
 | 0 | Foundation: monorepo, API, DB, migrations, Docker, CI, PIN lookup | ✅ Done |
-| 1 | Constituencies (PostGIS), MP/MLA profiles, **promise tracker** with sources & evidence, admin data entry | Next |
+| 1 | Lok Sabha constituencies (PostGIS), PIN → seat, 540 MPs, **promise tracker** with sources, timeline & evidence, admin API | ✅ Done |
+| 1b | Vidhan Sabha boundaries & MLAs, candidate affidavits | Next |
 | 2 | Auth & roles, citizen issue reporting, **weekly top issues** (scheduled job), moderation, audit log | |
 | 3 | Report cards with a public formula, history comparison, charts, open-data export, E2E tests | |
 | 4 | Deploy staging/prod, monitoring, backups, Hindi + regional languages, PWA | |
@@ -402,12 +415,35 @@ Read the code **in this order**; each file is short and commented.
 - [ ] Add a column `circle text` to `post_offices`, run `pnpm db:generate`, read the SQL, migrate.
 - [ ] Break a test on purpose, push to a branch, and watch CI go red.
 
+### Study guide: Phase 1
+
+Reading order:
+1. `apps/api/src/db/schema.ts`, then `apps/api/drizzle/0002_*.sql`: the domain model, enums, CHECKs, GiST indexes.
+2. `apps/api/src/imports/corrections.ts`: what real-world data problems look like.
+3. `apps/api/src/imports/{constituencies,pin-locations,members}.ts` and `imports/lib/sources.ts`: the pipeline and the spatial join SQL.
+4. `apps/api/src/modules/constituencies/constituency.repository.ts`: `ST_AsSVG`, joins, the "latest legislature" subquery.
+5. `apps/api/src/modules/promises/*`: transactions, the business rules, the admin hook.
+6. `apps/api/test/integration/spatial.test.ts`: testing PostGIS for real.
+7. `apps/web/src/app/area/[pincode]/page.tsx` (`Promise.allSettled`), `constituency/[slug]/page.tsx`, `constituencies/page.tsx` (`connection()`).
+
+Exercises:
+- [ ] In `pnpm db:studio`, find the 3 vacant seats. Write the SQL that finds them.
+- [ ] Find which PIN codes span 3+ constituencies. Look at one on the site.
+- [ ] Add a sourced promise to Demo Nagar with `curl` and the admin token, then change its status. Watch the timeline.
+- [ ] Try to insert a promise without `source_id` directly in SQL. Read Postgres's error.
+- [ ] Add `GET /v1/parties/:name/members` (repository → service → route → test).
+- [ ] Change `MIN_PINCODE_SHARE` to 0.4 and see which test fails and why.
+
 **Interview questions you should now be able to answer:**
 - Why a separate API instead of calling the database from Next.js?
 - What's the difference between the three caches, and what does each protect against?
 - What problem do migrations solve? What happens if two developers generate one at the same time?
 - Why does the service receive its dependencies instead of importing them?
 - What does a multi-stage Dockerfile save you?
+- How does a spatial index make "which polygon contains this point" fast? Why precompute the answer?
+- Why store status history as append-only rows instead of updating a column?
+- Where are the trust rules enforced, and why in more than one layer?
+- How did you deal with dirty, conflicting government data?
 
 ---
 

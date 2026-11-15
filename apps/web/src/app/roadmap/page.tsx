@@ -11,9 +11,19 @@ const phases = [
     items: ["Monorepo: Next.js web, Fastify API, shared contract", "Postgres + PostGIS with versioned migrations", "PIN code lookup with caching", "Docker, CI, tests"],
   },
   {
-    name: "Phase 1: Representatives & promises",
+    name: "Phase 1: Lok Sabha, MPs & promises",
+    done: true,
+    items: [
+      "PIN code → Lok Sabha constituency for 19,000+ PIN codes (PostGIS spatial join)",
+      "All 543 constituencies with boundaries; 540 sitting MPs from sansad.in",
+      "Promise tracker: sources, deadlines, status timeline and evidence",
+      "Admin API to record promises (every entry requires a source)",
+    ],
+  },
+  {
+    name: "Phase 1b: Vidhan Sabha & MLAs",
     done: false,
-    items: ["PIN code → Lok Sabha & Vidhan Sabha constituency (PostGIS)", "MP / MLA profiles from ECI affidavits", "Promise tracker with sources, deadlines and evidence", "Admin tools to add and review data"],
+    items: ["Assembly constituency boundaries", "MLAs from state legislature records", "Candidate affidavits: assets, cases, education (ECI)"],
   },
   {
     name: "Phase 2: Citizen voice",

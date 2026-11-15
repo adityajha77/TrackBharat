@@ -9,6 +9,8 @@ export const ErrorCode = z.enum([
   "NOT_FOUND",
   "RATE_LIMITED",
   "UPSTREAM_UNAVAILABLE",
+  "UNAUTHORIZED",
+  "CONFLICT",
   "INTERNAL_ERROR",
 ]);
 export type ErrorCode = z.infer<typeof ErrorCode>;

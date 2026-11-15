@@ -24,8 +24,8 @@ const steps = [
 
 const features = [
   { icon: MapPin, title: "PIN code lookup", body: "Area, district and post offices for any of India's ~19,000 PIN codes.", status: "live" as const },
-  { icon: FileCheck2, title: "Promise tracker", body: "Sourced promises with deadlines, status history and evidence.", status: "Phase 1" },
-  { icon: Landmark, title: "Representative profiles", body: "MP & MLA data from ECI affidavits and parliamentary records.", status: "Phase 1" },
+  { icon: FileCheck2, title: "Promise tracker", body: "Sourced promises with deadlines, status history and evidence.", status: "live" as const },
+  { icon: Landmark, title: "Representative profiles", body: "All 540 sitting MPs from Parliament's records; MLAs next.", status: "live" as const },
   { icon: Megaphone, title: "Citizen issue board", body: "Report local problems with photos; the community upvotes; the top issues are highlighted every week.", status: "Phase 2" },
   { icon: BarChart3, title: "Constituency report card", body: "A transparent score with the formula published, and history across terms.", status: "Phase 3" },
   { icon: Scale, title: "Know your rights", body: "RTI, voting rights, education, food and work guarantees in plain language.", status: "live" as const },

@@ -18,6 +18,8 @@ const EnvSchema = z.object({
     .transform((v) => v.split(",").map((s) => s.trim()).filter(Boolean)),
   PINCODE_CACHE_TTL_DAYS: z.coerce.number().int().positive().default(30),
   INDIA_POST_BASE_URL: z.url().default("https://api.postalpincode.in"),
+  /** Bearer token for admin write endpoints. Unset = admin writes disabled. Phase 2 replaces this with real auth. */
+  ADMIN_API_TOKEN: z.string().min(32, "ADMIN_API_TOKEN must be at least 32 characters").optional(),
 });
 
 export type Config = z.infer<typeof EnvSchema>;

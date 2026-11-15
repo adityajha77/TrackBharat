@@ -5,6 +5,10 @@ import { createDb } from "./db/client";
 import { createIndiaPostClient } from "./modules/pincodes/india-post.client";
 import { createPincodeRepository } from "./modules/pincodes/pincode.repository";
 import { createPincodeService } from "./modules/pincodes/pincode.service";
+import { createConstituencyRepository } from "./modules/constituencies/constituency.repository";
+import { createConstituencyService } from "./modules/constituencies/constituency.service";
+import { createPromiseRepository } from "./modules/promises/promise.repository";
+import { createPromiseService } from "./modules/promises/promise.service";
 
 /**
  * ENTRY POINT / composition root. The only file that creates real
@@ -21,6 +25,9 @@ const pincodeService = createPincodeService({
 
 const app = await buildApp({
   pincodeService,
+  constituencyService: createConstituencyService(createConstituencyRepository(db)),
+  promiseService: createPromiseService(createPromiseRepository(db)),
+  adminToken: config.ADMIN_API_TOKEN,
   pingDb: async () => {
     await db.execute(sql`select 1`);
   },

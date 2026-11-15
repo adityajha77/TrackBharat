@@ -34,3 +34,6 @@ Thumbs.db
 .claude/
 apps/web/AGENTS.md
 apps/web/CLAUDE.md
+
+# Downloaded public datasets (re-downloadable; sources are recorded in code)
+.data/

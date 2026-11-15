@@ -25,4 +25,10 @@ export class AppError extends Error {
   static upstream(message: string) {
     return new AppError("UPSTREAM_UNAVAILABLE", message, 502);
   }
+  static unauthorized(message: string) {
+    return new AppError("UNAUTHORIZED", message, 401);
+  }
+  static conflict(message: string) {
+    return new AppError("CONFLICT", message, 409);
+  }
 }

@@ -33,6 +33,8 @@ jobs:
 
     env:
       DATABASE_URL: postgres://trackbharat:trackbharat@localhost:5432/trackbharat
+      # The CI database is thrown away after the run, so integration tests may use it.
+      TEST_DATABASE_URL: postgres://trackbharat:trackbharat@localhost:5432/trackbharat
 
     steps:
       - uses: actions/checkout@v4
@@ -45,12 +47,13 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck
-      - run: pnpm test
 
-      # Proves migrations apply cleanly to an empty database, and that the
-      # schema in code matches the committed migrations (no forgotten `db:generate`).
+      # Proves migrations apply cleanly to an EMPTY database (and creates the
+      # tables the integration tests need), and that the schema in code matches
+      # the committed migrations (no forgotten `db:generate`).
       - name: Migrations apply cleanly
         run: pnpm db:migrate
+      - run: pnpm test
       - name: No un-generated schema changes
         run: |
           pnpm db:generate

@@ -10,6 +10,7 @@ export const site = {
     linkedin: "https://www.linkedin.com/in/aditya-kumar-jha-72493a319/",
   },
   nav: [
+    { href: "/constituencies", label: "Constituencies" },
     { href: "/#how-it-works", label: "How it works" },
     { href: "/rights", label: "Know your rights" },
     { href: "/roadmap", label: "Roadmap" },

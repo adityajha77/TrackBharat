@@ -1,6 +1,13 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
-import { ApiErrorBody, PincodeLookupResponse } from "@trackbharat/shared";
+import {
+  ApiErrorBody,
+  ConstituencyDetail,
+  ConstituencyIndexResponse,
+  PincodeConstituenciesResponse,
+  PincodeLookupResponse,
+  PromiseDetail,
+} from "@trackbharat/shared";
 import type { z } from "zod";
 
 /**
@@ -48,4 +55,34 @@ export async function getPincode(pincode: string) {
   cacheLife("hours");
   cacheTag(`pincode:${pincode}`);
   return request(`/v1/pincodes/${pincode}`, PincodeLookupResponse);
+}
+
+export async function getPincodeConstituencies(pincode: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(`pincode:${pincode}`);
+  return request(`/v1/pincodes/${pincode}/constituencies`, PincodeConstituenciesResponse);
+}
+
+/** The 543-seat index changes only when boundaries do: cache for days. */
+export async function getConstituencyIndex() {
+  "use cache";
+  cacheLife("days");
+  cacheTag("constituencies");
+  return request(`/v1/constituencies`, ConstituencyIndexResponse);
+}
+
+/** Promises change through admin edits; minutes-long cache, purgeable per seat. */
+export async function getConstituency(slug: string) {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag(`constituency:${slug}`);
+  return request(`/v1/constituencies/${slug}`, ConstituencyDetail);
+}
+
+export async function getPromise(id: number) {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag(`promise:${id}`);
+  return request(`/v1/promises/${id}`, PromiseDetail);
 }

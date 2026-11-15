@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { ApiErrorBody, HealthResponse, PincodeLookupResponse } from "@trackbharat/shared";
-import { buildApp, type AppDeps } from "../src/app";
+import { buildApp } from "../src/app";
+import { deps } from "./helpers";
 
 // HTTP-level tests: `app.inject()` simulates a request in memory, so no port is
 // opened. We also parse every response with the SHARED schema: this proves the
@@ -9,24 +10,6 @@ import { buildApp, type AppDeps } from "../src/app";
 let app: Awaited<ReturnType<typeof buildApp>>;
 afterEach(() => app?.close());
 
-function deps(overrides: Partial<AppDeps> = {}): AppDeps {
-  return {
-    pincodeService: {
-      lookup: async (pincode) => ({
-        pincode,
-        district: "Bangalore",
-        state: "Karnataka",
-        postOffices: [],
-        source: "cache",
-        fetchedAt: new Date().toISOString(),
-      }),
-    },
-    pingDb: async () => {},
-    corsOrigins: ["http://localhost:3000"],
-    version: "test",
-    ...overrides,
-  };
-}
 
 describe("GET /health", () => {
   it("is ok when the database is up", async () => {

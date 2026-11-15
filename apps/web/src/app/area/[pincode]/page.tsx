@@ -1,11 +1,14 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Building2, FileCheck2, Landmark, Mail, Megaphone, MapPin } from "lucide-react";
+import { ArrowRight, Building2, Landmark, Mail, Megaphone, MapPin, Users } from "lucide-react";
 import { Pincode } from "@trackbharat/shared";
-import { ApiError, getPincode } from "@/lib/api";
+import { ApiError, getPincode, getPincodeConstituencies } from "@/lib/api";
 import { Badge, Card } from "@/components/ui/card";
 import { PincodeSearch } from "@/components/pincode-search";
+import { OutdatedBoundaryNote } from "@/components/civic/bits";
+import { RepresentativePhoto } from "@/components/civic/representative-photo";
 
 /**
  * /area/560034, the "your constituency" page.
@@ -38,39 +41,71 @@ async function AreaDetails({ pincode }: { pincode: string }) {
   const valid = Pincode.safeParse(pincode);
   if (!valid.success) notFound();
 
-  let area;
-  try {
-    area = await getPincode(valid.data);
-  } catch (err) {
+  // Two independent sources, fetched in PARALLEL. allSettled (not all) so one
+  // failing (e.g. India Post down) doesn't hide the other (our own database).
+  const [areaRes, seatsRes] = await Promise.allSettled([getPincode(valid.data), getPincodeConstituencies(valid.data)]);
+  const area = areaRes.status === "fulfilled" ? areaRes.value : null;
+  const seats = seatsRes.status === "fulfilled" ? seatsRes.value.constituencies : [];
+
+  if (!area && !seats.length) {
+    const err = areaRes.status === "rejected" ? areaRes.reason : null;
     if (err instanceof ApiError && err.status === 404) notFound();
     return <ErrorState message={err instanceof Error ? err.message : "Something went wrong"} />;
   }
 
+  const primary = seats[0];
   return (
     <div className="space-y-8">
       <header className="flex flex-wrap items-end justify-between gap-6">
         <div>
           <p className="flex items-center gap-2 text-sm text-muted">
-            <MapPin className="size-4" aria-hidden /> PIN code <span className="font-mono text-foreground">{area.pincode}</span>
+            <MapPin className="size-4" aria-hidden /> PIN code <span className="font-mono text-foreground">{valid.data}</span>
           </p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">{area.district}</h1>
-          <p className="mt-1 text-lg text-muted">{area.state}</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">{area?.district ?? primary?.name}</h1>
+          <p className="mt-1 text-lg text-muted">{area?.state ?? primary?.state}</p>
         </div>
         <PincodeSearch className="sm:max-w-xs" />
       </header>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      {/* Your Lok Sabha constituency (one, or several when the PIN straddles a boundary) */}
+      <section aria-labelledby="your-mp" className="space-y-4">
+        <h2 id="your-mp" className="flex items-center gap-2 text-lg font-semibold">
+          <Landmark className="size-5 text-primary" aria-hidden />
+          {seats.length > 1 ? "This PIN code spans more than one constituency" : "Your Lok Sabha constituency"}
+        </h2>
+        {seats.length ? (
+          <div className={seats.length > 1 ? "grid gap-4 md:grid-cols-2" : ""}>
+            {seats.map((s) => (
+              <Link key={s.slug} href={`/constituency/${s.slug}`} className="group block">
+                <Card className="flex items-center gap-5 transition-colors group-hover:border-primary">
+                  {s.representative && <RepresentativePhoto name={s.representative.name} src={s.representative.imageUrl} className="size-16 shrink-0 text-lg" />}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs uppercase tracking-widest text-muted">
+                      {s.name} · {s.state}
+                      {seats.length > 1 && <> · {Math.round(s.share * 100)}% of post offices</>}
+                    </p>
+                    <p className="mt-1 text-xl font-semibold">{s.representative ? s.representative.name : "Seat vacant"}</p>
+                    {s.representative?.party && <p className="text-sm text-muted">Member of Parliament · {s.representative.party}</p>}
+                  </div>
+                  <span className="hidden items-center gap-1 text-sm font-medium text-primary sm:inline-flex">
+                    Promises <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
+                  </span>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <Card className="border-dashed text-sm text-muted">We couldn&apos;t match this PIN code to a constituency yet.</Card>
+        )}
+        {seats.some((s) => s.boundaryOutdated) && <OutdatedBoundaryNote />}
+      </section>
+
+      <div className="grid gap-4 md:grid-cols-2">
         <ComingSoon
-          icon={Landmark}
-          title="Your representatives"
-          phase="Phase 1"
-          body="Your MP (Lok Sabha) and MLA (Vidhan Sabha), with party, term, attendance and affidavit details."
-        />
-        <ComingSoon
-          icon={FileCheck2}
-          title="Promises & progress"
-          phase="Phase 1"
-          body="Election promises for this constituency with sources, deadlines, status and evidence."
+          icon={Users}
+          title="Your MLA (Vidhan Sabha)"
+          phase="Phase 1b"
+          body="Your state assembly representative, from each state legislature's records."
         />
         <ComingSoon
           icon={Megaphone}
@@ -80,7 +115,7 @@ async function AreaDetails({ pincode }: { pincode: string }) {
         />
       </div>
 
-      <Card>
+      {area && <Card>
         <div className="flex items-center justify-between gap-4">
           <h2 className="flex items-center gap-2 font-semibold">
             <Mail className="size-4 text-primary" aria-hidden /> Post offices in this PIN code
@@ -105,7 +140,7 @@ async function AreaDetails({ pincode }: { pincode: string }) {
         <p className="mt-4 text-xs text-muted">
           Source: India Post · last updated {new Date(area.fetchedAt).toLocaleDateString("en-IN", { dateStyle: "medium" })}
         </p>
-      </Card>
+      </Card>}
     </div>
   );
 }

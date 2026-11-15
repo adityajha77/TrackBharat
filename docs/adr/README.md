@@ -11,5 +11,8 @@ That history is what lets someone (including future you, or an interviewer) unde
 | [0003](./0003-nextjs-for-the-web-app.md) | Next.js (App Router) for the web app | Accepted |
 | [0004](./0004-postgres-postgis-drizzle.md) | Postgres + PostGIS, schema managed with Drizzle migrations | Accepted |
 | [0005](./0005-cache-aside-for-pincode-lookups.md) | Cache-aside with stale-if-error for PIN code lookups | Accepted |
+| [0006](./0006-public-data-sources-and-privacy.md) | Public data sources, licensing and privacy | Accepted |
+| [0007](./0007-pincode-to-constituency-by-spatial-majority.md) | PIN code → constituency by spatial majority of post offices | Accepted |
+| [0008](./0008-sourced-promises-only.md) | Promises only with a source, enforced by the database | Accepted |
 
 Template for new ADRs: copy any file, keep the headings: **Context → Decision → Alternatives considered → Consequences**.
