@@ -20,6 +20,13 @@ import { createAccountService } from "./modules/auth/account";
 import { createLeaderboardService } from "./modules/leaderboard/leaderboard.service";
 import { createReportCardRepository } from "./modules/report-cards/report-card.repository";
 import { createReportCardService } from "./modules/report-cards/report-card.service";
+import { createCausesService } from "./modules/causes/causes.service";
+import { createNewsService } from "./modules/news/news.service";
+import { createPartiesService } from "./modules/parties/parties.service";
+import { createNetaService } from "./modules/parties/neta.service";
+import { createEmailLinksService } from "./modules/email/email-links";
+import { createOutboxMailer, createSmtpMailer } from "./modules/email/mailer";
+import path from "node:path";
 
 /**
  * ENTRY POINT / composition root. The only file that creates real
@@ -37,6 +44,9 @@ const pincodeService = createPincodeService({
 const promiseService = createPromiseService(createPromiseRepository(db));
 const photoStore = createPhotoStore(config.UPLOADS_DIR);
 const issueService = createIssueService(createIssueRepository(db), photoStore);
+// No SMTP configured → emails go to an in-memory outbox (dev); production must set SMTP_URL.
+if (config.NODE_ENV === "production" && !config.SMTP_URL) throw new Error("SMTP_URL is required in production (verification and reset emails)");
+const mailer = config.SMTP_URL ? createSmtpMailer(config.SMTP_URL, config.MAIL_FROM) : createOutboxMailer();
 
 const app = await buildApp({
   pincodeService,
@@ -49,6 +59,13 @@ const app = await buildApp({
   submissionService: createSubmissionService(createSubmissionRepository(db), promiseService),
   photoStore,
   reportCardService: createReportCardService(createReportCardRepository(db)),
+  causesService: createCausesService(db),
+  newsService: createNewsService(db),
+  partiesService: createPartiesService(db),
+  netaService: createNetaService(db),
+  emailLinks: createEmailLinksService(db, mailer, config.WEB_URL),
+  leaderPhotos: createPhotoStore(path.join(config.UPLOADS_DIR, "leaders")),
+  exposeOutbox: config.NODE_ENV !== "production" && !config.SMTP_URL,
   db,
   pingDb: async () => {
     await db.execute(sql`select 1`);

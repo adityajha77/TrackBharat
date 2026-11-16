@@ -17,7 +17,7 @@ export function RepresentativePhoto({ name, className }: { name: string; src?: s
   // Stable colour per name, so the same MP always gets the same tone
   const tone = TONES[[...name].reduce((n, ch) => n + ch.charCodeAt(0), 0) % TONES.length];
   return (
-    <span aria-hidden className={cn("inline-flex select-none items-center justify-center rounded-2xl font-semibold tracking-tight", tone, className)}>
+    <span aria-hidden className={cn("inline-flex select-none items-center justify-center rounded-md font-semibold tracking-tight", tone, className)}>
       {initials}
     </span>
   );

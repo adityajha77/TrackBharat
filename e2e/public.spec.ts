@@ -6,7 +6,7 @@ test("home: enter a PIN code and reach the constituency and MP", async ({ page }
   await page.goto("/");
   await page.waitForLoadState("networkidle");
   await page.getByLabel("Your 6-digit PIN code").first().fill("560034");
-  await page.getByRole("button", { name: /Track/ }).first().click();
+  await page.getByRole("button", { name: /Find my area/ }).first().click();
   await expect(page).toHaveURL(/\/area\/560034$/);
   await expect(page.getByText("Tejasvi Surya")).toBeVisible();
 
@@ -20,7 +20,7 @@ test("an invalid PIN code is explained, not sent to the server", async ({ page }
   await page.goto("/");
   await page.waitForLoadState("networkidle");
   await page.getByLabel("Your 6-digit PIN code").first().fill("012345");
-  await page.getByRole("button", { name: /Track/ }).first().click();
+  await page.getByRole("button", { name: /Find my area/ }).first().click();
   await expect(page.getByText("cannot start with 0")).toBeVisible();
   await expect(page).toHaveURL(/\/$/);
 });

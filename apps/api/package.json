@@ -18,7 +18,9 @@
     "db:import": "tsx --env-file-if-exists=.env src/imports/run.ts",
     "worker": "tsx --env-file-if-exists=.env src/worker.ts",
     "job:weekly-rankings": "tsx --env-file-if-exists=.env src/worker.ts --once",
-    "user:role": "tsx --env-file-if-exists=.env src/scripts/set-role.ts"
+    "job:news": "tsx --env-file-if-exists=.env src/worker.ts --news",
+    "user:role": "tsx --env-file-if-exists=.env src/scripts/set-role.ts",
+    "mla:wikipedia": "tsx src/scripts/mla-from-wikipedia.ts"
   },
   "dependencies": {
     "@fastify/cors": "^11.4.3",
@@ -29,14 +31,17 @@
     "@trackbharat/shared": "workspace:*",
     "croner": "^11.0.1",
     "drizzle-orm": "^0.45.4",
+    "fast-xml-parser": "^5.12.1",
     "fastify": "^5.12.8",
     "fastify-plugin": "^6.0.1",
+    "nodemailer": "^10.6.0",
     "pg": "^8.23.1",
     "shapefile": "^0.6.6",
     "sharp": "^0.35.5",
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@types/nodemailer": "^8.0.2",
     "@types/pg": "^8.23.1",
     "@types/shapefile": "^0.6.4",
     "drizzle-kit": "^0.31.11",

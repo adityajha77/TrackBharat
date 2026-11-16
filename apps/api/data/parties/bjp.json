@@ -1,0 +1,62 @@
+{
+  "slug": "bjp",
+  "name": "Bharatiya Janata Party",
+  "shortName": "BJP",
+  "founded": "1980-04-06",
+  "founders": "Atal Bihari Vajpayee, L. K. Advani and others, from the former Bharatiya Jana Sangh (founded 1951 by Syama Prasad Mookerjee)",
+  "mission": "Describes its philosophy as 'Integral Humanism' (Deendayal Upadhyaya) and cultural nationalism, with a focus on development and national security.",
+  "missionSource": "https://en.wikipedia.org/wiki/Bharatiya_Janata_Party",
+  "symbol": "Lotus",
+  "color": "#FF9933",
+  "sortOrder": 20,
+  "leaders": [
+    { "name": "Syama Prasad Mookerjee", "role": "Founder, Bharatiya Jana Sangh", "years": "1951–1953", "wikipedia": "Syama_Prasad_Mukherjee" },
+    { "name": "Deendayal Upadhyaya", "role": "Ideologue, Bharatiya Jana Sangh", "years": "1950s–1968", "wikipedia": "Deendayal_Upadhyaya" },
+    { "name": "Atal Bihari Vajpayee", "role": "Prime Minister", "years": "1996, 1998–2004", "wikipedia": "Atal_Bihari_Vajpayee", "quote": "Jai Jawan, Jai Kisan, Jai Vigyan (Hail the soldier, the farmer, and science)", "quoteSource": "https://en.wikipedia.org/wiki/Jai_Jawan_Jai_Kisan" },
+    { "name": "L. K. Advani", "role": "Deputy Prime Minister", "years": "2002–2004", "wikipedia": "L._K._Advani" },
+    { "name": "Narendra Modi", "role": "Prime Minister", "years": "2014–", "wikipedia": "Narendra_Modi" }
+  ],
+  "events": [
+    { "date": "1951-10-21", "precision": "DAY", "title": "Bharatiya Jana Sangh founded", "body": "Syama Prasad Mookerjee founds the party that the BJP grew out of.", "source": "https://en.wikipedia.org/wiki/Bharatiya_Jana_Sangh" },
+    { "date": "1977-01-23", "precision": "MONTH", "title": "Merges into the Janata Party", "body": "The Jana Sangh joins other opposition parties to fight the post-Emergency election.", "source": "https://en.wikipedia.org/wiki/Janata_Party" },
+    { "date": "1980-04-06", "precision": "DAY", "title": "BJP founded", "body": "Former Jana Sangh members found the BJP; Atal Bihari Vajpayee is the first president.", "source": "https://en.wikipedia.org/wiki/Bharatiya_Janata_Party" },
+    { "date": "1984-12-28", "precision": "MONTH", "title": "Wins 2 Lok Sabha seats", "body": "Its first general election.", "source": "https://en.wikipedia.org/wiki/Bharatiya_Janata_Party" },
+    { "date": "1996-05-16", "precision": "DAY", "title": "First BJP government", "body": "Vajpayee becomes Prime Minister; the government lasts 13 days.", "source": "https://en.wikipedia.org/wiki/Atal_Bihari_Vajpayee" },
+    { "date": "1998-03-19", "precision": "DAY", "title": "Leads the NDA government", "body": "Vajpayee becomes Prime Minister again, until 2004.", "source": "https://en.wikipedia.org/wiki/Atal_Bihari_Vajpayee" },
+    { "date": "2014-05-26", "precision": "DAY", "title": "First single-party majority", "body": "With 282 seats; Narendra Modi becomes Prime Minister.", "source": "https://en.wikipedia.org/wiki/2014_Indian_general_election" },
+    { "date": "2024-06-09", "precision": "DAY", "title": "Third term, as a coalition", "body": "Wins 240 seats; leads the NDA government with its allies.", "source": "https://en.wikipedia.org/wiki/2024_Indian_general_election" }
+  ],
+  "manifestos": [
+    {
+      "year": 2024,
+      "title": "Sankalp Patra: Modi Ki Guarantee",
+      "source": "https://en.wikipedia.org/wiki/Bharatiya_Janata_Party_campaign_for_the_2024_Indian_general_election",
+      "formedGovernment": true,
+      "promises": [
+        { "category": "HEALTH", "text": "Extend Ayushman Bharat health cover to every citizen aged 70 and above.", "status": "FULFILLED", "note": "Approved by the Union Cabinet in September 2024; cards issued from October 2024.", "evidence": "https://en.wikipedia.org/wiki/Ayushman_Bharat_Yojana" },
+        { "category": "OTHER", "text": "One Nation, One Election: simultaneous elections to the Lok Sabha and assemblies.", "status": "IN_PROGRESS", "note": "Constitution amendment bills introduced in December 2024 and sent to a Joint Parliamentary Committee.", "evidence": "https://en.wikipedia.org/wiki/One_Nation,_One_Election" },
+        { "category": "OTHER", "text": "A Uniform Civil Code." },
+        { "category": "HOUSING", "text": "3 crore more houses under PM Awas Yojana." },
+        { "category": "LOCAL_DEVELOPMENT", "text": "Free ration for 80 crore people for five more years.", "status": "FULFILLED", "note": "PM Garib Kalyan Anna Yojana extended for five years from January 2024.", "evidence": "https://en.wikipedia.org/wiki/Pradhan_Mantri_Garib_Kalyan_Anna_Yojana" },
+        { "category": "EMPLOYMENT", "text": "Make 3 crore rural women 'Lakhpati Didis'." },
+        { "category": "AGRICULTURE", "text": "Keep raising minimum support prices (MSP) for major crops." }
+      ]
+    },
+    {
+      "year": 2019,
+      "title": "Sankalp Patra",
+      "source": "https://en.wikipedia.org/wiki/Bharatiya_Janata_Party_campaign_for_the_2019_Indian_general_election",
+      "formedGovernment": true,
+      "promises": [
+        { "category": "OTHER", "text": "Annul Article 370 and Article 35A for Jammu and Kashmir.", "status": "FULFILLED", "note": "Revoked in August 2019; upheld by the Supreme Court in December 2023.", "evidence": "https://en.wikipedia.org/wiki/Revocation_of_the_special_status_of_Jammu_and_Kashmir" },
+        { "category": "OTHER", "text": "Enact the Citizenship (Amendment) Bill.", "status": "FULFILLED", "note": "Passed in December 2019; rules notified in March 2024.", "evidence": "https://en.wikipedia.org/wiki/Citizenship_(Amendment)_Act,_2019" },
+        { "category": "OTHER", "text": "Pass a law against triple talaq.", "status": "FULFILLED", "note": "Muslim Women (Protection of Rights on Marriage) Act, July 2019.", "evidence": "https://en.wikipedia.org/wiki/Muslim_Women_(Protection_of_Rights_on_Marriage)_Act,_2019" },
+        { "category": "OTHER", "text": "Explore all possibilities to build the Ram temple in Ayodhya within the framework of the Constitution.", "status": "FULFILLED", "note": "Supreme Court verdict in November 2019; temple consecrated in January 2024.", "evidence": "https://en.wikipedia.org/wiki/Ram_Mandir" },
+        { "category": "WATER", "text": "Piped water (Nal se Jal) to every household by 2024.", "status": "PARTIAL", "note": "Jal Jeevan Mission raised coverage sharply but had not reached every household by 2024.", "evidence": "https://en.wikipedia.org/wiki/Jal_Jeevan_Mission" },
+        { "category": "OTHER", "text": "33% reservation for women in Parliament and state assemblies.", "status": "PARTIAL", "note": "Law passed in September 2023; it takes effect only after the next census and delimitation.", "evidence": "https://en.wikipedia.org/wiki/Nari_Shakti_Vandan_Adhiniyam" },
+        { "category": "AGRICULTURE", "text": "Double farmers' income by 2022." },
+        { "category": "HOUSING", "text": "A pucca house for every family by 2022." }
+      ]
+    }
+  ]
+}

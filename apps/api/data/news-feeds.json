@@ -1,0 +1,6 @@
+[
+  { "name": "The Hindu", "url": "https://www.thehindu.com/news/national/feeder/default.rss", "homepage": "https://www.thehindu.com" },
+  { "name": "The Indian Express", "url": "https://indianexpress.com/section/india/feed/", "homepage": "https://indianexpress.com" },
+  { "name": "Scroll", "url": "https://feeds.feedburner.com/ScrollinArticles.rss", "homepage": "https://scroll.in" },
+  { "name": "Mongabay India", "url": "https://india.mongabay.com/feed/", "homepage": "https://india.mongabay.com" }
+]

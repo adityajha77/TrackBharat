@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync, FastifyRequest } from "fastify";
-import { CreateIssueInput, ModerationActionInput, ReportIssueInput } from "@trackbharat/shared";
+import { CreateIssueInput, ModerationActionInput, ReportIssueInput, VoteInput } from "@trackbharat/shared";
 import { AppError } from "../../lib/errors";
 import { parseBody, parseId } from "../../lib/validation";
 import { currentUser, requireRole, requireUser } from "../auth/auth.plugin";
@@ -29,7 +29,7 @@ async function readIssueRequest(req: FastifyRequest): Promise<{ fields: Record<s
 export const issueRoutes =
   (service: IssueService, photos: PhotoStore): FastifyPluginAsync =>
   async (app) => {
-    // ---- Public reads (personalised with votedByMe when logged in) --------
+    // ---- Public reads (personalised with myVote when logged in) --------
     app.get<{ Params: { slug: string }; Querystring: { sort?: string; limit?: string } }>("/constituencies/:slug/issues", async (req, reply) => {
       const sort = req.query.sort === "new" ? "new" : "top";
       const limit = Math.min(Math.max(Number(req.query.limit) || 20, 1), 50);
@@ -55,8 +55,12 @@ export const issueRoutes =
       return reply.code(201).send({ id });
     });
 
-    app.post<{ Params: { id: string } }>("/issues/:id/vote", { preHandler: requireUser }, async (req) => service.vote(currentUser(req), parseId(req.params.id), true));
-    app.delete<{ Params: { id: string } }>("/issues/:id/vote", { preHandler: requireUser }, async (req) => service.vote(currentUser(req), parseId(req.params.id), false));
+    // Body { value: 1 | -1 } (defaults to 1, so older clients that POST without a body still work)
+    const voteLimit = { rateLimit: { max: 30, timeWindow: "1 minute" } };
+    app.post<{ Params: { id: string } }>("/issues/:id/vote", { preHandler: requireUser, config: voteLimit }, async (req) =>
+      service.vote(currentUser(req), parseId(req.params.id), parseBody(VoteInput, req.body ?? {}).value),
+    );
+    app.delete<{ Params: { id: string } }>("/issues/:id/vote", { preHandler: requireUser, config: voteLimit }, async (req) => service.vote(currentUser(req), parseId(req.params.id), null));
 
     app.post<{ Params: { id: string } }>("/issues/:id/report", { preHandler: requireUser }, async (req, reply) => {
       await service.report(currentUser(req), parseId(req.params.id), parseBody(ReportIssueInput, req.body).reason);

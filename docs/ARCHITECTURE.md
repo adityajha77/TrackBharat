@@ -267,8 +267,14 @@ Next.js 16 with **Cache Components** (`cacheComponents: true`). The rules:
 
 ### Design system
 All colours are CSS variables in `src/app/globals.css` (light + `.dark`), exposed to Tailwind as `bg-surface`,
-`text-muted`, `text-saffron`, etc. Components never hard-code colours. UI primitives (`components/ui/`) are
+`text-muted`, `text-saffron`, `border-ink`, etc. Components never hard-code colours. UI primitives (`components/ui/`) are
 hand-written and small, so there's no UI kit to fight.
+
+Since Phase 3b the look is **"soft brutalism + bento"**: thick ink borders and hard offset shadows (`.brutal`,
+`.brutal-sm`), buttons that press *into* their shadow (`.press`), square-ish corners, mono labels, bento grids, a muted
+newsprint palette with saffron / white / green accents. Motion is CSS-only (spinning Ashoka Chakra, drifting tricolour
+ribbon, scroll-driven `reveal`, animated progress rings via `@property`) and stops under `prefers-reduced-motion`.
+Reveal animations move content but never hide it, so a stalled animation can't make text invisible.
 
 ---
 
@@ -346,7 +352,8 @@ Run the full production-like stack in containers: `docker compose --profile full
 ### CI (`.github/workflows/ci.yml`)
 On every push/PR, GitHub Actions spins up a real PostGIS, then: install → lint → typecheck → test →
 **apply migrations to an empty DB** → **fail if `schema.ts` changed without a migration** → build → build both
-Docker images. A red ✗ blocks merging.
+Docker images. A third job imports real data, builds the web app **from scratch**, starts API + web and runs the
+**Playwright** browser tests. A red ✗ blocks merging.
 
 ### Deployment (Phase 4 plan)
 | Piece | Candidate | Why |
@@ -372,7 +379,7 @@ The **testing pyramid**: many fast unit tests, fewer integration tests, a few en
 | Security | Admin endpoints: no token / wrong token / disabled → 401, service never reached (`admin.test.ts`) | Vitest + inject |
 | Data pipeline | Name matching, corrections, CSV parsing (`imports.test.ts`) | Vitest |
 | Integration (real PostGIS) | Spatial join + SVG outline against a real database (`test/integration/`) | Vitest + `TEST_DATABASE_URL` |
-| End-to-end | *(Phase 3)* type a PIN in a real browser | Playwright |
+| End-to-end | type a PIN, vote on a cause, switch to Marathi, publish news, reset a password, in a real browser | Playwright |
 
 `pnpm test` runs all of them.
 
@@ -384,10 +391,11 @@ The **testing pyramid**: many fast unit tests, fewer integration tests, a few en
 |---|---|---|
 | 0 | Foundation: monorepo, API, DB, migrations, Docker, CI, PIN lookup | ✅ Done |
 | 1 | Lok Sabha constituencies (PostGIS), PIN → seat, 540 MPs, **promise tracker** with sources, timeline & evidence, admin API | ✅ Done |
-| 1b | Vidhan Sabha boundaries ✅; MLAs state by state from sourced CSVs; candidate affidavits | In progress |
+| 1b | Vidhan Sabha boundaries ✅; **2,555 MLAs in 14 states** from sourced CSVs ✅; remaining states, by-elections, candidate affidavits | In progress |
 | 2 | Auth & roles, citizen issues, **weekly top issues** (scheduled worker), moderation, audit log, account deletion | ✅ Done |
 | 3 | Report cards with a public formula, previous-MP comparison, **national leaderboard** (today / this week), India insights, open-data CSV, Playwright E2E tests | ✅ Done |
-| 4 | Deploy staging/prod, monitoring, backups, Hindi + regional languages, PWA | |
+| 3b | Clear home flow, brutalist-bento design, **12 languages**, **up/down votes**, **Causes of the Week**, sharing, **news review pipeline**, **manifestos (promised vs done)**, **party timeline**, **Know Your Neta**, email verification + password reset, E2E in CI | ✅ Done |
+| 4 | Deploy staging/prod, monitoring, backups, real email provider, PWA | |
 | 5 | Mobile app (Expo / React Native) on the same `/v1` API | |
 
 ---
@@ -426,6 +434,21 @@ Exercises:
 - [ ] Run `pnpm job:weekly-rankings` twice. Why is it safe?
 - [ ] Add a `GET /v1/leaderboard?period=month` (service, route, schema, test).
 - [ ] Break the CSV header order on purpose and see which guard fires.
+
+### Study guide: Phase 3b
+
+Read in this order: `apps/web/src/proxy.ts` + `src/i18n/*` (languages, ADR-0014) → `app/[lang]/layout.tsx` (fonts, `lang`/`dir`) →
+`components/voices/up-down-vote.tsx` (optimistic ±1) → `modules/issues/issue.repository.ts` (`FILTER`, upsert switch) →
+`jobs/pick-causes.ts` (CTE + JSON aggregation, idempotent with moderator edits) → `modules/email/*` (one-time hashed links,
+mailer adapter) → `modules/news/rss.ts` + `news.service.ts` (untrusted XML, dedupe) → `imports/parties.ts` (rules as code,
+licence-checked photos) → `scripts/mla-from-wikipedia.ts` + `imports/mlas.ts` (cross-checked import) → `e2e/voices.spec.ts`.
+
+Exercises:
+- [ ] Add a 13th language: a JSON file, one line in `locales.ts`, a Noto font. Which test tells you what's missing?
+- [ ] Vote as an unverified account, then verify via `/dev/outbox`. Watch `issue_votes.counted` flip.
+- [ ] Run `pnpm job:news`, publish a story as `verifier@`, and find the entry in `audit_log`.
+- [ ] Add a promise with status `FULFILLED` but no `evidence` to a party JSON and run the import. Which rule stops it?
+- [ ] Generate an MLA CSV for a new state with `pnpm mla:wikipedia` and see how many rows the cross-check rejects.
 
 ### Study guide: Phase 1
 

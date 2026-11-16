@@ -8,6 +8,8 @@ import {
   MyActivity,
   PublicUser,
   VoteResponse,
+  CausesResponse,
+  NewsItem,
 } from "@trackbharat/shared";
 import { z } from "zod";
 import { ApiError } from "./api";
@@ -60,7 +62,9 @@ export const getIssues = (slug: string, sort: "top" | "new" = "top", limit = 20)
   call(`/v1/constituencies/${slug}/issues?sort=${sort}&limit=${limit}`, IssueListResponse);
 export const getIssue = (id: number) => call(`/v1/issues/${id}`, IssueDetail);
 export const createIssue = (form: FormData) => call("/v1/issues", Created, { method: "POST", body: form });
-export const vote = (id: number, up: boolean) => call(`/v1/issues/${id}/vote`, VoteResponse, { method: up ? "POST" : "DELETE" });
+/** value: +1 / -1, or 0 to take the vote back. */
+export const vote = (id: number, value: 1 | -1 | 0) =>
+  call(`/v1/issues/${id}/vote`, VoteResponse, value === 0 ? { method: "DELETE" } : { method: "POST", body: json({ value }) });
 export const reportIssue = (id: number, reason: string) => call(`/v1/issues/${id}/report`, Nothing, { method: "POST", body: json({ reason }) });
 
 export const submitPromise = (body: unknown) => call("/v1/promise-submissions", Created, { method: "POST", body: json(body) });
@@ -73,3 +77,18 @@ export const reviewSubmission = (id: number, body: unknown) =>
 
 export const changePassword = (body: unknown) => call("/v1/auth/change-password", Nothing, { method: "POST", body: json(body) });
 export const deleteAccount = (body: unknown) => call("/v1/auth/delete-account", Nothing, { method: "POST", body: json(body) });
+
+// ---- Causes, news, email links ------------------------------------------------
+export const getCauses = () => call("/v1/causes/current", CausesResponse);
+export const voteCause = (id: number, value: 1 | -1 | 0) =>
+  call(`/v1/causes/${id}/vote`, VoteResponse, value === 0 ? { method: "DELETE" } : { method: "POST", body: json({ value }) });
+export const submitNews = (body: unknown) => call("/v1/news", Created, { method: "POST", body: json(body) });
+export const getNewsQueue = () => call("/v1/moderation/news", z.object({ items: z.array(NewsItem) }));
+export const reviewNews = (id: number, body: unknown) => call(`/v1/moderation/news/${id}`, Nothing, { method: "POST", body: json(body) });
+
+export const verifyEmail = (token: string) => call("/v1/auth/verify-email", Nothing, { method: "POST", body: json({ token }), token: null });
+export const resendVerification = () => call("/v1/auth/resend-verification", Nothing, { method: "POST" });
+export const forgotPassword = (email: string) => call("/v1/auth/forgot-password", Nothing, { method: "POST", body: json({ email }), token: null });
+export const resetPassword = (body: unknown) => call("/v1/auth/reset-password", Nothing, { method: "POST", body: json(body), token: null });
+export const getOutbox = () =>
+  call("/v1/dev/outbox", z.object({ emails: z.array(z.object({ to: z.string(), subject: z.string(), text: z.string(), sentAt: z.string() })) }), { token: null });

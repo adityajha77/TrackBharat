@@ -29,7 +29,7 @@ export function createLeaderboardService(db: Pick<Database, "execute">, now: () 
         WITH activity AS (
           SELECT i.id, i.title, i.category, i.status, i.created_at >= ${since} AS is_new,
                  c.slug, c.name AS cname, s.name AS state, c.is_demo,
-                 (SELECT count(*) FROM issue_votes v WHERE v.issue_id = i.id AND v.created_at >= ${since})::int AS votes
+                 (SELECT count(*) FROM issue_votes v WHERE v.issue_id = i.id AND v.created_at >= ${since} AND v.counted AND v.value = 1)::int AS votes
           FROM issues i JOIN constituencies c ON c.id = i.constituency_id JOIN states s ON s.id = c.state_id
           WHERE i.status <> 'HIDDEN'
         ),

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/link";
 import { useState } from "react";
 import { CalendarClock, ChevronRight } from "lucide-react";
 import type { PromiseStatus, PromiseSummary } from "@trackbharat/shared";
@@ -34,7 +34,7 @@ export function PromiseList({ promises }: { promises: PromiseSummary[] }) {
         ))}
       </div>
 
-      <ul className="mt-4 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface">
+      <ul className="mt-4 divide-y divide-border overflow-hidden brutal rounded-md bg-surface">
         {visible.map((p) => {
           const overdue = p.deadline && p.deadline < today && !["FULFILLED", "BROKEN"].includes(p.status);
           return (

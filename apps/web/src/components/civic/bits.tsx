@@ -32,7 +32,7 @@ export function SourceLink({ source, className }: { source: Source; className?: 
 
 export function DemoNotice() {
   return (
-    <div role="note" className="flex items-start gap-3 rounded-xl border border-saffron/40 bg-saffron/10 px-4 py-3 text-sm">
+    <div role="note" className="flex items-start gap-3 rounded-md border border-saffron/40 bg-saffron/10 px-4 py-3 text-sm">
       <FlaskConical className="mt-0.5 size-4 shrink-0 text-saffron" aria-hidden />
       <p>
         <strong>Demo data.</strong> This constituency, its representative, party and promises are fictional. They exist only to
@@ -44,7 +44,7 @@ export function DemoNotice() {
 
 export function OutdatedBoundaryNote() {
   return (
-    <div role="note" className="flex items-start gap-3 rounded-xl border border-border bg-surface-muted px-4 py-3 text-sm">
+    <div role="note" className="flex items-start gap-3 brutal rounded-md bg-surface-muted px-4 py-3 text-sm">
       <TriangleAlert className="mt-0.5 size-4 shrink-0 text-saffron" aria-hidden />
       <p className="text-muted">
         <strong className="text-foreground">Boundaries changed recently.</strong> Constituencies in Assam (2023) and Jammu &amp;

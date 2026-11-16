@@ -11,6 +11,12 @@ import {
   PromiseDetail,
   ReportCard,
   WeeklyHighlights,
+  CausesResponse,
+  NewsList,
+  NetaResponse,
+  PartiesResponse,
+  PartyDetail,
+  Timeline,
 } from "@trackbharat/shared";
 import type { z } from "zod";
 
@@ -175,4 +181,68 @@ async function cachedGetLeaderboard(period: "day" | "week") {
 }
 export async function getLeaderboard(period: "day" | "week") {
   return unwrap(await cachedGetLeaderboard(period));
+}
+
+// ---- Phase 3b: causes, news, parties, timeline, netas ------------------------
+
+/** Logged-out view of this week's causes (no "my vote"): cached for a minute. */
+async function cachedGetCauses() {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("causes");
+  return capture(() => request(`/v1/causes/current`, CausesResponse));
+}
+export async function getCausesPublic() {
+  return unwrap(await cachedGetCauses());
+}
+
+async function cachedGetNews(state: string | null) {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("news");
+  return capture(() => request(`/v1/news${state ? `?state=${encodeURIComponent(state)}` : ""}`, NewsList));
+}
+export async function getNews(state: string | null = null) {
+  return unwrap(await cachedGetNews(state));
+}
+
+/** Curated party data changes when the import runs: cache for hours. */
+async function cachedGetParties() {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("parties");
+  return capture(() => request(`/v1/parties`, PartiesResponse));
+}
+export async function getParties() {
+  return unwrap(await cachedGetParties());
+}
+
+async function cachedGetParty(slug: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("parties");
+  return capture(() => request(`/v1/parties/${slug}`, PartyDetail));
+}
+export async function getParty(slug: string) {
+  return unwrap(await cachedGetParty(slug));
+}
+
+async function cachedGetTimeline() {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("parties");
+  return capture(() => request(`/v1/timeline`, Timeline));
+}
+export async function getTimeline() {
+  return unwrap(await cachedGetTimeline());
+}
+
+async function cachedGetNetas(house: "LOK_SABHA" | "VIDHAN_SABHA") {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("netas");
+  return capture(() => request(`/v1/netas?house=${house}`, NetaResponse));
+}
+export async function getNetas(house: "LOK_SABHA" | "VIDHAN_SABHA") {
+  return unwrap(await cachedGetNetas(house));
 }

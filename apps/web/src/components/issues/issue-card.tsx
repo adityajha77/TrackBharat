@@ -1,9 +1,9 @@
-import Link from "next/link";
+import Link from "@/components/link";
 import { Camera, Clock } from "lucide-react";
 import type { IssueSummary } from "@trackbharat/shared";
 import { CATEGORY } from "@/lib/labels";
 import { IssueStatusBadge } from "./issue-status";
-import { VoteButton } from "./vote-button";
+import { UpDownVote } from "@/components/voices/up-down-vote";
 
 const ago = (iso: string) => {
   const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
@@ -12,14 +12,7 @@ const ago = (iso: string) => {
 
 export function IssueCard({ issue, signedIn, rank }: { issue: IssueSummary; signedIn: boolean; rank?: number }) {
   return (
-    <article className="flex gap-4 rounded-2xl border border-border bg-surface p-4">
-      <VoteButton
-        issueId={issue.id}
-        votes={issue.votesThisWeek}
-        voted={issue.votedByMe ?? false}
-        signedIn={signedIn}
-        disabled={issue.status === "RESOLVED" ? "Resolved issues can't be voted on" : undefined}
-      />
+    <article className="brutal flex gap-4 rounded-md bg-surface p-4">
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
           {rank && <span className="font-mono font-semibold text-saffron">#{rank}</span>}
@@ -39,10 +32,22 @@ export function IssueCard({ issue, signedIn, rank }: { issue: IssueSummary; sign
           </span>
           <span>{issue.votesTotal} votes all-time</span>
         </p>
+        <div className="mt-3">
+          <UpDownVote
+            kind="issue"
+            id={issue.id}
+            up={issue.votesThisWeek}
+            down={issue.downVotesThisWeek}
+            myVote={issue.myVote ?? 0}
+            signedIn={signedIn}
+            size="sm"
+            disabled={issue.status === "RESOLVED" ? "Resolved issues can't be voted on" : undefined}
+          />
+        </div>
       </div>
       {issue.photoPath && (
         // eslint-disable-next-line @next/next/no-img-element -- our own already-optimised WebP, served via /media
-        <img src={issue.photoPath} alt="" loading="lazy" className="hidden size-20 shrink-0 rounded-xl object-cover sm:block" />
+        <img src={issue.photoPath} alt="" loading="lazy" className="hidden size-20 shrink-0 rounded-md border-2 border-ink object-cover sm:block" />
       )}
     </article>
   );

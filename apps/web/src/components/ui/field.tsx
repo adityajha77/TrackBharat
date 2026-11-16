@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 /** Form primitives: one consistent look for every input on the site. */
 const control =
-  "mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm outline-none transition-colors placeholder:text-muted focus:border-primary disabled:opacity-60";
+  "mt-1.5 w-full rounded-md border-2 border-ink bg-surface px-3 py-2.5 text-sm outline-none transition-shadow placeholder:text-muted focus:shadow-[3px_3px_0_var(--ink)] disabled:opacity-60";
 
 export function Field({ label, hint, children, className }: { label: string; hint?: ReactNode; children: ReactNode; className?: string }) {
   return (

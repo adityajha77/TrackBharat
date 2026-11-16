@@ -8,12 +8,14 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #fbfaf7; /* warm paper */
-  --surface: #ffffff;
-  --surface-muted: #f3f1eb;
-  --foreground: #14151a;
-  --muted: #5f6472;
-  --border: #e5e1d8;
+  --background: #f4efe4; /* newsprint paper */
+  --surface: #fffdf8;
+  --surface-muted: #ebe4d4;
+  --foreground: #16161a;
+  --muted: #55565e;
+  --border: #d8cfbd;
+  /* Brutalist ink: the colour of thick borders and hard shadows */
+  --ink: #16161a;
 
   --primary: #1f3d99; /* Ashoka navy: trust */
   --primary-foreground: #ffffff;
@@ -31,12 +33,13 @@
 }
 
 .dark {
-  --background: #0c0e13;
-  --surface: #141720;
-  --surface-muted: #1b1f2a;
-  --foreground: #eceef3;
-  --muted: #9aa1b2;
-  --border: #262b38;
+  --background: #101114;
+  --surface: #181a1f;
+  --surface-muted: #22252c;
+  --foreground: #efece4;
+  --muted: #a3a3a8;
+  --border: #30333b;
+  --ink: #efece4;
 
   --primary: #8aa8ff;
   --primary-foreground: #0c0e13;
@@ -55,6 +58,7 @@
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-border: var(--border);
+  --color-ink: var(--ink);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-saffron: var(--saffron);
@@ -66,8 +70,10 @@
   --color-flag-green: var(--flag-green);
   --color-flag-navy: var(--flag-navy);
 
-  --font-sans: var(--font-geist-sans);
-  --font-hindi: var(--font-devanagari);
+  /* Latin first, then one Noto font per Indian script: the browser picks by glyph. */
+  --font-sans: var(--font-geist-sans), var(--font-deva), var(--font-gujr), var(--font-beng), var(--font-taml), var(--font-telu),
+    var(--font-knda), var(--font-mlym), var(--font-guru), var(--font-orya), var(--font-arab);
+  --font-hindi: var(--font-deva);
   --font-mono: var(--font-geist-mono);
 }
 
@@ -90,36 +96,14 @@
   }
 }
 
-/* --- Tiranga (waving flag) — see components/india/waving-flag.tsx --------- */
-/* Registered custom property: unlike a normal CSS variable, the browser knows
-   it's a number, so it can be ANIMATED smoothly. Used as the fold shadow strength. */
-@property --shade {
-  syntax: "<number>";
-  inherits: false;
-  initial-value: 0;
-}
-.tiranga-slice {
-  flex: 1;
-  /* 1px overlap hides the sub-pixel seams between animated slices */
-  margin-right: -1px;
-  /* Wave (movement) and shade (light in the folds) share timing, so they stay in sync */
-  animation:
-    tiranga-wave 2.6s ease-in-out infinite,
-    tiranga-shade 2.6s ease-in-out infinite;
-}
-@keyframes tiranga-wave {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(var(--amp, 4%)); }
-}
-@keyframes tiranga-shade {
-  0%, 100% { --shade: 0; }
-  50% { --shade: 0.1; }
-}
-
 /* Slow, almost subconscious rotation for the background chakra */
 .chakra-spin {
   animation: chakra-spin 120s linear infinite;
 }
+.chakra-spin-fast {
+  animation: chakra-spin 24s linear infinite;
+}
+.dark .chakra-spin-fast { color: var(--flag-navy); }
 @keyframes chakra-spin {
   to { transform: rotate(360deg); }
 }
@@ -131,6 +115,85 @@
     linear-gradient(to bottom, color-mix(in oklab, var(--foreground) 6%, transparent) 1px, transparent 1px);
   background-size: 44px 44px;
   mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 40%, transparent 100%);
+}
+
+/* --- Brutalist + bento primitives ---------------------------------------- */
+/* Hard offset shadow: the "sticker on paper" look. Pressing moves the element INTO its shadow. */
+.brutal {
+  border: 2px solid var(--ink);
+  box-shadow: 4px 4px 0 var(--ink);
+}
+.brutal-sm {
+  border: 2px solid var(--ink);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+.press {
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.press:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0 var(--ink);
+}
+.press:active {
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px 0 var(--ink);
+}
+.brutal-sm.press:hover { box-shadow: 3px 3px 0 var(--ink); }
+.brutal-sm.press:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--ink); }
+
+/* Tricolour ribbon: three soft bands that drift like cloth in the wind (no full flag). */
+.ribbon-band {
+  animation: ribbon-drift 9s ease-in-out infinite;
+  transform-origin: left center;
+}
+.ribbon-band:nth-child(2) { animation-delay: -3s; }
+.ribbon-band:nth-child(3) { animation-delay: -6s; }
+@keyframes ribbon-drift {
+  0%, 100% { transform: translateX(0) skewY(-6deg) scaleY(1); }
+  50% { transform: translateX(-4%) skewY(-3deg) scaleY(1.15); }
+}
+
+/* Reveal on scroll: CSS scroll-driven animation where supported, visible everywhere else. */
+@supports (animation-timeline: view()) {
+  .reveal {
+    animation: reveal linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 40%;
+  }
+}
+/* Movement only, never opacity: if a browser stalls the timeline, content is still readable. */
+@keyframes reveal {
+  from { transform: translateY(28px) rotate(-0.4deg); }
+  to { transform: none; }
+}
+
+/* Progress ring (manifestos): the arc grows from 0 to --p when it scrolls into view */
+@property --p {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+.ring-arc {
+  stroke-dasharray: calc(var(--p) * 1%) 100%;
+  animation: ring-grow 1.2s ease-out both;
+}
+@keyframes ring-grow {
+  from { --p: 0; }
+}
+.bar-grow {
+  animation: bar-grow 1s ease-out both;
+  transform-origin: left;
+}
+@keyframes bar-grow {
+  from { transform: scaleX(0); }
+}
+
+/* Marquee for the motto band */
+.marquee {
+  animation: marquee 40s linear infinite;
+}
+@keyframes marquee {
+  to { transform: translateX(-50%); }
 }
 
 @media (prefers-reduced-motion: reduce) {

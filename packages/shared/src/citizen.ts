@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { CreatePromiseInput, PromiseCategory } from "./civic";
 import { Pincode } from "./pincode";
+import { MyVote } from "./voices";
 
 /**
  * Contract for Phase 2: accounts, citizen issues, votes and moderation.
@@ -10,7 +11,13 @@ import { Pincode } from "./pincode";
 export const UserRole = z.enum(["CITIZEN", "VERIFIER", "MODERATOR", "ADMIN"]);
 export type UserRole = z.infer<typeof UserRole>;
 
-export const PublicUser = z.object({ id: z.number().int(), name: z.string(), role: UserRole });
+export const PublicUser = z.object({
+  id: z.number().int(),
+  name: z.string(),
+  role: UserRole,
+  /** false = signed up but hasn't clicked the email link yet; their votes don't count in rankings. */
+  emailVerified: z.boolean().optional(),
+});
 export type PublicUser = z.infer<typeof PublicUser>;
 
 export const SignupInput = z.object({
@@ -51,12 +58,15 @@ export const IssueSummary = z.object({
   createdAt: z.iso.datetime(),
   /** Path relative to the site, e.g. "/media/issues/<uuid>.webp". */
   photoPath: z.string().nullable(),
+  /** "Faced this too" votes this week (counted votes only). */
   votesThisWeek: z.number().int(),
+  /** "Not accurate" votes this week. */
+  downVotesThisWeek: z.number().int(),
   votesTotal: z.number().int(),
   /** Short public name, e.g. "Priya S.": never the full name or email. */
   reporter: z.string(),
-  /** Only present when the request is authenticated. */
-  votedByMe: z.boolean().optional(),
+  /** My vote this week; only present when the request is authenticated. */
+  myVote: MyVote.optional(),
 });
 export type IssueSummary = z.infer<typeof IssueSummary>;
 
@@ -77,7 +87,7 @@ export const WeeklyHighlights = z.object({
 });
 export type WeeklyHighlights = z.infer<typeof WeeklyHighlights>;
 
-export const VoteResponse = z.object({ voted: z.boolean(), votesThisWeek: z.number().int() });
+export const VoteResponse = z.object({ myVote: MyVote, up: z.number().int(), down: z.number().int(), counted: z.boolean() });
 
 export const ReportReason = z.enum(["SPAM", "ABUSIVE", "FALSE_INFORMATION", "PERSONAL_INFORMATION", "DUPLICATE", "OTHER"]);
 export const ReportIssueInput = z.object({ reason: ReportReason });

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/link";
 import { BookOpenCheck, Info, Scale, TrendingUp } from "lucide-react";
 import type { QuestionStats, ReportCard as ReportCardData } from "@trackbharat/shared";
 import { Badge, Card } from "@/components/ui/card";
@@ -123,7 +123,7 @@ export function ReportCard({ data }: { data: ReportCardData }) {
       </Card>
 
       {data.overall === null && (
-        <p className="flex gap-2 rounded-xl border border-border bg-surface-muted px-4 py-3 text-sm text-muted">
+        <p className="flex gap-2 brutal rounded-md bg-surface-muted px-4 py-3 text-sm text-muted">
           <Info className="mt-0.5 size-4 shrink-0" aria-hidden />
           <span>
             We only show an overall score when at least two parts have enough data. An honest &ldquo;not enough data yet&rdquo; is better than a

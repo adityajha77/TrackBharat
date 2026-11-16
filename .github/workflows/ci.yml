@@ -84,3 +84,68 @@ jobs:
           push: false
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  e2e:
+    name: Browser tests (Playwright)
+    runs-on: ubuntu-latest
+    needs: check
+    timeout-minutes: 30
+    services:
+      db:
+        image: postgis/postgis:17-3.5
+        env:
+          POSTGRES_USER: trackbharat
+          POSTGRES_PASSWORD: trackbharat
+          POSTGRES_DB: trackbharat
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U trackbharat"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      DATABASE_URL: postgres://trackbharat:trackbharat@localhost:5432/trackbharat
+      CORS_ORIGINS: http://localhost:3200
+      WEB_URL: http://localhost:3200
+      API_URL: http://localhost:4000
+      E2E_BASE_URL: http://localhost:3200
+      SKIP_PHOTOS: "1" # don't fetch leader photos from Wikimedia in CI
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # Real public data (constituencies, PIN codes, MPs) + curated data + the seed.
+      # The slow parliamentary-questions crawl is skipped.
+      - name: Database
+        run: |
+          pnpm db:migrate
+          pnpm db:import constituencies assembly pins members parties news-feeds mlas
+          pnpm db:seed
+
+      # Always a CLEAN production build: a stale build cache once served old CSS.
+      - name: Build web
+        run: pnpm --filter @trackbharat/web build
+
+      - name: Start API and web
+        run: |
+          # API in "test" mode with no SMTP: emails go to the dev outbox the tests read
+          NODE_ENV=test pnpm --filter @trackbharat/api exec tsx src/server.ts > api.log 2>&1 &
+          pnpm --filter @trackbharat/web exec next start --port 3200 > web.log 2>&1 &
+          npx wait-on -t 120000 http://localhost:4000/health http://localhost:3200
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+
+      - name: Upload traces and logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-results
+          path: |
+            test-results/
+            api.log
+            web.log

@@ -1,8 +1,9 @@
 # TrackBharat
 
-**Vote with facts, not faces.** TrackBharat makes political promises measurable and government performance
-understandable to ordinary Indian citizens. Enter your PIN code to see your area, your representatives, the promises
-they made, and what actually happened.
+**Vote with facts, not faces.** See what's wrong in your locality, vote on India's Causes of the Week, know your neta,
+and check every promise against the evidence, in 12 Indian languages.
+
+> *"We are not from any party or any religion. Our only motto is transparency: India deserves to see the truth."*
 
 [![CI](https://github.com/adityajha77/TrackBharat/actions/workflows/ci.yml/badge.svg)](https://github.com/adityajha77/TrackBharat/actions/workflows/ci.yml)
 
@@ -18,10 +19,18 @@ they made, and what actually happened.
 
 ## Status
 
-**Phases 0–3 are built.** PIN code → Lok Sabha seat and assembly seat, your MP, a sourced promise tracker, **report cards** with a
-published formula and a comparison with the previous MP, citizen problem reports with weekly votes, and a **national leaderboard of
-what India is asking for** (today / this week). Accounts, roles, moderation, open-data CSVs and end-to-end tests are in. Next:
-state-by-state MLA data, then going live (Phase 4) and the mobile app (Phase 5). See the [roadmap](docs/ARCHITECTURE.md#11-roadmap).
+**Phases 0–3b are built.**
+- **Your area:** PIN code → Lok Sabha and assembly seat, your MP (and MLA in 14 states), report cards with a published formula.
+- **Raise your voice:** report local problems with photos; neighbours vote **"faced this too" / "not accurate"**; every Monday
+  the most common problems become **India's Causes of the Week** (vote up/down, share to X, WhatsApp, Facebook, Telegram).
+- **News that needs a voice:** RSS headlines → a verifier writes a short sourced summary (state, district, who is responsible).
+- **Manifestos, promised vs done** with evidence links, and **how India's parties evolved**: a neutral, sourced timeline with
+  credited free-licence photos.
+- **Know Your Neta:** every sitting MP and MLA, by state and party.
+- **12 languages** (English, हिन्दी, मराठी, ગુજરાતી, বাংলা, தமிழ், తెలుగు, ಕನ್ನಡ, മലയാളം, ਪੰਜਾਬੀ, ଓଡ଼ିଆ, اردو), email verification,
+  password reset, moderation, open-data CSVs, and browser tests in CI.
+
+Next: going live (Phase 4) and the mobile app (Phase 5). See the [roadmap](docs/ARCHITECTURE.md#11-roadmap).
 
 ## Run it locally
 
@@ -36,12 +45,15 @@ pnpm db:up        # Postgres + PostGIS in Docker, on localhost:5433
 pnpm db:migrate   # create the tables
 pnpm db:import    # public data: constituencies, assembly seats, post offices, MPs, previous MPs (~1 min)
 pnpm db:import questions   # parliamentary questions per MP (slow, ~20 min once; resumable, then cached)
+pnpm db:import parties news-feeds mlas   # curated data: parties, manifestos, timeline, news feeds, MLAs
 pnpm db:seed      # sample data incl. the fictional "Demo Nagar" promise-tracker demo
 pnpm dev          # API → http://localhost:4000 · web → http://localhost:3000
-pnpm worker       # (optional) the weekly-highlights scheduler
+pnpm worker       # (optional) scheduler: weekly rankings + Causes of the Week (Mon), news headlines (every 2 h)
+pnpm --filter @trackbharat/api job:news   # fetch news headlines once, now
 ```
 
 Log in locally with `citizen@`, `verifier@`, `moderator@` or `admin@trackbharat.local` (the password is in `apps/api/src/db/seed.ts`).
+Without `SMTP_URL`, emails (verification, password reset) go to a local outbox at http://localhost:3000/dev/outbox.
 
 Try it: open http://localhost:3000 and search `560034`, or open http://localhost:3000/constituency/demo-nagar.
 
@@ -73,6 +85,10 @@ Whole stack in containers (production-like): `docker compose --profile full up -
 | GET | `/v1/constituencies/:slug/report-card` | Score, components, questions asked, previous-MP comparison |
 | GET | `/v1/leaderboard?period=day` or `week` | National problems by category, issue, constituency and state |
 | GET | `/v1/insights`, `/v1/export/:dataset.csv` | India-wide totals; open-data downloads |
+| GET / POST | `/v1/causes/current`, `/v1/causes/:id/vote` | India's Causes of the Week; vote `{ "value": 1 \| -1 }` |
+| GET / POST | `/v1/news`, `/v1/moderation/news/:id` | Published stories; suggest a story; verifier review |
+| GET | `/v1/parties`, `/v1/parties/:slug`, `/v1/timeline`, `/v1/netas?house=` | Manifestos, party timeline, Know Your Neta |
+| POST | `/v1/auth/verify-email`, `forgot-password`, `reset-password` | One-time email links |
 | POST | `/v1/auth/signup`, `login`, `logout`, `change-password`, `delete-account` | Accounts (Argon2 passwords, opaque session tokens) |
 | GET / POST | `/v1/constituencies/:slug/issues`, `/v1/issues`, `…/vote`, `…/report` | Citizen issues, weekly votes, community reports |
 | POST | `/v1/admin/promises…`, `/v1/moderation/…` | Verifier / moderator actions (role-checked and audited); every promise needs an https source |
@@ -95,4 +111,6 @@ Built by [Aditya Jha](https://www.linkedin.com/in/aditya-kumar-jha-72493a319/).
 
 **Data:** constituency boundaries by DataMeet / Arun Ganesh (CC0) · post office directory by the Department of Posts
 (Government Open Data Licence – India, via IndiaPIN) · members from the Lok Sabha Secretariat (sansad.in) · PIN lookups
-by India Post. Details in [ADR-0006](docs/adr/0006-public-data-sources-and-privacy.md).
+by India Post. Details in [ADR-0006](docs/adr/0006-public-data-sources-and-privacy.md). MLA lists, party history and manifesto
+summaries cite Wikipedia (which cites ECI and the parties) until official links are added; leader photos are from Wikimedia
+Commons under free licences, credited on the page.

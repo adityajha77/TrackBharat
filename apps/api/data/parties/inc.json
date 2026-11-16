@@ -1,0 +1,62 @@
+{
+  "slug": "inc",
+  "name": "Indian National Congress",
+  "shortName": "INC",
+  "founded": "1885-12-28",
+  "founders": "Allan Octavian Hume, Dadabhai Naoroji, Dinshaw Wacha and others; first president W. C. Bonnerjee",
+  "mission": "Describes itself as committed to secularism, democratic socialism and inclusive welfare, building on its role in the independence movement.",
+  "missionSource": "https://en.wikipedia.org/wiki/Indian_National_Congress",
+  "symbol": "Hand",
+  "color": "#19AAED",
+  "sortOrder": 10,
+  "leaders": [
+    { "name": "Jawaharlal Nehru", "role": "Prime Minister", "years": "1947–1964", "wikipedia": "Jawaharlal_Nehru", "quote": "At the stroke of the midnight hour, when the world sleeps, India will awake to life and freedom.", "quoteSource": "https://en.wikipedia.org/wiki/Tryst_with_Destiny" },
+    { "name": "Lal Bahadur Shastri", "role": "Prime Minister", "years": "1964–1966", "wikipedia": "Lal_Bahadur_Shastri", "quote": "Jai Jawan, Jai Kisan (Hail the soldier, hail the farmer)", "quoteSource": "https://en.wikipedia.org/wiki/Jai_Jawan_Jai_Kisan" },
+    { "name": "Indira Gandhi", "role": "Prime Minister", "years": "1966–1977, 1980–1984", "wikipedia": "Indira_Gandhi", "quote": "Garibi Hatao (Remove poverty)", "quoteSource": "https://en.wikipedia.org/wiki/Garibi_Hatao" },
+    { "name": "Manmohan Singh", "role": "Prime Minister", "years": "2004–2014", "wikipedia": "Manmohan_Singh" },
+    { "name": "Mallikarjun Kharge", "role": "Party president", "years": "2022–", "wikipedia": "Mallikarjun_Kharge" }
+  ],
+  "events": [
+    { "date": "1885-12-28", "precision": "DAY", "title": "Founded in Bombay", "body": "The first session is held in Bombay with 72 delegates; W. C. Bonnerjee presides.", "source": "https://en.wikipedia.org/wiki/Indian_National_Congress" },
+    { "date": "1929-12-31", "precision": "DAY", "title": "Purna Swaraj resolution", "body": "At the Lahore session the party adopts complete independence as its goal.", "source": "https://en.wikipedia.org/wiki/Indian_National_Congress" },
+    { "date": "1947-08-15", "precision": "DAY", "title": "Forms independent India's first government", "body": "Jawaharlal Nehru becomes the first Prime Minister.", "source": "https://en.wikipedia.org/wiki/Jawaharlal_Nehru" },
+    { "date": "1969-11-12", "precision": "MONTH", "title": "Party splits", "body": "The party divides into Congress (R), led by Indira Gandhi, and Congress (O).", "source": "https://en.wikipedia.org/wiki/Indian_National_Congress" },
+    { "date": "1977-03-22", "precision": "MONTH", "title": "Loses power for the first time", "body": "After the Emergency, the party loses the general election to the Janata Party.", "source": "https://en.wikipedia.org/wiki/Janata_Party" },
+    { "date": "1980-01-14", "precision": "MONTH", "title": "Returns to power", "body": "Indira Gandhi becomes Prime Minister again after the 1980 general election.", "source": "https://en.wikipedia.org/wiki/Indira_Gandhi" },
+    { "date": "2004-05-22", "precision": "DAY", "title": "Leads the UPA government", "body": "Manmohan Singh becomes Prime Minister of a coalition government.", "source": "https://en.wikipedia.org/wiki/Manmohan_Singh" },
+    { "date": "2014-05-16", "precision": "DAY", "title": "Reduced to 44 seats", "body": "Its lowest Lok Sabha tally at the time.", "source": "https://en.wikipedia.org/wiki/2014_Indian_general_election" },
+    { "date": "2024-06-04", "precision": "DAY", "title": "Wins 99 seats", "body": "The party becomes the largest opposition party; Rahul Gandhi becomes Leader of the Opposition.", "source": "https://en.wikipedia.org/wiki/2024_Indian_general_election" }
+  ],
+  "manifestos": [
+    {
+      "year": 2024,
+      "title": "Nyay Patra",
+      "source": "https://manifesto.inc.in/en/",
+      "formedGovernment": false,
+      "promises": [
+        { "category": "EMPLOYMENT", "text": "Fill about 30 lakh vacant central government posts." },
+        { "category": "EMPLOYMENT", "text": "A right to apprenticeship: a one-year paid apprenticeship of Rs 1 lakh for graduates and diploma holders under 25." },
+        { "category": "LOCAL_DEVELOPMENT", "text": "Mahalakshmi scheme: Rs 1 lakh a year to every poor family, paid to the eldest woman." },
+        { "category": "AGRICULTURE", "text": "A legal guarantee for minimum support prices (MSP) as recommended by the Swaminathan Commission." },
+        { "category": "OTHER", "text": "A nationwide socio-economic and caste census." },
+        { "category": "OTHER", "text": "A constitutional amendment to raise the 50% cap on reservations for SC, ST and OBC." },
+        { "category": "EMPLOYMENT", "text": "Scrap the Agnipath scheme and return to regular army recruitment." },
+        { "category": "EMPLOYMENT", "text": "A national minimum wage of Rs 400 a day, including under MGNREGA." }
+      ]
+    },
+    {
+      "year": 2019,
+      "title": "Hum Nibhayenge",
+      "source": "https://en.wikipedia.org/wiki/Indian_National_Congress_campaign_for_the_2019_Indian_general_election",
+      "formedGovernment": false,
+      "promises": [
+        { "category": "LOCAL_DEVELOPMENT", "text": "NYAY: Rs 72,000 a year to the poorest 20% of families (about 5 crore families)." },
+        { "category": "EMPLOYMENT", "text": "Fill 22 lakh vacant government posts by March 2020." },
+        { "category": "AGRICULTURE", "text": "A separate 'Kisan budget' for agriculture every year." },
+        { "category": "SAFETY", "text": "Omit the sedition offence (Section 124A) from the Indian Penal Code." },
+        { "category": "OTHER", "text": "33% reservation for women in the Lok Sabha and state assemblies." },
+        { "category": "OTHER", "text": "Scrap the electoral bond scheme." }
+      ]
+    }
+  ]
+}

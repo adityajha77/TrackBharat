@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { refresh, updateTag } from "next/cache";
-import { ChangePasswordInput, DeleteAccountInput, LoginInput, SignupInput } from "@trackbharat/shared";
+import { ChangePasswordInput, DeleteAccountInput, LoginInput, ResetPasswordInput, ReviewNewsInput, SignupInput, SubmitNewsInput } from "@trackbharat/shared";
 import { ApiError } from "@/lib/api";
 import * as api from "@/lib/api-user";
 import { clearSessionCookie, setSessionCookie } from "@/lib/session";
@@ -74,14 +74,21 @@ export async function createIssueAction(_prev: ActionState, form: FormData): Pro
   redirect(`/issues/${id}?new=1`);
 }
 
-export async function voteAction(issueId: number, up: boolean): Promise<ActionState> {
+/**
+ * Up/down vote on an issue ("faced this too" / "not accurate") or on one of
+ * India's Causes of the Week. value 0 = take my vote back.
+ */
+export async function voteAction(kind: "issue" | "cause", id: number, value: 1 | -1 | 0): Promise<ActionState & { counted?: boolean }> {
+  let counted = true;
   try {
-    await api.vote(issueId, up);
+    const res = kind === "issue" ? await api.vote(id, value) : await api.voteCause(id, value);
+    counted = res.counted;
   } catch (e) {
     return { error: message(e) };
   }
+  if (kind === "cause") updateTag("causes");
   refresh(); // re-render the current page with fresh vote counts
-  return { ok: true };
+  return { ok: true, counted };
 }
 
 export async function reportIssueAction(issueId: number, reason: string): Promise<ActionState> {
@@ -160,4 +167,68 @@ export async function deleteAccountAction(_prev: ActionState, form: FormData): P
   }
   await clearSessionCookie();
   redirect("/?deleted=1");
+}
+
+// ---- News ----------------------------------------------------------------------
+export async function submitNewsAction(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const parsed = SubmitNewsInput.safeParse({ url: form.get("url"), headline: form.get("headline"), note: form.get("note") || undefined });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message, values: fieldsOf(form) };
+  try {
+    await api.submitNews(parsed.data);
+  } catch (e) {
+    return { error: message(e), values: fieldsOf(form) };
+  }
+  return { ok: true };
+}
+
+export async function reviewNewsAction(id: number, _prev: ActionState, form: FormData): Promise<ActionState> {
+  const decision = form.get("decision");
+  const opt = (k: string) => (String(form.get(k) ?? "").trim() || undefined);
+  const parsed = ReviewNewsInput.safeParse(
+    decision === "REJECT"
+      ? { decision }
+      : { decision: "PUBLISH", summary: opt("summary"), state: opt("state"), district: opt("district"), responsible: opt("responsible"), category: opt("category") },
+  );
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message, values: fieldsOf(form) };
+  try {
+    await api.reviewNews(id, parsed.data);
+  } catch (e) {
+    return { error: message(e), values: fieldsOf(form) };
+  }
+  updateTag("news");
+  refresh();
+  return { ok: true };
+}
+
+// ---- Email links -----------------------------------------------------------------
+export async function forgotPasswordAction(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const email = String(form.get("email") ?? "").trim();
+  if (!email.includes("@")) return { error: "Enter a valid email address", values: fieldsOf(form) };
+  try {
+    await api.forgotPassword(email);
+  } catch (e) {
+    return { error: message(e), values: fieldsOf(form) };
+  }
+  return { ok: true }; // same answer whether or not the account exists
+}
+
+export async function resetPasswordAction(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const parsed = ResetPasswordInput.safeParse({ token: form.get("token"), newPassword: form.get("newPassword") });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message };
+  if (form.get("newPassword") !== form.get("confirm")) return { error: "The two passwords don't match" };
+  try {
+    await api.resetPassword(parsed.data);
+  } catch (e) {
+    return { error: message(e) };
+  }
+  return { ok: true };
+}
+
+export async function resendVerificationAction(): Promise<ActionState> {
+  try {
+    await api.resendVerification();
+    return { ok: true };
+  } catch (e) {
+    return { error: message(e) };
+  }
 }

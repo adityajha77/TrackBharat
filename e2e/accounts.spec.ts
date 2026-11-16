@@ -39,7 +39,7 @@ test("signup: a new account lands on My activity and the header shows the user",
 
   await expect(page).toHaveURL(/\/me$/);
   await expect(page.getByRole("heading", { name: /Namaste, Asha/ })).toBeVisible();
-  await expect(page.locator("header summary")).toContainText("Asha");
+  await expect(page.locator("header details.group > summary")).toContainText("Asha");
 });
 
 test("a logged-out visitor is sent to log in, then back where they were going", async ({ page }) => {
@@ -68,7 +68,7 @@ test("logout ends the session on the server too", async ({ page, context }) => {
   const stolen = (await context.cookies()).find((c) => c.name === "tb_session")!;
   expect(stolen.httpOnly).toBe(true); // JavaScript can't read the session cookie
 
-  await page.locator("header summary").click();
+  await page.locator("header details.group > summary").click();
   await page.getByRole("button", { name: "Log out" }).click();
   await expect(page).toHaveURL(/\/$/);
   await expect(page.locator("header").getByRole("link", { name: "Log in" })).toBeVisible();

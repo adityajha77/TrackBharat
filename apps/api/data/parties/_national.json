@@ -1,0 +1,12 @@
+[
+  { "date": "1947-08-15", "precision": "DAY", "title": "Independence", "body": "India becomes independent; the Constituent Assembly continues to draft the Constitution.", "source": "https://en.wikipedia.org/wiki/Indian_Independence_Act_1947" },
+  { "date": "1950-01-26", "precision": "DAY", "title": "The Constitution comes into force", "body": "India becomes a republic. The date is celebrated as Republic Day.", "source": "https://en.wikipedia.org/wiki/Constitution_of_India" },
+  { "date": "1951-10-25", "precision": "MONTH", "title": "First general election begins", "body": "Held from October 1951 to February 1952, with universal adult franchise.", "source": "https://en.wikipedia.org/wiki/1951%E2%80%9352_Indian_general_election" },
+  { "date": "1975-06-25", "precision": "DAY", "title": "The Emergency is declared", "body": "Civil liberties are suspended until March 1977.", "source": "https://en.wikipedia.org/wiki/The_Emergency_(India)" },
+  { "date": "1977-03-24", "precision": "DAY", "title": "First non-Congress government", "body": "Morarji Desai of the Janata Party becomes Prime Minister.", "source": "https://en.wikipedia.org/wiki/Janata_Party" },
+  { "date": "1989-12-02", "precision": "DAY", "title": "National Front government", "body": "V. P. Singh of the Janata Dal becomes Prime Minister of a coalition government.", "source": "https://en.wikipedia.org/wiki/National_Front_(India)" },
+  { "date": "1991-07-24", "precision": "DAY", "title": "Economic liberalisation", "body": "The Union Budget opens up the economy (P. V. Narasimha Rao government, Finance Minister Manmohan Singh).", "source": "https://en.wikipedia.org/wiki/Economic_liberalisation_in_India" },
+  { "date": "1993-04-24", "precision": "DAY", "title": "Panchayati Raj in the Constitution", "body": "The 73rd Amendment comes into force, giving village councils constitutional status.", "source": "https://en.wikipedia.org/wiki/Seventy-third_Amendment_of_the_Constitution_of_India" },
+  { "date": "2005-10-12", "precision": "DAY", "title": "Right to Information Act in force", "body": "Any citizen can ask a public authority for information.", "source": "https://en.wikipedia.org/wiki/Right_to_Information_Act,_2005" },
+  { "date": "2023-09-28", "precision": "MONTH", "title": "Women's reservation becomes law", "body": "One-third of Lok Sabha and assembly seats are to be reserved for women after the next delimitation.", "source": "https://en.wikipedia.org/wiki/Nari_Shakti_Vandan_Adhiniyam" }
+]

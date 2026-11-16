@@ -20,9 +20,10 @@ type Row = {
   created_at: Date;
   photo_key: string | null;
   votes_this_week: number;
+  down_this_week: number;
   votes_total: number;
   reporter_name: string;
-  voted_by_me: boolean | null;
+  my_vote: number | null;
 };
 
 const toSummary = (r: Row, includeVoted: boolean): IssueSummary => ({
@@ -34,21 +35,25 @@ const toSummary = (r: Row, includeVoted: boolean): IssueSummary => ({
   createdAt: new Date(r.created_at).toISOString(),
   photoPath: r.photo_key ? `/media/issues/${r.photo_key}` : null,
   votesThisWeek: r.votes_this_week,
+  downVotesThisWeek: r.down_this_week,
   votesTotal: r.votes_total,
   reporter: shortName(r.reporter_name),
-  ...(includeVoted ? { votedByMe: Boolean(r.voted_by_me) } : {}),
+  ...(includeVoted ? { myVote: r.my_vote === 1 ? 1 : r.my_vote === -1 ? -1 : 0 } : {}),
 });
 
 /**
  * The SELECT shared by lists and details. Vote counts are computed with
- * correlated sub-queries that use the (issue_id, week_start) index.
+ * correlated sub-queries that use the (issue_id, week_start) index. Only COUNTED
+ * votes (from email-verified accounts) are added up; `FILTER` splits ups and downs
+ * in one pass.
  */
 const summarySelect = (weekStart: string, userId: number | null) => sql`
   SELECT i.id, i.title, i.category, i.status, i.pincode, i.created_at, i.photo_key,
          u.name AS reporter_name,
-         (SELECT count(*) FROM issue_votes v WHERE v.issue_id = i.id AND v.week_start = ${weekStart})::int AS votes_this_week,
-         (SELECT count(*) FROM issue_votes v WHERE v.issue_id = i.id)::int AS votes_total,
-         ${userId === null ? sql`NULL` : sql`EXISTS (SELECT 1 FROM issue_votes v WHERE v.issue_id = i.id AND v.user_id = ${userId} AND v.week_start = ${weekStart})`} AS voted_by_me
+         (SELECT count(*) FROM issue_votes v WHERE v.issue_id = i.id AND v.week_start = ${weekStart} AND v.counted AND v.value = 1)::int AS votes_this_week,
+         (SELECT count(*) FROM issue_votes v WHERE v.issue_id = i.id AND v.week_start = ${weekStart} AND v.counted AND v.value = -1)::int AS down_this_week,
+         (SELECT count(*) FROM issue_votes v WHERE v.issue_id = i.id AND v.counted AND v.value = 1)::int AS votes_total,
+         ${userId === null ? sql`NULL` : sql`(SELECT v.value FROM issue_votes v WHERE v.issue_id = i.id AND v.user_id = ${userId} AND v.week_start = ${weekStart})`}::int AS my_vote
   FROM issues i JOIN users u ON u.id = i.user_id`;
 
 export function createIssueRepository(db: Database) {
@@ -81,7 +86,7 @@ export function createIssueRepository(db: Database) {
     },
 
     async list(constituencyId: number, opts: { sort: "top" | "new"; weekStart: string; userId: number | null; limit: number }) {
-      const order = opts.sort === "top" ? sql`votes_this_week DESC, votes_total DESC, i.created_at DESC` : sql`i.created_at DESC`;
+      const order = opts.sort === "top" ? sql`votes_this_week - down_this_week DESC, votes_total DESC, i.created_at DESC` : sql`i.created_at DESC`;
       const { rows } = await db.execute<Row>(sql`
         ${summarySelect(opts.weekStart, opts.userId)}
         WHERE i.constituency_id = ${constituencyId} AND i.status <> 'HIDDEN'
@@ -129,16 +134,28 @@ export function createIssueRepository(db: Database) {
       return rows.map((r) => toSummary(r, true));
     },
 
-    /** Idempotent: voting twice in a week is a no-op (the primary key forbids duplicates). */
-    async vote(userId: number, issueId: number, weekStart: string) {
-      await db.insert(issueVotes).values({ userId, issueId, weekStart }).onConflictDoNothing();
+    /**
+     * One vote per person, per issue, per week: an UPSERT, so voting again just
+     * switches the direction (up ⇄ down) instead of adding a second vote.
+     */
+    async vote(userId: number, issueId: number, weekStart: string, value: 1 | -1, counted: boolean) {
+      await db
+        .insert(issueVotes)
+        .values({ userId, issueId, weekStart, value, counted })
+        .onConflictDoUpdate({ target: [issueVotes.userId, issueVotes.issueId, issueVotes.weekStart], set: { value, counted, createdAt: sql`now()` } });
     },
     async unvote(userId: number, issueId: number, weekStart: string) {
       await db.delete(issueVotes).where(and(eq(issueVotes.userId, userId), eq(issueVotes.issueId, issueId), eq(issueVotes.weekStart, weekStart)));
     },
-    async votesInWeek(issueId: number, weekStart: string) {
-      const [r] = await db.select({ n: count() }).from(issueVotes).where(and(eq(issueVotes.issueId, issueId), eq(issueVotes.weekStart, weekStart)));
-      return r?.n ?? 0;
+    async tally(issueId: number, weekStart: string) {
+      const [r] = await db
+        .select({
+          up: sql<number>`count(*) FILTER (WHERE ${issueVotes.value} = 1)::int`,
+          down: sql<number>`count(*) FILTER (WHERE ${issueVotes.value} = -1)::int`,
+        })
+        .from(issueVotes)
+        .where(and(eq(issueVotes.issueId, issueId), eq(issueVotes.weekStart, weekStart), eq(issueVotes.counted, true)));
+      return { up: r?.up ?? 0, down: r?.down ?? 0 };
     },
 
     /**

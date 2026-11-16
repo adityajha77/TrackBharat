@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/link";
 import { Megaphone, Plus, Trophy } from "lucide-react";
 import { getHighlights } from "@/lib/api";
 import { getIssues, getMe } from "@/lib/api-user";

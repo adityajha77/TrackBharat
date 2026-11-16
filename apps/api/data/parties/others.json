@@ -1,0 +1,137 @@
+[
+  {
+    "slug": "cpim",
+    "name": "Communist Party of India (Marxist)",
+    "shortName": "CPI(M)",
+    "founded": "1964-11-07",
+    "founders": "Leaders who left the Communist Party of India at the 7th Congress in Calcutta, including E. M. S. Namboodiripad, Jyoti Basu and P. Sundarayya",
+    "mission": "Describes itself as a Marxist–Leninist party working for socialism, through a 'people's democracy' led by the working class.",
+    "missionSource": "https://en.wikipedia.org/wiki/Communist_Party_of_India_(Marxist)",
+    "symbol": "Hammer, sickle and star",
+    "color": "#CC0000",
+    "sortOrder": 30,
+    "leaders": [
+      { "name": "E. M. S. Namboodiripad", "role": "Chief Minister of Kerala; General Secretary", "years": "1957–1959 (CPI), 1967–1969", "wikipedia": "E._M._S._Namboodiripad" },
+      { "name": "Jyoti Basu", "role": "Chief Minister of West Bengal", "years": "1977–2000", "wikipedia": "Jyoti_Basu" },
+      { "name": "Harkishan Singh Surjeet", "role": "General Secretary", "years": "1992–2005", "wikipedia": "Harkishan_Singh_Surjeet" },
+      { "name": "Pinarayi Vijayan", "role": "Chief Minister of Kerala", "years": "2016–", "wikipedia": "Pinarayi_Vijayan" }
+    ],
+    "events": [
+      { "date": "1957-04-05", "precision": "DAY", "title": "First elected communist state government (CPI)", "body": "E. M. S. Namboodiripad becomes Chief Minister of Kerala, before the party split.", "source": "https://en.wikipedia.org/wiki/E._M._S._Namboodiripad" },
+      { "date": "1964-11-07", "precision": "MONTH", "title": "Formed after the CPI split", "body": "A group leaves the Communist Party of India and forms the CPI(M).", "source": "https://en.wikipedia.org/wiki/Communist_Party_of_India_(Marxist)" },
+      { "date": "1977-06-21", "precision": "DAY", "title": "Left Front government in West Bengal", "body": "Jyoti Basu becomes Chief Minister; the Left Front governs the state until 2011.", "source": "https://en.wikipedia.org/wiki/Jyoti_Basu" },
+      { "date": "2004-05-22", "precision": "MONTH", "title": "Supports the UPA government from outside", "body": "Left parties back the Manmohan Singh government without joining it.", "source": "https://en.wikipedia.org/wiki/Communist_Party_of_India_(Marxist)" },
+      { "date": "2008-07-08", "precision": "MONTH", "title": "Withdraws support over the nuclear deal", "body": "The Left withdraws support over the India–US civil nuclear agreement.", "source": "https://en.wikipedia.org/wiki/Communist_Party_of_India_(Marxist)" },
+      { "date": "2016-05-25", "precision": "DAY", "title": "Pinarayi Vijayan becomes Chief Minister of Kerala", "body": "The LDF wins again in 2021, the first back-to-back win in Kerala in decades.", "source": "https://en.wikipedia.org/wiki/Pinarayi_Vijayan" }
+    ]
+  },
+  {
+    "slug": "dmk",
+    "name": "Dravida Munnetra Kazhagam",
+    "shortName": "DMK",
+    "founded": "1949-09-17",
+    "founders": "C. N. Annadurai",
+    "mission": "Describes itself as a social-justice party of the Dravidian movement, focused on self-respect, state autonomy and the Tamil language.",
+    "missionSource": "https://en.wikipedia.org/wiki/Dravida_Munnetra_Kazhagam",
+    "symbol": "Rising sun",
+    "color": "#E30613",
+    "sortOrder": 40,
+    "leaders": [
+      { "name": "C. N. Annadurai", "role": "Founder; Chief Minister of Tamil Nadu", "years": "1967–1969", "wikipedia": "C._N._Annadurai" },
+      { "name": "M. Karunanidhi", "role": "Chief Minister of Tamil Nadu (five terms)", "years": "1969–2011 (in office for five terms)", "wikipedia": "M._Karunanidhi" },
+      { "name": "M. K. Stalin", "role": "Chief Minister of Tamil Nadu", "years": "2021–", "wikipedia": "M._K._Stalin" }
+    ],
+    "events": [
+      { "date": "1949-09-17", "precision": "DAY", "title": "Founded in Madras", "body": "C. N. Annadurai founds the DMK after leaving the Dravidar Kazhagam.", "source": "https://en.wikipedia.org/wiki/Dravida_Munnetra_Kazhagam" },
+      { "date": "1967-03-06", "precision": "DAY", "title": "Forms the state government", "body": "Annadurai becomes Chief Minister of Madras State (renamed Tamil Nadu in 1969).", "source": "https://en.wikipedia.org/wiki/C._N._Annadurai" },
+      { "date": "1969-02-10", "precision": "DAY", "title": "M. Karunanidhi becomes Chief Minister", "body": "After Annadurai's death.", "source": "https://en.wikipedia.org/wiki/M._Karunanidhi" },
+      { "date": "2021-05-07", "precision": "DAY", "title": "M. K. Stalin becomes Chief Minister", "body": "The DMK-led alliance wins the 2021 assembly election.", "source": "https://en.wikipedia.org/wiki/M._K._Stalin" }
+    ]
+  },
+  {
+    "slug": "bsp",
+    "name": "Bahujan Samaj Party",
+    "shortName": "BSP",
+    "founded": "1984-04-14",
+    "founders": "Kanshi Ram",
+    "mission": "Describes its aim as political power for the 'Bahujan' (Scheduled Castes, Scheduled Tribes, OBCs and minorities), inspired by B. R. Ambedkar.",
+    "missionSource": "https://en.wikipedia.org/wiki/Bahujan_Samaj_Party",
+    "symbol": "Elephant",
+    "color": "#22409A",
+    "sortOrder": 50,
+    "leaders": [
+      { "name": "Kanshi Ram", "role": "Founder", "years": "1984–2006", "wikipedia": "Kanshi_Ram" },
+      { "name": "Mayawati", "role": "Chief Minister of Uttar Pradesh (four terms); party president", "years": "1995–2012 (four terms)", "wikipedia": "Mayawati" }
+    ],
+    "events": [
+      { "date": "1984-04-14", "precision": "DAY", "title": "Founded", "body": "Kanshi Ram founds the BSP on B. R. Ambedkar's birth anniversary.", "source": "https://en.wikipedia.org/wiki/Bahujan_Samaj_Party" },
+      { "date": "1995-06-03", "precision": "DAY", "title": "Mayawati becomes Chief Minister of Uttar Pradesh", "body": "India's first Dalit woman Chief Minister.", "source": "https://en.wikipedia.org/wiki/Mayawati" },
+      { "date": "2007-05-13", "precision": "DAY", "title": "Wins a majority in Uttar Pradesh", "body": "The BSP forms a government on its own.", "source": "https://en.wikipedia.org/wiki/Mayawati" }
+    ]
+  },
+  {
+    "slug": "sp",
+    "name": "Samajwadi Party",
+    "shortName": "SP",
+    "founded": "1992-10-04",
+    "founders": "Mulayam Singh Yadav",
+    "mission": "Describes itself as a socialist party in the tradition of Ram Manohar Lohia.",
+    "missionSource": "https://en.wikipedia.org/wiki/Samajwadi_Party",
+    "symbol": "Bicycle",
+    "color": "#E2231A",
+    "sortOrder": 60,
+    "leaders": [
+      { "name": "Mulayam Singh Yadav", "role": "Founder; Chief Minister of Uttar Pradesh", "years": "1989–2007 (three terms)", "wikipedia": "Mulayam_Singh_Yadav" },
+      { "name": "Akhilesh Yadav", "role": "Chief Minister of Uttar Pradesh; party president", "years": "2012–2017; president 2017–", "wikipedia": "Akhilesh_Yadav" }
+    ],
+    "events": [
+      { "date": "1992-10-04", "precision": "DAY", "title": "Founded", "body": "Mulayam Singh Yadav founds the party in Lucknow.", "source": "https://en.wikipedia.org/wiki/Samajwadi_Party" },
+      { "date": "2012-03-15", "precision": "DAY", "title": "Akhilesh Yadav becomes Chief Minister", "body": "The SP wins a majority in Uttar Pradesh.", "source": "https://en.wikipedia.org/wiki/Akhilesh_Yadav" },
+      { "date": "2024-06-04", "precision": "DAY", "title": "Wins 37 Lok Sabha seats", "body": "The third-largest party in the 18th Lok Sabha.", "source": "https://en.wikipedia.org/wiki/2024_Indian_general_election" }
+    ]
+  },
+  {
+    "slug": "aitc",
+    "name": "All India Trinamool Congress",
+    "shortName": "AITC",
+    "founded": "1998-01-01",
+    "founders": "Mamata Banerjee",
+    "mission": "Describes itself as a centre-left, regionalist party; its political slogan is 'Ma Mati Manush' (mother, land, people).",
+    "missionSource": "https://en.wikipedia.org/wiki/All_India_Trinamool_Congress",
+    "symbol": "Twin flowers and grass (Jora Ghas Phul)",
+    "color": "#20C646",
+    "sortOrder": 70,
+    "leaders": [
+      { "name": "Mamata Banerjee", "role": "Founder; Chief Minister of West Bengal", "years": "2011–", "wikipedia": "Mamata_Banerjee" }
+    ],
+    "events": [
+      { "date": "1998-01-01", "precision": "DAY", "title": "Founded", "body": "Mamata Banerjee leaves the Congress and founds the party.", "source": "https://en.wikipedia.org/wiki/All_India_Trinamool_Congress" },
+      { "date": "2011-05-20", "precision": "DAY", "title": "Ends 34 years of Left Front rule in West Bengal", "body": "Mamata Banerjee becomes Chief Minister.", "source": "https://en.wikipedia.org/wiki/Mamata_Banerjee" }
+    ]
+  },
+  {
+    "slug": "aap",
+    "name": "Aam Aadmi Party",
+    "shortName": "AAP",
+    "founded": "2012-11-26",
+    "founders": "Arvind Kejriwal and members of the India Against Corruption movement",
+    "mission": "Describes its aim as clean governance and 'swaraj' (self-rule), born from the 2011 anti-corruption movement.",
+    "missionSource": "https://en.wikipedia.org/wiki/Aam_Aadmi_Party",
+    "symbol": "Broom",
+    "color": "#0066A4",
+    "sortOrder": 80,
+    "leaders": [
+      { "name": "Arvind Kejriwal", "role": "Founder; Chief Minister of Delhi", "years": "2013–2014, 2015–2024", "wikipedia": "Arvind_Kejriwal" },
+      { "name": "Bhagwant Mann", "role": "Chief Minister of Punjab", "years": "2022–", "wikipedia": "Bhagwant_Mann" },
+      { "name": "Atishi Marlena", "role": "Chief Minister of Delhi", "years": "2024–2025", "wikipedia": "Atishi_Marlena" }
+    ],
+    "events": [
+      { "date": "2012-11-26", "precision": "DAY", "title": "Founded", "body": "Formed by activists of the India Against Corruption movement.", "source": "https://en.wikipedia.org/wiki/Aam_Aadmi_Party" },
+      { "date": "2013-12-28", "precision": "DAY", "title": "First Delhi government", "body": "Arvind Kejriwal becomes Chief Minister; he resigns after 49 days.", "source": "https://en.wikipedia.org/wiki/Arvind_Kejriwal" },
+      { "date": "2015-02-14", "precision": "DAY", "title": "Wins 67 of 70 seats in Delhi", "body": "Kejriwal becomes Chief Minister again.", "source": "https://en.wikipedia.org/wiki/Arvind_Kejriwal" },
+      { "date": "2022-03-16", "precision": "DAY", "title": "Forms the government in Punjab", "body": "Bhagwant Mann becomes Chief Minister after the party wins 92 of 117 seats.", "source": "https://en.wikipedia.org/wiki/Bhagwant_Mann" },
+      { "date": "2023-04-10", "precision": "DAY", "title": "Recognised as a national party", "body": "By the Election Commission of India.", "source": "https://en.wikipedia.org/wiki/Aam_Aadmi_Party" },
+      { "date": "2025-02-08", "precision": "DAY", "title": "Loses the Delhi assembly election", "body": "The BJP wins a majority in Delhi.", "source": "https://en.wikipedia.org/wiki/Aam_Aadmi_Party" }
+    ]
+  }
+]

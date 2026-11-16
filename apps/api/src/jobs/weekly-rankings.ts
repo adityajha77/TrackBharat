@@ -7,7 +7,7 @@ export const TOP_N = 5;
 /**
  * WEEKLY HIGHLIGHTS JOB
  *
- * For a finished week, rank every constituency's issues by the votes they got
+ * For a finished week, rank every constituency's issues by the NET votes they got
  * THAT week and store the top N in weekly_issue_rankings: a frozen snapshot that
  * later votes can't change ("what mattered most to residents in week X").
  *
@@ -22,13 +22,15 @@ export async function computeWeeklyRankings(db: Database, weekStart: string = pr
       INSERT INTO weekly_issue_rankings (week_start, constituency_id, rank, issue_id, votes)
       SELECT ${weekStart}::date, constituency_id, rnk, issue_id, votes
       FROM (
-        SELECT i.constituency_id, i.id AS issue_id, count(v.*)::int AS votes,
+        -- Net score = "faced this too" minus "not accurate", counted (verified) votes only
+        SELECT i.constituency_id, i.id AS issue_id, sum(v.value)::int AS votes,
                row_number() OVER (PARTITION BY i.constituency_id
-                                  ORDER BY count(v.*) DESC, i.created_at ASC) AS rnk
+                                  ORDER BY sum(v.value) DESC, i.created_at ASC) AS rnk
         FROM issues i
-        JOIN issue_votes v ON v.issue_id = i.id AND v.week_start = ${weekStart}
+        JOIN issue_votes v ON v.issue_id = i.id AND v.week_start = ${weekStart} AND v.counted
         WHERE i.status <> 'HIDDEN'
         GROUP BY i.id
+        HAVING sum(v.value) > 0
       ) ranked
       WHERE rnk <= ${TOP_N}`);
     return { weekStart, rows: res.rowCount ?? 0 };

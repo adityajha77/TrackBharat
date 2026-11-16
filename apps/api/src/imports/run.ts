@@ -5,6 +5,8 @@ import { importMembers, importPreviousMembers } from "./members";
 import { importQuestions } from "./questions";
 import { importMlas } from "./mlas";
 import { importPinLocations } from "./pin-locations";
+import { importParties } from "./parties";
+import { importNewsFeeds } from "./news-feeds";
 
 /**
  * Data import pipeline. Order matters: members need constituencies; the PIN
@@ -21,6 +23,8 @@ const steps = {
   "previous-members": importPreviousMembers, // 17th Lok Sabha, for comparisons
   questions: importQuestions, // slow (~10 min first run, then cached): parliamentary questions per MP
   mlas: importMlas,
+  parties: (db: Parameters<typeof importParties>[0]) => importParties(db, { photos: process.env.SKIP_PHOTOS !== "1" }), // curated: profiles, leaders (+ free-licence photos), timeline, manifestos
+  "news-feeds": importNewsFeeds,
 } as const;
 
 const databaseUrl = process.env.DATABASE_URL;

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/link";
 import { useActionState } from "react";
 import { loginAction, signupAction, type ActionState } from "@/app/actions";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,18 @@ export function AuthForm({ mode, next }: { mode: "login" | "signup"; next?: stri
       <Field label="Email">
         <Input name="email" type="email" autoComplete="email" required defaultValue={state.values?.email} />
       </Field>
-      <Field label="Password" hint={signup ? "At least 10 characters. A short sentence works well." : undefined}>
+      <Field
+        label="Password"
+        hint={
+          signup ? (
+            "At least 10 characters. A short sentence works well."
+          ) : (
+            <Link href="/forgot-password" className="underline underline-offset-2">
+              Forgot password?
+            </Link>
+          )
+        }
+      >
         <Input name="password" type="password" autoComplete={signup ? "new-password" : "current-password"} required minLength={signup ? 10 : 1} />
       </Field>
       <FormError message={state.error} />

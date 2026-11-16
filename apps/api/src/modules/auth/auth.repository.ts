@@ -13,15 +13,17 @@ export function createAuthRepository(db: Database) {
   return {
     async findUserByEmail(email: string): Promise<UserRecord | null> {
       const [u] = await db
-        .select({ id: users.id, name: users.name, role: users.role, email: users.email, passwordHash: users.passwordHash, isBlocked: users.isBlocked })
+        .select({ id: users.id, name: users.name, role: users.role, email: users.email, passwordHash: users.passwordHash, isBlocked: users.isBlocked, verifiedAt: users.emailVerifiedAt })
         .from(users)
         .where(eq(users.email, email));
-      return u ?? null;
+      if (!u) return null;
+      const { verifiedAt, ...rest } = u;
+      return { ...rest, emailVerified: verifiedAt !== null };
     },
 
     async createUser(input: { name: string; email: string; passwordHash: string; role?: UserRole }): Promise<PublicUser> {
       const [u] = await db.insert(users).values(input).returning({ id: users.id, name: users.name, role: users.role });
-      return u!;
+      return { ...u!, emailVerified: false };
     },
 
     async createSession(userId: number, tokenHash: string, expiresAt: Date, userAgent: string | null) {
@@ -31,11 +33,13 @@ export function createAuthRepository(db: Database) {
     /** The user behind a session token, if the session exists, hasn't expired and the user isn't blocked. */
     async findSessionUser(tokenHash: string): Promise<(PublicUser & { sessionId: number; lastSeenAt: Date }) | null> {
       const [row] = await db
-        .select({ sessionId: sessions.id, lastSeenAt: sessions.lastSeenAt, id: users.id, name: users.name, role: users.role })
+        .select({ sessionId: sessions.id, lastSeenAt: sessions.lastSeenAt, id: users.id, name: users.name, role: users.role, verifiedAt: users.emailVerifiedAt })
         .from(sessions)
         .innerJoin(users, eq(users.id, sessions.userId))
         .where(and(eq(sessions.tokenHash, tokenHash), gt(sessions.expiresAt, sql`now()`), eq(users.isBlocked, false)));
-      return row ?? null;
+      if (!row) return null;
+      const { verifiedAt, ...rest } = row;
+      return { ...rest, emailVerified: verifiedAt !== null };
     },
 
     /** Sliding expiry: an active user stays logged in; an idle session dies after the TTL. */

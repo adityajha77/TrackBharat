@@ -92,7 +92,7 @@ describe("issue service rules", () => {
 
   it("forbids voting for your own report", async () => {
     const svc = createIssueService(base({ exists: vi.fn().mockResolvedValue({ id: 5, status: "OPEN", userId: citizen.id }) }), photos);
-    await expect(svc.vote(citizen, 5, true)).rejects.toThrow(/own report/);
+    await expect(svc.vote(citizen, 5, 1)).rejects.toThrow(/own report/);
   });
 
   it("hides HIDDEN issues from the public but not from their author", async () => {

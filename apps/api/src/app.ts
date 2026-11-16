@@ -25,6 +25,14 @@ import { submissionRoutes } from "./modules/submissions/submission.routes";
 import type { SubmissionService } from "./modules/submissions/submission.service";
 import { reportCardRoutes } from "./modules/report-cards/report-card.routes";
 import type { ReportCardService } from "./modules/report-cards/report-card.service";
+import { causesRoutes } from "./modules/causes/causes.routes";
+import type { CausesService } from "./modules/causes/causes.service";
+import { newsRoutes } from "./modules/news/news.routes";
+import type { NewsService } from "./modules/news/news.service";
+import { partiesRoutes } from "./modules/parties/parties.routes";
+import type { PartiesService } from "./modules/parties/parties.service";
+import type { NetaService } from "./modules/parties/neta.service";
+import type { EmailLinksService } from "./modules/email/email-links";
 import type { Database } from "./db/client";
 
 /**
@@ -44,6 +52,14 @@ export interface AppDeps {
   submissionService: SubmissionService;
   photoStore: PhotoStore;
   reportCardService: ReportCardService;
+  causesService: CausesService;
+  newsService: NewsService;
+  partiesService: PartiesService;
+  netaService: NetaService;
+  emailLinks: EmailLinksService;
+  leaderPhotos: PhotoStore;
+  /** Dev only: exposes GET /v1/dev/outbox so emailed links can be clicked locally. */
+  exposeOutbox?: boolean;
   /** Only used by the CSV export route (plain SQL → CSV). */
   db: Pick<Database, "execute">;
   pingDb: () => Promise<void>;
@@ -119,11 +135,19 @@ export async function buildApp(deps: AppDeps) {
   await app.register(pincodeRoutes(deps.pincodeService), { prefix: "/v1" });
   await app.register(constituencyRoutes(deps.constituencyService), { prefix: "/v1" });
   await app.register(promiseRoutes(deps.promiseService), { prefix: "/v1" });
-  await app.register(authRoutes(deps.authService, deps.accountService), { prefix: "/v1" });
+  await app.register(authRoutes(deps.authService, deps.accountService, deps.emailLinks), { prefix: "/v1" });
   await app.register(issueRoutes(deps.issueService, deps.photoStore), { prefix: "/v1" });
   await app.register(submissionRoutes(deps.submissionService, deps.issueService), { prefix: "/v1" });
   await app.register(reportCardRoutes(deps.reportCardService, deps.db), { prefix: "/v1" });
   await app.register(leaderboardRoutes(deps.leaderboardService), { prefix: "/v1" });
+  await app.register(causesRoutes(deps.causesService), { prefix: "/v1" });
+  await app.register(newsRoutes(deps.newsService), { prefix: "/v1" });
+  await app.register(partiesRoutes(deps.partiesService, deps.netaService, deps.leaderPhotos), { prefix: "/v1" });
+
+  if (deps.exposeOutbox && deps.emailLinks.outbox) {
+    const outbox = deps.emailLinks.outbox;
+    app.get("/v1/dev/outbox", async () => ({ emails: outbox() }));
+  }
 
   return app;
 }

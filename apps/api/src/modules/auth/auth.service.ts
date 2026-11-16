@@ -45,7 +45,7 @@ export function createAuthService(repo: AuthRepository, now: () => Date = () => 
       // Same message for "no such user" and "wrong password": don't reveal which emails exist
       if (!u || !ok) throw AppError.unauthorized("Incorrect email or password");
       if (u.isBlocked) throw AppError.forbidden("This account has been blocked");
-      return issueSession({ id: u.id, name: u.name, role: u.role }, userAgent);
+      return issueSession({ id: u.id, name: u.name, role: u.role, emailVerified: u.emailVerified }, userAgent);
     },
 
     async logout(token: string) {
@@ -58,7 +58,7 @@ export function createAuthService(repo: AuthRepository, now: () => Date = () => 
       if (!s) return null;
       // Extend the session at most once a day, not on every request (saves a write per request)
       if (now().getTime() - s.lastSeenAt.getTime() > DAY_MS) await repo.touchSession(s.sessionId, expiry());
-      return { id: s.id, name: s.name, role: s.role };
+      return { id: s.id, name: s.name, role: s.role, emailVerified: s.emailVerified };
     },
   };
 }

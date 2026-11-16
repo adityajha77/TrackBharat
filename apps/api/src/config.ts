@@ -20,6 +20,11 @@ const EnvSchema = z.object({
   INDIA_POST_BASE_URL: z.url().default("https://api.postalpincode.in"),
   /** Where re-encoded issue photos are stored (a Docker volume in production). */
   UPLOADS_DIR: z.string().default("./.uploads"),
+  /** Public web address, used in email links. */
+  WEB_URL: z.url().default("http://localhost:3000"),
+  /** e.g. smtps://user:pass@smtp.example.com:465. Unset = dev outbox (emails kept in memory, shown at /dev/outbox). */
+  SMTP_URL: z.string().optional(),
+  MAIL_FROM: z.string().default("TrackBharat <no-reply@trackbharat.local>"),
 });
 
 export type Config = z.infer<typeof EnvSchema>;

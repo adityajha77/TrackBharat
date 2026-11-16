@@ -55,14 +55,17 @@ export function createIssueService(repo: IssueRepository, photos: PhotoStore, no
       return rest;
     },
 
-    async vote(user: PublicUser, id: number, up: boolean) {
+    /** value: +1 "faced this too", -1 "not accurate", null = take my vote back. */
+    async vote(user: PublicUser, id: number, value: 1 | -1 | null) {
       const issue = await visibleIssue(id);
-      if (issue.userId === user.id) throw AppError.validation("You can't vote for your own report");
+      if (issue.userId === user.id) throw AppError.validation("You can't vote on your own report");
       if (issue.status === "RESOLVED") throw AppError.validation("This issue is already resolved");
       const weekStart = week();
-      if (up) await repo.vote(user.id, id, weekStart);
-      else await repo.unvote(user.id, id, weekStart);
-      return { voted: up, votesThisWeek: await repo.votesInWeek(id, weekStart) };
+      // Unverified accounts may vote, but their votes don't count until they verify (anti-brigading).
+      const counted = user.emailVerified !== false;
+      if (value === null) await repo.unvote(user.id, id, weekStart);
+      else await repo.vote(user.id, id, weekStart, value, counted);
+      return { myVote: value ?? 0, counted, ...(await repo.tally(id, weekStart)) } as const;
     },
 
     async report(user: PublicUser, id: number, reason: string) {

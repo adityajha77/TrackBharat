@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
-import { ChangePasswordInput, DeleteAccountInput, LoginInput, SignupInput } from "@trackbharat/shared";
+import { ChangePasswordInput, DeleteAccountInput, ForgotPasswordInput, LoginInput, ResetPasswordInput, SignupInput, TokenInput } from "@trackbharat/shared";
+import type { EmailLinksService } from "../email/email-links";
 import { parseBody } from "../../lib/validation";
 import { currentUser, requireUser } from "./auth.plugin";
 import type { AccountService } from "./account";
@@ -9,11 +10,32 @@ import type { AuthService } from "./auth.service";
 const AUTH_RATE_LIMIT = { config: { rateLimit: { max: 10, timeWindow: "1 minute" } } };
 
 export const authRoutes =
-  (service: AuthService, account: AccountService): FastifyPluginAsync =>
+  (service: AuthService, account: AccountService, links: EmailLinksService): FastifyPluginAsync =>
   async (app) => {
     app.post("/auth/signup", AUTH_RATE_LIMIT, async (req, reply) => {
       const res = await service.signup(parseBody(SignupInput, req.body), req.headers["user-agent"] ?? null);
+      // A failed email must not fail the signup: they can ask for the link again.
+      await links.sendVerification(res.user).catch((err) => req.log.warn({ err }, "verification email failed"));
       return reply.code(201).send(res);
+    });
+
+    // ---- Email links -------------------------------------------------------
+    app.post("/auth/verify-email", AUTH_RATE_LIMIT, async (req, reply) => {
+      await links.verify(parseBody(TokenInput, req.body).token);
+      return reply.code(204).send();
+    });
+    app.post("/auth/resend-verification", { preHandler: requireUser, config: { rateLimit: { max: 3, timeWindow: "10 minutes" } } }, async (req, reply) => {
+      await links.sendVerification(currentUser(req));
+      return reply.code(204).send();
+    });
+    app.post("/auth/forgot-password", { config: { rateLimit: { max: 5, timeWindow: "10 minutes" } } }, async (req, reply) => {
+      await links.forgotPassword(parseBody(ForgotPasswordInput, req.body).email);
+      return reply.code(204).send(); // same answer whether or not the account exists
+    });
+    app.post("/auth/reset-password", AUTH_RATE_LIMIT, async (req, reply) => {
+      const input = parseBody(ResetPasswordInput, req.body);
+      await links.resetPassword(input.token, input.newPassword);
+      return reply.code(204).send();
     });
 
     app.post("/auth/login", AUTH_RATE_LIMIT, async (req) => service.login(parseBody(LoginInput, req.body), req.headers["user-agent"] ?? null));

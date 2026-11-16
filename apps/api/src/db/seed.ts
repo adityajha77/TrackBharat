@@ -1,10 +1,11 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { createDb } from "./client";
 import { upsertSource } from "./helpers";
 import { constituencies, evidence, issues, issueVotes, parties, promiseStatusHistory, promises, representatives, states, terms, users } from "./schema";
 import { createPincodeRepository } from "../modules/pincodes/pincode.repository";
 import { hashPassword } from "../modules/auth/password";
 import { computeWeeklyRankings } from "../jobs/weekly-rankings";
+import { pickCauses } from "../jobs/pick-causes";
 import { previousWeek, weekStartIST } from "../lib/time";
 
 /**
@@ -54,6 +55,8 @@ async function seedDemoPromiseTracker() {
     const old = await tx.select({ id: constituencies.id }).from(constituencies).where(eq(constituencies.slug, "demo-nagar"));
     if (old[0]) {
       await tx.delete(issues).where(eq(issues.constituencyId, old[0].id));
+      // An approved submission may point at a demo promise: unlink it first (the submission itself stays).
+      await tx.execute(sql`UPDATE promise_submissions SET promise_id = NULL WHERE promise_id IN (SELECT id FROM promises WHERE constituency_id = ${old[0].id})`);
       await tx.delete(promises).where(eq(promises.constituencyId, old[0].id));
       await tx.delete(terms).where(eq(terms.constituencyId, old[0].id));
       await tx.delete(constituencies).where(eq(constituencies.id, old[0].id));
@@ -186,7 +189,7 @@ async function seedDevAccountsAndIssues() {
   const passwordHash = await hashPassword(DEV_PASSWORD);
   const ids: Record<string, number> = {};
   for (const u of DEV_USERS) {
-    const [row] = await db.insert(users).values({ ...u, passwordHash }).onConflictDoUpdate({ target: users.email, set: { role: u.role, passwordHash } }).returning({ id: users.id });
+    const [row] = await db.insert(users).values({ ...u, passwordHash, emailVerifiedAt: new Date() }).onConflictDoUpdate({ target: users.email, set: { role: u.role, passwordHash, emailVerifiedAt: new Date() } }).returning({ id: users.id });
     ids[u.role] = row!.id;
   }
   // A few voters so the demo has realistic vote counts
@@ -194,8 +197,8 @@ async function seedDevAccountsAndIssues() {
   for (let i = 1; i <= 6; i++) {
     const [row] = await db
       .insert(users)
-      .values({ email: `voter${i}@trackbharat.local`, name: `Demo Voter ${i}`, passwordHash })
-      .onConflictDoUpdate({ target: users.email, set: { passwordHash } })
+      .values({ email: `voter${i}@trackbharat.local`, name: `Demo Voter ${i}`, passwordHash, emailVerifiedAt: new Date() })
+      .onConflictDoUpdate({ target: users.email, set: { passwordHash, emailVerifiedAt: new Date() } })
       .returning({ id: users.id });
     voters.push(row!.id);
   }
@@ -222,6 +225,11 @@ async function seedDevAccountsAndIssues() {
   }
   const ranked = await computeWeeklyRankings(db, lastWeek);
   console.log(`  ✓ Demo issues: ${demo.length} in Demo Nagar, with votes; last week's highlights computed (${ranked.rows} rows)`);
+
+  // This week's Causes of the Week, from the demo issues, clearly labelled as sample data.
+  const causes = await pickCauses(db, thisWeek, { includeDemo: true });
+  await db.execute(sql`UPDATE weekly_causes SET blurb = 'Sample cause from the fictional Demo Nagar data, so you can try voting locally.' WHERE week_start = ${thisWeek} AND blurb IS NULL`);
+  console.log(`  ✓ Causes of the Week (sample): ${causes.picked}`);
 }
 
 try {

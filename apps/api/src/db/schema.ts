@@ -348,6 +348,8 @@ export const users = pgTable(
     passwordHash: text("password_hash").notNull(),
     role: userRoleEnum("role").notNull().default("CITIZEN"),
     isBlocked: boolean("is_blocked").notNull().default(false),
+    /** Set when the person clicks the link we emailed. Only verified accounts' votes count in rankings. */
+    emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex("users_email_uq").on(t.email)],
@@ -415,9 +417,17 @@ export const issueVotes = pgTable(
       .notNull()
       .references(() => issues.id, { onDelete: "cascade" }),
     weekStart: date("week_start").notNull(),
+    /** +1 = "I face this too", -1 = "not accurate / not an issue here". */
+    value: smallint("value").notNull().default(1),
+    /** Copied from the voter's verified status at vote time; rankings use only counted votes. */
+    counted: boolean("counted").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [primaryKey({ columns: [t.userId, t.issueId, t.weekStart] }), index("issue_votes_issue_week_idx").on(t.issueId, t.weekStart)],
+  (t) => [
+    primaryKey({ columns: [t.userId, t.issueId, t.weekStart] }),
+    index("issue_votes_issue_week_idx").on(t.issueId, t.weekStart),
+    check("issue_votes_value_ck", sql`${t.value} IN (-1, 1)`),
+  ],
 );
 
 /** "This post is spam / abusive / false". One report per user per issue. */
@@ -567,3 +577,216 @@ export const evidenceRelations = relations(evidence, ({ one }) => ({
   promise: one(promises, { fields: [evidence.promiseId], references: [promises.id] }),
   source: one(sources, { fields: [evidence.sourceId], references: [sources.id] }),
 }));
+
+// ---------------------------------------------------------------------------
+// EMAIL: verification and password-reset links (Phase 3b)
+// ---------------------------------------------------------------------------
+export const emailTokenPurposeEnum = pgEnum("email_token_purpose", ["VERIFY_EMAIL", "RESET_PASSWORD"]);
+
+/** One-time links. Like sessions, we store only the SHA-256 of the token, so a DB leak can't be replayed. */
+export const emailTokens = pgTable(
+  "email_tokens",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    purpose: emailTokenPurposeEnum("purpose").notNull(),
+    tokenHash: text("token_hash").notNull().unique(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    usedAt: timestamp("used_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("email_tokens_user_idx").on(t.userId, t.purpose)],
+);
+
+// ---------------------------------------------------------------------------
+// CAUSES OF THE WEEK: national problems picked every Monday from citizens' reports
+// ---------------------------------------------------------------------------
+export const weeklyCauses = pgTable(
+  "weekly_causes",
+  {
+    id: serial("id").primaryKey(),
+    weekStart: date("week_start").notNull(),
+    category: promiseCategoryEnum("category").notNull(),
+    /** Optional moderator wording; null = the UI shows the (translated) category name. */
+    title: text("title"),
+    blurb: text("blurb"),
+    /** Evidence for the pick, frozen at pick time: last week's reports and states. */
+    issueCount: integer("issue_count").notNull().default(0),
+    stateCount: integer("state_count").notNull().default(0),
+    examples: jsonb("examples").$type<{ id: number; title: string }[]>().notNull().default([]),
+    pinned: boolean("pinned").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("weekly_causes_week_category_uq").on(t.weekStart, t.category)],
+);
+
+export const causeVotes = pgTable(
+  "cause_votes",
+  {
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    causeId: integer("cause_id")
+      .notNull()
+      .references(() => weeklyCauses.id, { onDelete: "cascade" }),
+    value: smallint("value").notNull(),
+    counted: boolean("counted").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.causeId] }),
+    index("cause_votes_cause_idx").on(t.causeId),
+    check("cause_votes_value_ck", sql`${t.value} IN (-1, 1)`),
+  ],
+);
+
+// ---------------------------------------------------------------------------
+// NEWS THAT NEEDS A VOICE: RSS headlines -> verifier writes a short summary -> published
+// ---------------------------------------------------------------------------
+export const newsStatusEnum = pgEnum("news_status", ["DRAFT", "PUBLISHED", "REJECTED"]);
+
+export const newsFeeds = pgTable("news_feeds", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  url: text("url").notNull().unique(),
+  homepage: text("homepage").notNull(),
+  active: boolean("active").notNull().default(true),
+  lastFetchedAt: timestamp("last_fetched_at", { withTimezone: true }),
+  lastError: text("last_error"),
+});
+
+/**
+ * We never store article text: only the headline, the link and OUR OWN short summary
+ * (written by a verifier). That keeps us on the right side of copyright.
+ */
+export const newsItems = pgTable(
+  "news_items",
+  {
+    id: serial("id").primaryKey(),
+    feedId: integer("feed_id").references(() => newsFeeds.id, { onDelete: "set null" }),
+    /** The feed's unique id for the item: re-fetching the feed never creates duplicates. */
+    guid: text("guid").unique(),
+    headline: text("headline").notNull(),
+    url: text("url").notNull().unique(),
+    sourceName: text("source_name").notNull(),
+    sourcePublishedAt: timestamp("source_published_at", { withTimezone: true }),
+    summary: text("summary"),
+    category: promiseCategoryEnum("category"),
+    stateId: integer("state_id").references(() => states.id),
+    district: text("district"),
+    responsible: text("responsible"),
+    status: newsStatusEnum("status").notNull().default("DRAFT"),
+    submittedBy: integer("submitted_by").references(() => users.id, { onDelete: "set null" }),
+    reviewedBy: integer("reviewed_by").references(() => users.id, { onDelete: "set null" }),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("news_items_status_published_idx").on(t.status, t.publishedAt),
+    // A story can't be published without our own summary and a state.
+    check("news_items_published_ck", sql`${t.status} <> 'PUBLISHED' OR (${t.summary} IS NOT NULL AND ${t.stateId} IS NOT NULL)`),
+  ],
+);
+
+// ---------------------------------------------------------------------------
+// PARTIES: profiles, manifestos (promised vs done) and the history timeline
+// ---------------------------------------------------------------------------
+export const manifestoStatusEnum = pgEnum("manifesto_status", ["FULFILLED", "PARTIAL", "IN_PROGRESS", "BROKEN", "NOT_RATED", "NOT_IN_POWER"]);
+
+/** Extra facts for the larger parties. Every claim carries a source URL. */
+export const partyProfiles = pgTable("party_profiles", {
+  partyId: integer("party_id")
+    .primaryKey()
+    .references(() => parties.id, { onDelete: "cascade" }),
+  slug: text("slug").notNull().unique(),
+  founded: date("founded").notNull(),
+  founders: text("founders").notNull(),
+  /** Their own words (constitution / official site), with the link. */
+  ideologyQuote: text("ideology_quote").notNull(),
+  ideologySourceUrl: text("ideology_source_url").notNull(),
+  symbol: text("symbol").notNull(),
+  /** Brand colour for small accents only; never used to rank or judge. */
+  color: text("color").notNull(),
+  sortOrder: smallint("sort_order").notNull().default(100),
+});
+
+export const manifestos = pgTable(
+  "manifestos",
+  {
+    id: serial("id").primaryKey(),
+    partyId: integer("party_id")
+      .notNull()
+      .references(() => parties.id),
+    electionYear: smallint("election_year").notNull(),
+    title: text("title").notNull(),
+    sourceUrl: text("source_url").notNull(),
+    /** Did this party lead the government after the election? Decides "didn't form government". */
+    formedGovernment: boolean("formed_government").notNull(),
+  },
+  (t) => [uniqueIndex("manifestos_party_year_uq").on(t.partyId, t.electionYear)],
+);
+
+export const manifestoPromises = pgTable(
+  "manifesto_promises",
+  {
+    id: serial("id").primaryKey(),
+    manifestoId: integer("manifesto_id")
+      .notNull()
+      .references(() => manifestos.id, { onDelete: "cascade" }),
+    category: promiseCategoryEnum("category").notNull(),
+    text: text("text").notNull(),
+    page: smallint("page"),
+    status: manifestoStatusEnum("status").notNull().default("NOT_RATED"),
+    statusNote: text("status_note"),
+    evidenceUrl: text("evidence_url"),
+  },
+  (t) => [
+    uniqueIndex("manifesto_promises_text_uq").on(t.manifestoId, t.text),
+    // A verdict needs evidence: only "not rated" / "didn't form government" may go without a link.
+    check("manifesto_promises_evidence_ck", sql`${t.status} IN ('NOT_RATED', 'NOT_IN_POWER') OR ${t.evidenceUrl} IS NOT NULL`),
+  ],
+);
+
+/** A dated, sourced event. party_id NULL = a national milestone shown for everyone. */
+export const timelineEvents = pgTable(
+  "timeline_events",
+  {
+    id: serial("id").primaryKey(),
+    partyId: integer("party_id").references(() => parties.id, { onDelete: "cascade" }),
+    date: date("date").notNull(),
+    /** How precise `date` is (DAY, MONTH or YEAR): some events are only known by year. */
+    precision: text("precision").notNull().default("DAY"),
+    title: text("title").notNull(),
+    body: text("body").notNull(),
+    sourceUrl: text("source_url").notNull(),
+  },
+  (t) => [index("timeline_events_date_idx").on(t.date), uniqueIndex("timeline_events_uq").on(t.partyId, t.date, t.title)],
+);
+
+export const partyLeaders = pgTable(
+  "party_leaders",
+  {
+    id: serial("id").primaryKey(),
+    partyId: integer("party_id")
+      .notNull()
+      .references(() => parties.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    role: text("role").notNull(),
+    years: text("years").notNull(),
+    quote: text("quote"),
+    quoteSourceUrl: text("quote_source_url"),
+    /** Photo stored in our own media; licence and source are required alongside it. */
+    photoKey: text("photo_key"),
+    photoLicense: text("photo_license"),
+    photoAuthor: text("photo_author"),
+    photoSourceUrl: text("photo_source_url"),
+    sortOrder: smallint("sort_order").notNull().default(100),
+  },
+  (t) => [
+    uniqueIndex("party_leaders_party_name_uq").on(t.partyId, t.name),
+    check("party_leaders_quote_ck", sql`${t.quote} IS NULL OR ${t.quoteSourceUrl} IS NOT NULL`),
+    check("party_leaders_photo_ck", sql`${t.photoKey} IS NULL OR (${t.photoLicense} IS NOT NULL AND ${t.photoSourceUrl} IS NOT NULL)`),
+  ],
+);

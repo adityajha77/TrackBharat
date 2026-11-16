@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/link";
 import { ArrowRight, Building, Landmark } from "lucide-react";
 import type { PincodeConstituency } from "@trackbharat/shared";
 import { Card } from "@/components/ui/card";

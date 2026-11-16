@@ -5,6 +5,7 @@ import { useState, useTransition, type FormEvent } from "react";
 import { ArrowRight, LoaderCircle, MapPin } from "lucide-react";
 import { Pincode } from "@trackbharat/shared";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n/client";
 
 /**
  * Client component: it needs state + event handlers. It validates with the SAME
@@ -12,6 +13,7 @@ import { cn } from "@/lib/utils";
  * The API still validates again: never trust the client.
  */
 export function PincodeSearch({ className, autoFocus }: { className?: string; autoFocus?: boolean }) {
+  const { t } = useI18n();
   const router = useRouter();
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -31,12 +33,12 @@ export function PincodeSearch({ className, autoFocus }: { className?: string; au
   return (
     <form onSubmit={onSubmit} className={cn("w-full max-w-md", className)} noValidate>
       <label htmlFor="pincode" className="sr-only">
-        Your 6-digit PIN code
+        {t.search.label}
       </label>
       <div
         className={cn(
-          "flex items-center gap-2 rounded-xl border bg-surface p-1.5 pl-4 shadow-sm transition-colors focus-within:border-primary",
-          error ? "border-danger" : "border-border",
+          "brutal flex items-center gap-2 rounded-md bg-surface p-1.5 pl-4",
+          error && "border-danger",
         )}
       >
         <MapPin className="size-5 shrink-0 text-muted" aria-hidden />
@@ -45,7 +47,7 @@ export function PincodeSearch({ className, autoFocus }: { className?: string; au
           inputMode="numeric"
           autoComplete="postal-code"
           maxLength={6}
-          placeholder="Enter PIN code, e.g. 560034"
+          placeholder={t.search.placeholder}
           value={value}
           autoFocus={autoFocus}
           onChange={(e) => {
@@ -59,10 +61,10 @@ export function PincodeSearch({ className, autoFocus }: { className?: string; au
         <button
           type="submit"
           disabled={pending}
-          className="inline-flex h-11 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
+          className="brutal-sm press inline-flex h-11 items-center gap-2 rounded-md bg-saffron px-4 text-sm font-bold text-ink disabled:opacity-60"
         >
           {pending ? <LoaderCircle className="size-4 animate-spin" /> : <ArrowRight className="size-4" />}
-          <span className="hidden sm:inline">Track</span>
+          <span className="hidden sm:inline">{t.search.button}</span>
         </button>
       </div>
       <p id="pincode-error" role="alert" className="mt-2 min-h-5 text-sm text-danger">
