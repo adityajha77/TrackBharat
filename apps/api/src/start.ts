@@ -5,3 +5,5 @@
  */
 await import("./db/migrate");
 await import("./server");
+
+export {}; // makes this file a module (top-level await)
