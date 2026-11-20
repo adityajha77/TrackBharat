@@ -26,7 +26,7 @@ import { createNewsService } from "./modules/news/news.service";
 import { createPartiesService } from "./modules/parties/parties.service";
 import { createNetaService } from "./modules/parties/neta.service";
 import { createEmailLinksService } from "./modules/email/email-links";
-import { createOutboxMailer, createSmtpMailer } from "./modules/email/mailer";
+import { createBrevoMailer, createOutboxMailer, createSmtpMailer } from "./modules/email/mailer";
 import path from "node:path";
 
 /**
@@ -53,8 +53,13 @@ const issueService = createIssueService(createIssueRepository(db), photoStore);
 // No SMTP configured → emails go to an in-memory outbox (dev); production must set SMTP_URL.
 // Without SMTP, production still starts (Google sign-in needs no email), but no emails go out:
 // email sign-ups can't be verified and passwords can't be reset until SMTP_URL is set.
-if (config.NODE_ENV === "production" && !config.SMTP_URL) console.warn("SMTP_URL is not set: verification and password-reset emails are OFF");
-const mailer = config.SMTP_URL ? createSmtpMailer(config.SMTP_URL, config.MAIL_FROM) : createOutboxMailer();
+const emailEnabled = Boolean(config.BREVO_API_KEY || config.SMTP_URL);
+if (config.NODE_ENV === "production" && !emailEnabled) console.warn("No BREVO_API_KEY or SMTP_URL: verification and password-reset emails are OFF");
+const mailer = config.BREVO_API_KEY
+  ? createBrevoMailer(config.BREVO_API_KEY, config.MAIL_FROM)
+  : config.SMTP_URL
+    ? createSmtpMailer(config.SMTP_URL, config.MAIL_FROM)
+    : createOutboxMailer();
 
 const authService = createAuthService(createAuthRepository(db));
 
@@ -65,7 +70,7 @@ const app = await buildApp({
   authService,
   googleAuth: createGoogleAuth(db, config, authService),
   secureCookies: config.NODE_ENV === "production",
-  emailEnabled: Boolean(config.SMTP_URL) || config.NODE_ENV !== "production",
+  emailEnabled: emailEnabled || config.NODE_ENV !== "production",
   accountService: createAccountService(db, photoStore),
   leaderboardService: createLeaderboardService(db),
   issueService,
@@ -78,7 +83,7 @@ const app = await buildApp({
   netaService: createNetaService(db),
   emailLinks: createEmailLinksService(db, mailer, config.WEB_URL),
   leaderPhotos: createPhotoStore(config.LEADER_PHOTOS_DIR ?? path.join(config.UPLOADS_DIR, "leaders")),
-  exposeOutbox: config.NODE_ENV !== "production" && !config.SMTP_URL,
+  exposeOutbox: config.NODE_ENV !== "production" && !emailEnabled,
   db,
   pingDb: async () => {
     await db.execute(sql`select 1`);

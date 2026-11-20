@@ -29,8 +29,10 @@ export const authRoutes =
       return reply.code(204).send();
     });
     app.post("/auth/forgot-password", { config: { rateLimit: { max: 5, timeWindow: "10 minutes" } } }, async (req, reply) => {
-      await links.forgotPassword(parseBody(ForgotPasswordInput, req.body).email);
-      return reply.code(204).send(); // same answer whether or not the account exists
+      // Same answer whether or not the account exists, and whether or not the email
+      // could be sent right now (a mail outage must not reveal which emails exist).
+      await links.forgotPassword(parseBody(ForgotPasswordInput, req.body).email).catch((err) => req.log.error({ err }, "password-reset email failed"));
+      return reply.code(204).send();
     });
     app.post("/auth/reset-password", AUTH_RATE_LIMIT, async (req, reply) => {
       const input = parseBody(ResetPasswordInput, req.body);

@@ -94,3 +94,27 @@ describe("promise service: business rules", () => {
     ).rejects.toMatchObject({ statusCode: 404 });
   });
 });
+
+describe("Brevo mailer (email over HTTPS)", async () => {
+  const { createBrevoMailer, parseFrom } = await import("../src/modules/email/mailer");
+
+  it("reads the sender name and address from MAIL_FROM", () => {
+    expect(parseFrom("TrackBharat <me@gmail.com>")).toEqual({ name: "TrackBharat", email: "me@gmail.com" });
+    expect(parseFrom("me@gmail.com")).toEqual({ email: "me@gmail.com" });
+  });
+
+  it("posts the email to Brevo's API with the key, and reports failures", async () => {
+    const sent: { url: string; init: RequestInit }[] = [];
+    const ok = (async (url: string, init: RequestInit) => {
+      sent.push({ url, init });
+      return new Response("{}", { status: 201 });
+    }) as unknown as typeof fetch;
+    await createBrevoMailer("key-1", "TrackBharat <me@gmail.com>", ok).send({ to: "a@b.in", subject: "Hi", text: "Hello" });
+    expect(sent[0]!.url).toBe("https://api.brevo.com/v3/smtp/email");
+    expect(new Headers(sent[0]!.init.headers).get("api-key")).toBe("key-1");
+    expect(JSON.parse(String(sent[0]!.init.body))).toMatchObject({ sender: { name: "TrackBharat", email: "me@gmail.com" }, to: [{ email: "a@b.in" }], subject: "Hi", textContent: "Hello" });
+
+    const bad = (async () => new Response("unauthorized", { status: 401 })) as unknown as typeof fetch;
+    await expect(createBrevoMailer("x", "me@gmail.com", bad).send({ to: "a@b.in", subject: "s", text: "t" })).rejects.toThrow(/Brevo: HTTP 401/);
+  });
+});

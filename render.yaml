@@ -44,7 +44,9 @@ services:
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY # Supabase → Project Settings → API keys → service_role (secret!)
         sync: false
-      - key: SMTP_URL # optional for now: without it, verification and reset emails are off
+      - key: BREVO_API_KEY # email over HTTPS (Render's free plan blocks SMTP). brevo.com → SMTP & API → API keys
+        sync: false
+      - key: SMTP_URL # not usable on Render's free plan (SMTP ports are blocked); leave empty
         sync: false
       - key: MAIL_FROM
         sync: false
