@@ -6,10 +6,10 @@ import type { Dictionary } from "@/i18n/server";
 export function LeaderCard({ leader: l, t }: { leader: PartyLeader; t: Dictionary }) {
   return (
     <li className="brutal reveal flex flex-col overflow-hidden rounded-md bg-surface">
-      <div className="relative aspect-[4/3] border-b-2 border-ink bg-surface-muted">
+      <div className="relative aspect-[4/5] border-b-2 border-ink bg-surface-muted">
         {l.photoPath ? (
           // eslint-disable-next-line @next/next/no-img-element -- our own re-encoded WebP from /media
-          <img src={l.photoPath} alt={l.name} loading="lazy" className="absolute inset-0 size-full object-cover object-top grayscale-[35%]" />
+          <img src={l.photoPath} alt={l.name} loading="lazy" className="absolute inset-0 size-full object-contain p-2 grayscale-[35%]" />
         ) : (
           <UserRound className="absolute inset-0 m-auto size-16 text-muted" aria-hidden />
         )}

@@ -100,16 +100,17 @@ export function createPartiesService(db: Database) {
       const { rows: ms } = await db.execute<{
         id: number;
         election_year: number;
+        state: string | null;
         title: string;
         source_url: string;
         formed_government: boolean;
         promises: { id: number; category: string; text: string; page: number | null; status: string; status_note: string | null; evidence_url: string | null }[] | null;
       }>(sql`
-        SELECT m.id, m.election_year, m.title, m.source_url, m.formed_government,
+        SELECT m.id, m.election_year, m.state, m.title, m.source_url, m.formed_government,
                (SELECT json_agg(json_build_object('id', mp.id, 'category', mp.category, 'text', mp.text, 'page', mp.page,
                                                   'status', mp.status, 'status_note', mp.status_note, 'evidence_url', mp.evidence_url) ORDER BY mp.id)
                   FROM manifesto_promises mp WHERE mp.manifesto_id = m.id) AS promises
-        FROM manifestos m WHERE m.party_id = ${r.party_id} ORDER BY m.election_year DESC`);
+        FROM manifestos m WHERE m.party_id = ${r.party_id} ORDER BY m.election_year DESC, m.state NULLS FIRST`);
       return PartyDetail.parse({
         ...toSummary(r),
         founders: r.founders,
@@ -120,6 +121,7 @@ export function createPartiesService(db: Database) {
         manifestos: ms.map((m) => ({
           id: m.id,
           electionYear: m.election_year,
+          state: m.state,
           title: m.title,
           sourceUrl: m.source_url,
           formedGovernment: m.formed_government,

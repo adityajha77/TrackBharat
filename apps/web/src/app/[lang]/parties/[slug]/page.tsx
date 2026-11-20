@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -5,7 +6,7 @@ import { ExternalLink, FileText, Quote } from "lucide-react";
 import type { Manifesto } from "@trackbharat/shared";
 import Link from "@/components/link";
 import { LeaderCard } from "@/components/voices/leader-card";
-import { MANIFESTO_TONE, Ring, StatusBar } from "@/components/voices/progress";
+import { fulfilledShare, MANIFESTO_TONE, Ring, StatusBar } from "@/components/voices/progress";
 import { ShareBar } from "@/components/voices/share-bar";
 import { Badge, Eyebrow } from "@/components/ui/card";
 import { fmt, getT, type Dictionary } from "@/i18n/server";
@@ -17,6 +18,7 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/parties/[slug]">): Promise<Metadata> {
+  await connection(); // the title comes from live data, so it is resolved per request too
   const { slug } = await params;
   const p = await getParty(slug).catch(() => null);
   return p ? { title: `${p.name}: promised vs done`, description: `Manifesto promises of the ${p.name}, with sources and status.` } : {};
@@ -33,11 +35,13 @@ export default function PartyPage({ params }: PageProps<"/[lang]/parties/[slug]"
 }
 
 async function Party({ slug }: { slug: string }) {
+  await connection(); // live data: render per request, never at build time (the API isn't running during `next build`)
   const { t } = await getT();
   const p = await getParty(slug).catch((e) => {
     if (e instanceof ApiError && e.status === 404) notFound();
     throw e;
   });
+  const share = fulfilledShare(p.byStatus, p.promises);
   return (
     <div className="mx-auto max-w-7xl px-4 py-12">
       <Link href="/parties" className="font-mono text-xs text-muted hover:underline">
@@ -66,7 +70,7 @@ async function Party({ slug }: { slug: string }) {
               </span>
             </blockquote>
           </div>
-          {p.promises > 0 && <Ring value={(p.byStatus.FULFILLED ?? 0) / p.promises} label={t.parties.fulfilled} size={120} />}
+          {share !== null && <Ring value={share} label={t.parties.fulfilled} size={120} />}
         </div>
       </header>
 
@@ -125,10 +129,13 @@ function ManifestoBlock({ m, t, party, slug }: { m: Manifesto; t: Dictionary; pa
     <article className="brutal reveal rounded-md bg-surface p-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="font-mono text-3xl font-black">{m.electionYear}</p>
+          <p className="flex flex-wrap items-baseline gap-2">
+            <span className="font-mono text-3xl font-black">{m.electionYear}</span>
+            <span className="rounded-sm border-2 border-ink px-1.5 py-px font-mono text-[11px] font-bold uppercase">{m.state ? `${m.state} assembly` : "Lok Sabha"}</span>
+          </p>
           <h2 className="text-xl font-bold">{m.title}</h2>
           <p className="mt-1 text-sm text-muted">
-            {m.formedGovernment ? "Formed the government after this election." : `${t.status.NOT_IN_POWER} after this election, so promises aren't rated as kept or broken.`}
+            {m.formedGovernment ? `Formed the ${m.state ? `${m.state} state` : "central"} government after this election.` : `${t.status.NOT_IN_POWER} after this election, so promises aren't rated as kept or broken.`}
           </p>
         </div>
         <a href={m.sourceUrl} target="_blank" rel="noopener noreferrer" className="brutal-sm press inline-flex items-center gap-1.5 rounded-md bg-surface px-3 py-1.5 text-sm font-semibold">
@@ -160,7 +167,7 @@ function ManifestoBlock({ m, t, party, slug }: { m: Manifesto; t: Dictionary; pa
           </li>
         ))}
       </ul>
-      <ShareBar className="mt-4" path={`/parties/${slug}`} text={`${party} ${m.electionYear} manifesto: promised vs done, with sources, on TrackBharat`} />
+      <ShareBar className="mt-4" path={`/parties/${slug}`} text={`${party} ${m.state ? `${m.state} ` : ""}${m.electionYear} manifesto: promised vs done, with sources, on TrackBharat`} />
     </article>
   );
 }

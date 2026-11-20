@@ -17,6 +17,7 @@ import {
   smallint,
   text,
   timestamp,
+  unique,
   uniqueIndex,
   varchar,
 } from "drizzle-orm/pg-core";
@@ -720,12 +721,15 @@ export const manifestos = pgTable(
       .notNull()
       .references(() => parties.id),
     electionYear: smallint("election_year").notNull(),
+    /** NULL = Lok Sabha; otherwise the state whose assembly election this manifesto was for. */
+    state: text("state"),
     title: text("title").notNull(),
     sourceUrl: text("source_url").notNull(),
     /** Did this party lead the government after the election? Decides "didn't form government". */
     formedGovernment: boolean("formed_government").notNull(),
   },
-  (t) => [uniqueIndex("manifestos_party_year_uq").on(t.partyId, t.electionYear)],
+  // NULLS NOT DISTINCT: two Lok Sabha manifestos (state NULL) for one party and year still clash.
+  (t) => [unique("manifestos_party_year_state_uq").on(t.partyId, t.electionYear, t.state).nullsNotDistinct()],
 );
 
 export const manifestoPromises = pgTable(

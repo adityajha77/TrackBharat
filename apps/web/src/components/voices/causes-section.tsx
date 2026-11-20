@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { Megaphone, Pin } from "lucide-react";
 import type { Cause } from "@trackbharat/shared";
 import Link from "@/components/link";
@@ -14,6 +15,7 @@ import { ShareBar } from "./share-bar";
  * the cached public version.
  */
 export async function CausesSection({ limit }: { limit?: number }) {
+  await connection(); // live data: render per request, never at build time (the API isn't running during `next build`)
   const [{ t, lang }, me] = await Promise.all([getT(), getMe().catch(() => null)]);
   const data = me ? await getCauses() : await getCausesPublic();
   const causes = limit ? data.causes.slice(0, limit) : data.causes;

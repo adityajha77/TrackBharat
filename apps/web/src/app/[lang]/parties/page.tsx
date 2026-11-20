@@ -1,7 +1,8 @@
+import { connection } from "next/server";
 import type { Metadata } from "next";
 import { ArrowRight } from "lucide-react";
 import Link from "@/components/link";
-import { Ring, StatusBar } from "@/components/voices/progress";
+import { fulfilledShare, Ring, StatusBar } from "@/components/voices/progress";
 import { Eyebrow } from "@/components/ui/card";
 import { fmt, getT } from "@/i18n/server";
 import { getParties } from "@/lib/api";
@@ -13,6 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 /** Parties in founding order: never ranked by size or score. */
 export default async function PartiesPage() {
+  await connection(); // live data: render per request, never at build time (the API isn't running during `next build`)
   const [{ t }, { parties }] = await Promise.all([getT(), getParties()]);
   return (
     <div className="mx-auto max-w-7xl px-4 py-12">
@@ -23,7 +25,7 @@ export default async function PartiesPage() {
       </header>
       <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {parties.map((p) => {
-          const fulfilled = p.byStatus.FULFILLED ?? 0;
+          const share = fulfilledShare(p.byStatus, p.promises);
           return (
             <li key={p.slug}>
               <Link href={`/parties/${p.slug}`} className="brutal press reveal flex h-full flex-col gap-4 overflow-hidden rounded-md bg-surface">
@@ -36,7 +38,7 @@ export default async function PartiesPage() {
                         {p.shortName} · {t.timeline.founded} {p.founded.slice(0, 4)} · {p.symbol}
                       </p>
                     </div>
-                    {p.promises > 0 && <Ring value={fulfilled / p.promises} label={t.parties.fulfilled} size={64} />}
+                    {share !== null && <Ring value={share} label={t.parties.fulfilled} size={64} />}
                   </div>
                   {p.promises > 0 ? (
                     <>

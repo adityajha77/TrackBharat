@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import type { TimelineEvent } from "@trackbharat/shared";
 import { cn } from "@/lib/utils";
 
@@ -11,11 +11,25 @@ type Party = { slug: string; name: string; short: string; color: string };
  * events. Filter chips are client-side (the whole list is small).
  * Mobile: one column; desktop: events alternate left and right of the spine.
  */
-export function TimelineView({ parties, events, labels }: { parties: Party[]; events: TimelineEvent[]; labels: { all: string; national: string; source: string } }) {
+export function TimelineView({
+  parties,
+  events,
+  labels,
+  profiles,
+}: {
+  parties: Party[];
+  events: TimelineEvent[];
+  labels: { all: string; national: string; source: string };
+  /** Server-rendered profile (founders, mission, leaders' photos) per party slug. */
+  profiles: Record<string, ReactNode>;
+}) {
   const [only, setOnly] = useState<string | null>(null);
   const colour = Object.fromEntries(parties.map((p) => [p.slug, p.color]));
   const short = Object.fromEntries(parties.map((p) => [p.slug, p.short]));
-  const shown = events.filter((e) => !only || e.party === only || e.party === null);
+  // "All parties": everything, with national milestones. One party: only its
+  // own events and its own profile, nothing from other parties.
+  const shown = events.filter((e) => (only ? e.party === only : true));
+  const shownProfiles = only ? parties.filter((p) => p.slug === only) : parties;
 
   return (
     <div className="mt-10">
@@ -62,6 +76,9 @@ export function TimelineView({ parties, events, labels }: { parties: Party[]; ev
           );
         })}
       </ol>
+
+      {/* Every party, the same sections in the same order */}
+      <section className="mt-16 space-y-12">{shownProfiles.map((p) => profiles[p.slug])}</section>
     </div>
   );
 }

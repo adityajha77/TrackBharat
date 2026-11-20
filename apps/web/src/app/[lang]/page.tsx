@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { ArrowRight, Database, Landmark, Megaphone, ScrollText, ShieldCheck, Users, Vote } from "lucide-react";
 import Link from "@/components/link";
@@ -6,7 +7,7 @@ import { TodayTeaser } from "@/components/issues/today-teaser";
 import { TricolourRibbon } from "@/components/india/tricolour-ribbon";
 import { CausesSection } from "@/components/voices/causes-section";
 import { NewsCard } from "@/components/voices/news-card";
-import { Ring, StatusBar } from "@/components/voices/progress";
+import { fulfilledShare, Ring, StatusBar } from "@/components/voices/progress";
 import { ButtonLink } from "@/components/ui/button";
 import { Badge, Eyebrow, Stamp } from "@/components/ui/card";
 import { getT } from "@/i18n/server";
@@ -215,6 +216,7 @@ export default async function HomePage() {
 }
 
 async function NewsStrip() {
+  await connection();
   const [{ t }, news] = await Promise.all([getT(), getNews().catch(() => null)]);
   const items = news?.items.slice(0, 4) ?? [];
   if (!items.length) return <p className="brutal mt-8 rounded-md bg-surface p-6 text-sm text-muted">{t.news.empty}</p>;
@@ -228,6 +230,7 @@ async function NewsStrip() {
 }
 
 async function ManifestoTeaser() {
+  await connection();
   const [{ t }, data] = await Promise.all([getT(), getParties().catch(() => null)]);
   const top = (data?.parties ?? [])
     .filter((p) => p.promises > 0)
@@ -237,10 +240,10 @@ async function ManifestoTeaser() {
   return (
     <div className="mt-6 grid gap-5 sm:grid-cols-2">
       {top.map((p) => {
-        const rated = p.promises - (p.byStatus.NOT_RATED ?? 0) - (p.byStatus.NOT_IN_POWER ?? 0);
+        const share = fulfilledShare(p.byStatus, p.promises);
         return (
           <Link key={p.slug} href={`/parties/${p.slug}`} className="brutal-sm press flex items-center gap-4 rounded-md bg-background p-4">
-            <Ring value={rated ? (p.byStatus.FULFILLED ?? 0) / p.promises : 0} label={t.parties.fulfilled} size={76} />
+            <Ring value={share ?? 0} label={t.parties.fulfilled} size={76} />
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <span className="inline-block size-3 rounded-sm border border-ink" style={{ background: p.color }} />

@@ -127,16 +127,23 @@ test("manifestos and timeline: verdicts carry evidence; out-of-power promises ar
   await expect(page.getByRole("heading", { name: "Indian National Congress", level: 1 })).toBeVisible();
   await expect(page.getByText("Didn't form government").first()).toBeVisible();
   await expect(page.getByText(/^Broken$/)).toHaveCount(0);
+  // Rated on the state government it did form (Karnataka 2023), with evidence
+  await expect(page.getByText("Karnataka assembly")).toBeVisible();
+  await expect(page.locator("li").filter({ hasText: "Shakti: free bus travel" }).getByRole("link", { name: /Evidence/ })).toHaveAttribute("href", /^https:\/\//);
 
   await page.goto("/parties/bjp");
   const fulfilled = page.locator("li").filter({ hasText: "Annul Article 370" });
   await expect(fulfilled.getByRole("link", { name: /Evidence/ })).toHaveAttribute("href", /^https:\/\//);
 
   await page.goto("/timeline");
-  await expect(page.getByText("The Constitution comes into force")).toBeVisible();
-  await page.getByRole("button", { name: /^AAP$/ }).click();
-  await expect(page.getByText("Recognised as a national party")).toBeVisible();
-  await expect(page.getByText("Purna Swaraj resolution")).toHaveCount(0); // INC event hidden by the filter
+  const main = page.locator("#main"); // the page streams in: ignore the hidden copy React swaps in from
+  await expect(main.getByText("The Constitution comes into force")).toBeVisible();
+  await main.getByRole("button", { name: /^AAP$/ }).click();
+  await expect(main.getByText("Recognised as a national party")).toBeVisible();
+  await expect(main.getByText("Purna Swaraj resolution")).toHaveCount(0); // INC event hidden by the filter
+  await expect(main.getByRole("heading", { name: "Aam Aadmi Party", level: 2 })).toBeVisible();
+  await expect(main.getByRole("heading", { name: "Indian National Congress", level: 2 })).toHaveCount(0); // and its leaders' profile
+  await expect(main.getByText("The Constitution comes into force")).toHaveCount(0); // only AAP's own story
 });
 
 test("forgot password: the emailed link (dev outbox) sets a new password", async ({ page, request }) => {

@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Send } from "lucide-react";
@@ -15,6 +16,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function NewsPage({ searchParams }: PageProps<"/[lang]/news">) {
+  await connection(); // live data: render per request, never at build time (the API isn't running during `next build`)
   const { t } = await getT();
   return (
     <div className="mx-auto max-w-7xl px-4 py-12">

@@ -122,6 +122,8 @@ export const ManifestoPromiseView = z.object({
 export const Manifesto = z.object({
   id: z.number().int(),
   electionYear: z.number().int(),
+  /** null = Lok Sabha (national); otherwise the state whose assembly election it was. */
+  state: z.string().nullable(),
   title: z.string(),
   sourceUrl: z.string(),
   formedGovernment: z.boolean(),

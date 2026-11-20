@@ -37,7 +37,15 @@ const Promise_ = z.object({
   note: z.string().optional(),
   evidence: https.optional(),
 });
-const Manifesto = z.object({ year: z.number().int().min(1951).max(2100), title: z.string().min(3), source: https, formedGovernment: z.boolean(), promises: z.array(Promise_) });
+const Manifesto = z.object({
+  year: z.number().int().min(1951).max(2100),
+  /** Omit for a Lok Sabha manifesto; the state's name for an assembly election. */
+  state: z.string().min(3).optional(),
+  title: z.string().min(3),
+  source: https,
+  formedGovernment: z.boolean(),
+  promises: z.array(Promise_),
+});
 export const PartyFile = z.object({
   slug: z.string().regex(/^[a-z0-9-]+$/),
   name: z.string().min(2),
@@ -151,8 +159,8 @@ export async function importParties(db: Database, opts: { photos?: boolean } = {
     for (const m of f.manifestos) {
       const [row] = await db
         .insert(manifestos)
-        .values({ partyId, electionYear: m.year, title: m.title, sourceUrl: m.source, formedGovernment: m.formedGovernment })
-        .onConflictDoUpdate({ target: [manifestos.partyId, manifestos.electionYear], set: { title: m.title, sourceUrl: m.source, formedGovernment: m.formedGovernment } })
+        .values({ partyId, electionYear: m.year, state: m.state ?? null, title: m.title, sourceUrl: m.source, formedGovernment: m.formedGovernment })
+        .onConflictDoUpdate({ target: [manifestos.partyId, manifestos.electionYear, manifestos.state], set: { title: m.title, sourceUrl: m.source, formedGovernment: m.formedGovernment } })
         .returning({ id: manifestos.id });
       await db.delete(manifestoPromises).where(eq(manifestoPromises.manifestoId, row!.id));
       if (m.promises.length)

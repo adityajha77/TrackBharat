@@ -45,6 +45,34 @@
       ]
     },
     {
+      "year": 2023,
+      "state": "Karnataka",
+      "title": "Five guarantees",
+      "source": "https://en.wikipedia.org/wiki/2023_Karnataka_Legislative_Assembly_election",
+      "formedGovernment": true,
+      "promises": [
+        { "category": "LOCAL_DEVELOPMENT", "text": "Shakti: free bus travel for women in state-run buses.", "status": "FULFILLED", "note": "Launched in June 2023, weeks after the government took office.", "evidence": "https://en.wikipedia.org/wiki/Siddaramaiah" },
+        { "category": "ELECTRICITY", "text": "Gruha Jyothi: 200 units of free electricity a month for every household.", "status": "IN_PROGRESS", "note": "Approved by the first cabinet and funded in the July 2023 state budget (₹52,000 crore for all five guarantees); delivery not yet checked.", "evidence": "https://en.wikipedia.org/wiki/Siddaramaiah" },
+        { "category": "LOCAL_DEVELOPMENT", "text": "Gruha Lakshmi: ₹2,000 a month to the woman head of each family.", "status": "IN_PROGRESS", "note": "Approved by the first cabinet and funded in the July 2023 state budget (₹52,000 crore for all five guarantees); delivery not yet checked.", "evidence": "https://en.wikipedia.org/wiki/Siddaramaiah" },
+        { "category": "LOCAL_DEVELOPMENT", "text": "Anna Bhagya: 10 kg of free rice a month for every member of a BPL family.", "status": "IN_PROGRESS", "note": "Approved by the first cabinet and funded in the July 2023 state budget (₹52,000 crore for all five guarantees); delivery not yet checked.", "evidence": "https://en.wikipedia.org/wiki/Siddaramaiah" },
+        { "category": "EMPLOYMENT", "text": "Yuva Nidhi: ₹3,000 a month for unemployed graduates and ₹1,500 for diploma holders.", "status": "IN_PROGRESS", "note": "Approved by the first cabinet and funded in the July 2023 state budget (₹52,000 crore for all five guarantees); delivery not yet checked.", "evidence": "https://en.wikipedia.org/wiki/Siddaramaiah" }
+      ]
+    },
+    {
+      "year": 2023,
+      "state": "Telangana",
+      "title": "Six guarantees",
+      "source": "https://en.wikipedia.org/wiki/2023_Telangana_Legislative_Assembly_election",
+      "formedGovernment": true,
+      "promises": [
+        { "category": "LOCAL_DEVELOPMENT", "text": "Free bus travel for women in state-run buses.", "status": "FULFILLED", "note": "Launched in the government's first ten days (December 2023).", "evidence": "https://en.wikipedia.org/wiki/Revanth_Reddy" },
+        { "category": "HEALTH", "text": "Raise Arogyasri health cover to ₹10 lakh.", "status": "FULFILLED", "note": "Raised in the government's first ten days.", "evidence": "https://en.wikipedia.org/wiki/Revanth_Reddy" },
+        { "category": "AGRICULTURE", "text": "Waive crop loans of farmers up to ₹2 lakh.", "status": "IN_PROGRESS", "note": "Passed in July 2024, with ₹31,000 crore released for it.", "evidence": "https://en.wikipedia.org/wiki/Revanth_Reddy" },
+        { "category": "LOCAL_DEVELOPMENT", "text": "₹2,500 a month to every woman." },
+        { "category": "OTHER", "text": "LPG cylinders for ₹500." }
+      ]
+    },
+    {
       "year": 2019,
       "title": "Hum Nibhayenge",
       "source": "https://en.wikipedia.org/wiki/Indian_National_Congress_campaign_for_the_2019_Indian_general_election",

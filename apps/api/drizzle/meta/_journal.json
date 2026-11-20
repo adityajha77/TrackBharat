@@ -57,6 +57,13 @@
       "when": 1794821457675,
       "tag": "0007_causes_news_parties_email",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795194949744,
+      "tag": "0008_manifesto_state",
+      "breakpoints": true
     }
   ]
 }

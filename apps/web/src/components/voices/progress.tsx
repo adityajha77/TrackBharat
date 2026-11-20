@@ -13,6 +13,17 @@ export const MANIFESTO_TONE: Record<ManifestoStatus, string> = {
 export const MANIFESTO_ORDER: ManifestoStatus[] = ["FULFILLED", "PARTIAL", "IN_PROGRESS", "BROKEN", "NOT_RATED", "NOT_IN_POWER"];
 
 /** Animated ring: share of promises fulfilled (CSS @property animation, see globals.css). */
+/**
+ * Share of promises fulfilled, out of those the party was IN POWER to deliver.
+ * Promises made from opposition ("didn't form government") are left out of the
+ * denominator, so a party is never scored 0% for elections it lost.
+ * null = nothing it could be judged on yet.
+ */
+export function fulfilledShare(byStatus: Record<string, number>, total: number): number | null {
+  const accountable = total - (byStatus.NOT_IN_POWER ?? 0);
+  return accountable > 0 ? (byStatus.FULFILLED ?? 0) / accountable : null;
+}
+
 export function Ring({ value, label, size = 88 }: { value: number; label: string; size?: number }) {
   const pct = Math.round(value * 100);
   return (

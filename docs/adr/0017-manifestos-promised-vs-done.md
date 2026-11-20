@@ -19,8 +19,13 @@ sensitive data on the site, so the rules must be strict and identical for every 
   CAA, Ayushman Bharat 70+); contested or unmeasured promises (doubling farmers' income, UCC) stay "not yet rated".
 - Sources: the official manifesto site where we could reach it (INC 2024: manifesto.inc.in); otherwise the Wikipedia
   campaign article that cites the manifesto, until an official PDF link is confirmed.
-- The UI shows parties in founding order and colours "didn't form government" neutral grey, never red.
+- **Every party is judged where it governed.** A manifesto has an optional `state`: NULL is a Lok Sabha manifesto, otherwise
+  the state assembly election (e.g. INC Karnataka 2023, DMK Tamil Nadu 2021, AAP Punjab 2022). So parties that lead state
+  governments are rated on those, not only on national elections they lost.
+- **The fulfilled % counts only promises the party was in power to deliver** (`fulfilledShare`): "didn't form government"
+  promises are left out of the denominator, so no party shows 0% for an election it lost.
+- - The UI shows parties in founding order and colours "didn't form government" neutral grey, never red.
 
 ## Consequences
 - ✅ Fair by construction, auditable line by line.
-- ⚠️ Coverage is small and needs volunteers with sources; page numbers are empty until checked against the PDFs.
+- ⚠️ BSP has no rated manifesto yet. Coverage is small and needs volunteers with sources; page numbers are empty until checked against the PDFs.
