@@ -1,0 +1,61 @@
+# SCHEDULED JOBS against the production database (Supabase).
+#
+# The free hosting plan has no always-on background worker, so GitHub runs the
+# jobs on a timer instead (free for public repositories):
+#   - news: every 2 hours, fetch headlines from the press feeds
+#   - weekly: Monday 00:05 India time, rank last week's issues and pick the
+#     Causes of the Week
+# Each run starts, does its job, and exits. Run one by hand from the Actions tab
+# ("Run workflow").
+#
+# Needs one repository secret: PROD_DATABASE_URL (Settings → Secrets and
+# variables → Actions). Without it, the jobs skip themselves.
+name: Scheduled jobs
+
+on:
+  schedule:
+    - cron: "15 */2 * * *" # news, every 2 hours (UTC)
+    - cron: "35 18 * * 0" # weekly: Sunday 18:35 UTC = Monday 00:05 IST
+  workflow_dispatch:
+    inputs:
+      job:
+        description: "Which job"
+        type: choice
+        options: [news, weekly]
+        default: news
+
+concurrency:
+  group: scheduled-jobs
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+      NODE_ENV: production
+    steps:
+      - name: Skip when the database secret isn't set
+        id: check
+        run: |
+          if [ -z "$DATABASE_URL" ]; then echo "PROD_DATABASE_URL secret not set: skipping"; echo "skip=1" >> "$GITHUB_OUTPUT"; fi
+      - uses: actions/checkout@v4
+        if: steps.check.outputs.skip != '1'
+      - uses: pnpm/action-setup@v4
+        if: steps.check.outputs.skip != '1'
+      - uses: actions/setup-node@v4
+        if: steps.check.outputs.skip != '1'
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --filter @trackbharat/api...
+        if: steps.check.outputs.skip != '1'
+
+      - name: Weekly rankings and Causes of the Week
+        if: steps.check.outputs.skip != '1' && (github.event.schedule == '35 18 * * 0' || inputs.job == 'weekly')
+        run: pnpm --filter @trackbharat/api exec tsx src/worker.ts --once
+
+      - name: News headlines
+        if: steps.check.outputs.skip != '1' && (github.event.schedule == '15 */2 * * *' || inputs.job == 'news')
+        run: pnpm --filter @trackbharat/api exec tsx src/worker.ts --news

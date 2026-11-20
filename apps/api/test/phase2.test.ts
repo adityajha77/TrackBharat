@@ -75,7 +75,7 @@ describe("issue service rules", () => {
       findDetail: vi.fn(),
       ...o,
     }) as unknown as IssueRepository;
-  const photos = { save: vi.fn(), open: () => null, remove: vi.fn() };
+  const photos = { save: vi.fn(), open: async () => null, remove: vi.fn() };
   const input = { title: "Broken street light", description: "Dark for two weeks, unsafe at night.", category: "SAFETY" as const, pincode: "560034" };
 
   it(`limits reports to ${MAX_ISSUES_PER_DAY} per day`, async () => {
@@ -85,7 +85,7 @@ describe("issue service rules", () => {
 
   it("doesn't save the photo if the PIN code can't be matched (no orphan files)", async () => {
     const save = vi.fn();
-    const svc = createIssueService(base({ seatForPincode: vi.fn().mockResolvedValue(null) }), { save, open: () => null, remove: vi.fn() });
+    const svc = createIssueService(base({ seatForPincode: vi.fn().mockResolvedValue(null) }), { save, open: async () => null, remove: vi.fn() });
     await expect(svc.create(citizen, input, Buffer.from("x"))).rejects.toMatchObject({ statusCode: 400 });
     expect(save).not.toHaveBeenCalled();
   });
@@ -120,7 +120,7 @@ describe("photo store", () => {
     const store = createPhotoStore(mkdtempSync(path.join(tmpdir(), "tb-photos-")));
     const key = await store.save(withGps);
     const chunks: Buffer[] = [];
-    for await (const c of store.open(key)!) chunks.push(c as Buffer);
+    for await (const c of (await store.open(key)) as AsyncIterable<Buffer>) chunks.push(c);
     const meta = await sharp(Buffer.concat(chunks)).metadata();
     expect(meta.format).toBe("webp");
     expect(meta.exif).toBeUndefined();
@@ -129,6 +129,6 @@ describe("photo store", () => {
   it("rejects files that aren't images, and refuses path traversal", async () => {
     const store = createPhotoStore(mkdtempSync(path.join(tmpdir(), "tb-photos-")));
     await expect(store.save(Buffer.from("<script>alert(1)</script>"))).rejects.toMatchObject({ statusCode: 400 });
-    expect(store.open("../../etc/passwd")).toBeNull();
+    expect(await store.open("../../etc/passwd")).toBeNull();
   });
 });

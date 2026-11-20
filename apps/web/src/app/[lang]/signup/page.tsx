@@ -4,7 +4,7 @@ import { ShieldCheck } from "lucide-react";
 import Link from "@/components/link";
 import { Card } from "@/components/ui/card";
 import { AuthForm } from "@/components/auth/auth-form";
-import { GoogleButton } from "@/components/auth/google-button";
+import { EmailOffNote, GoogleButton } from "@/components/auth/google-button";
 
 export const metadata: Metadata = { title: "Create an account" };
 
@@ -19,6 +19,10 @@ export default function SignupPage({ searchParams }: PageProps<"/[lang]/signup">
             const next = typeof sp.next === "string" ? sp.next : undefined;
             return (
               <>
+                <EmailOffNote>
+                  Email confirmation isn&apos;t switched on yet. Sign up with Google and your votes count right away; with an email
+                  sign-up they count once confirmation emails start.
+                </EmailOffNote>
                 <GoogleButton next={next} label="Sign up with Google" />
                 <AuthForm mode="signup" next={next} />
               </>

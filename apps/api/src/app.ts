@@ -61,6 +61,8 @@ export interface AppDeps {
   emailLinks: EmailLinksService;
   /** "Continue with Google". Absent (tests) = the routes answer "not set up". */
   googleAuth?: GoogleAuth;
+  /** false = no SMTP: the website says email links are off (default true). */
+  emailEnabled?: boolean;
   /** Production: cookies only over HTTPS. */
   secureCookies?: boolean;
   leaderPhotos: PhotoStore;
@@ -142,8 +144,8 @@ export async function buildApp(deps: AppDeps) {
   await app.register(constituencyRoutes(deps.constituencyService), { prefix: "/v1" });
   await app.register(promiseRoutes(deps.promiseService), { prefix: "/v1" });
   await app.register(authRoutes(deps.authService, deps.accountService, deps.emailLinks), { prefix: "/v1" });
-  if (deps.googleAuth) await app.register(googleRoutes(deps.googleAuth, { secureCookies: deps.secureCookies ?? false }), { prefix: "/v1" });
-  else app.get("/v1/auth/providers", async () => ({ google: false }));
+  if (deps.googleAuth) await app.register(googleRoutes(deps.googleAuth, { secureCookies: deps.secureCookies ?? false, email: deps.emailEnabled ?? true }), { prefix: "/v1" });
+  else app.get("/v1/auth/providers", async () => ({ google: false, email: deps.emailEnabled ?? true }));
   await app.register(issueRoutes(deps.issueService, deps.photoStore), { prefix: "/v1" });
   await app.register(submissionRoutes(deps.submissionService, deps.issueService), { prefix: "/v1" });
   await app.register(reportCardRoutes(deps.reportCardService, deps.db), { prefix: "/v1" });

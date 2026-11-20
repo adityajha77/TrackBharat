@@ -26,7 +26,7 @@ export const partiesRoutes =
     });
 
     app.get<{ Params: { key: string } }>("/media/leaders/:key", async (req, reply) => {
-      const stream = leaderPhotos.open(req.params.key);
+      const stream = await leaderPhotos.open(req.params.key);
       if (!stream) return reply.code(404).send({ error: { code: "NOT_FOUND", message: "Photo not found", requestId: req.id } });
       return reply.header("content-type", "image/webp").header("cache-control", "public, max-age=31536000, immutable").send(stream);
     });

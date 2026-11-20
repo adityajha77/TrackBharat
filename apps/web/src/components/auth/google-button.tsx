@@ -12,18 +12,26 @@ import { z } from "zod";
 const API_URL = process.env.API_URL ?? "http://localhost:4000";
 const PUBLIC_API_URL = process.env.PUBLIC_API_URL ?? API_URL;
 
-async function googleEnabled() {
+/** What this server offers: Google sign-in, and whether it can send emails. */
+export async function getProviders() {
   try {
     const res = await fetch(`${API_URL}/v1/auth/providers`, { next: { revalidate: 300 } });
-    return z.object({ google: z.boolean() }).parse(await res.json()).google;
+    return z.object({ google: z.boolean(), email: z.boolean().default(true) }).parse(await res.json());
   } catch {
-    return false;
+    return { google: false, email: true };
   }
+}
+
+/** Shown where an email would be sent, while the server has no email set up. */
+export async function EmailOffNote({ children }: { children: React.ReactNode }) {
+  await connection();
+  if ((await getProviders()).email) return null;
+  return <p className="mb-4 rounded-md border-2 border-saffron bg-saffron/10 px-3 py-2 text-sm">{children}</p>;
 }
 
 export async function GoogleButton({ next, label = "Continue with Google" }: { next?: string; label?: string }) {
   await connection();
-  if (!(await googleEnabled())) return null;
+  if (!(await getProviders()).google) return null;
   const href = `${PUBLIC_API_URL}/v1/auth/google/start?next=${encodeURIComponent(next ?? "/me")}`;
   return (
     <>

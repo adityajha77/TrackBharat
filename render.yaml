@@ -1,0 +1,50 @@
+# Render Blueprint: the TrackBharat API on Render's free plan.
+# Render → New → Blueprint → pick this repo. Values marked `sync: false` are
+# asked for once in Render's dashboard (secrets never live in git).
+#
+# The website runs on Vercel, the database and photos on Supabase, and the
+# scheduled jobs on GitHub Actions (.github/workflows/jobs.yml), so nothing
+# here needs a paid always-on worker or disk.
+services:
+  - type: web
+    name: trackbharat-api
+    runtime: docker
+    plan: free
+    region: singapore # closest Render region to India
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    # Apply any new database migrations, then start the API (Render sets PORT itself).
+    dockerCommand: sh -c "node dist/migrate.js && node dist/server.js"
+    healthCheckPath: /health
+    autoDeploy: true
+    buildFilter:
+      paths:
+        - apps/api/**
+        - packages/shared/**
+        - pnpm-lock.yaml
+        - render.yaml
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: DATABASE_URL # Supabase → Connect → Session pooler (password's "@" written as %40)
+        sync: false
+      - key: PUBLIC_API_URL # this service's address, e.g. https://trackbharat-api.onrender.com
+        sync: false
+      - key: WEB_URL # the website, e.g. https://trackbharat.vercel.app
+        sync: false
+      - key: CORS_ORIGINS # same as WEB_URL
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: SUPABASE_URL # Supabase → Project Settings → API → Project URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY # Supabase → Project Settings → API keys → service_role (secret!)
+        sync: false
+      - key: SMTP_URL # optional for now: without it, verification and reset emails are off
+        sync: false
+      - key: MAIL_FROM
+        sync: false

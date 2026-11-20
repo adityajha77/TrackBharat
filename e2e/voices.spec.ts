@@ -57,9 +57,9 @@ test("Causes of the Week: vote up, switch to down, take it back; share links poi
   await login(page, "citizen@trackbharat.local");
   await page.goto("/causes");
   // Causes re-sort by votes after a reload, so pin the card by its title, not its position.
-  const first = page.locator("li").filter({ has: page.getByRole("button", { name: /Affects me/ }) }).first();
+  const first = page.locator("#main li").filter({ has: page.getByRole("button", { name: /Affects me/ }) }).first();
   const title = (await first.getByRole("heading", { level: 3 }).textContent())!;
-  const card = page.locator("li").filter({ has: page.getByRole("heading", { level: 3, name: title, exact: true }) });
+  const card = page.locator("#main li").filter({ has: page.getByRole("heading", { level: 3, name: title, exact: true }) });
   const up = card.getByRole("button", { name: /Affects me/ });
   const down = card.getByRole("button", { name: /Not my issue/ });
 
@@ -91,7 +91,8 @@ test("news: a citizen suggests a story, a verifier publishes it, it appears on /
 
   await login(page, "verifier@trackbharat.local");
   await page.goto("/moderation/news");
-  const item = page.locator("li").filter({ hasText: headline });
+  // #main: the page streams in, and React briefly keeps a hidden copy outside it
+  const item = page.locator("#main li").filter({ hasText: headline });
   await item.getByText("Review this story").click();
   await item.getByLabel(/Your summary/).fill("A government primary school has had no teacher for two months, so about 60 children have stopped attending. Parents have written to the district education office.");
   await item.getByLabel("State").selectOption("Odisha");

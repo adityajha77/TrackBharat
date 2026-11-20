@@ -14,7 +14,7 @@ import { createAuthService } from "./modules/auth/auth.service";
 import { createGoogleAuth } from "./modules/auth/google";
 import { createIssueRepository } from "./modules/issues/issue.repository";
 import { createIssueService } from "./modules/issues/issue.service";
-import { createPhotoStore } from "./modules/issues/photo-store";
+import { createPhotoStore, createSupabasePhotoStore } from "./modules/issues/photo-store";
 import { createSubmissionRepository } from "./modules/submissions/submission.repository";
 import { createSubmissionService } from "./modules/submissions/submission.service";
 import { createAccountService } from "./modules/auth/account";
@@ -43,10 +43,17 @@ const pincodeService = createPincodeService({
 });
 
 const promiseService = createPromiseService(createPromiseRepository(db));
-const photoStore = createPhotoStore(config.UPLOADS_DIR);
+const supabasePhotos =
+  config.SUPABASE_URL && config.SUPABASE_SERVICE_ROLE_KEY
+    ? createSupabasePhotoStore({ url: config.SUPABASE_URL, serviceKey: config.SUPABASE_SERVICE_ROLE_KEY, bucket: config.SUPABASE_PHOTOS_BUCKET })
+    : null;
+await supabasePhotos?.ensureBucket();
+const photoStore = supabasePhotos ?? createPhotoStore(config.UPLOADS_DIR);
 const issueService = createIssueService(createIssueRepository(db), photoStore);
 // No SMTP configured → emails go to an in-memory outbox (dev); production must set SMTP_URL.
-if (config.NODE_ENV === "production" && !config.SMTP_URL) throw new Error("SMTP_URL is required in production (verification and reset emails)");
+// Without SMTP, production still starts (Google sign-in needs no email), but no emails go out:
+// email sign-ups can't be verified and passwords can't be reset until SMTP_URL is set.
+if (config.NODE_ENV === "production" && !config.SMTP_URL) console.warn("SMTP_URL is not set: verification and password-reset emails are OFF");
 const mailer = config.SMTP_URL ? createSmtpMailer(config.SMTP_URL, config.MAIL_FROM) : createOutboxMailer();
 
 const authService = createAuthService(createAuthRepository(db));
@@ -58,6 +65,7 @@ const app = await buildApp({
   authService,
   googleAuth: createGoogleAuth(db, config, authService),
   secureCookies: config.NODE_ENV === "production",
+  emailEnabled: Boolean(config.SMTP_URL) || config.NODE_ENV !== "production",
   accountService: createAccountService(db, photoStore),
   leaderboardService: createLeaderboardService(db),
   issueService,

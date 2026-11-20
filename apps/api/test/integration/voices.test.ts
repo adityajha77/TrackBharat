@@ -18,7 +18,7 @@ describe.skipIf(!url)("Phase 3b on Postgres", () => {
   const { db, pool } = createDb(url ?? "postgres://unused");
   const NOW = new Date("2032-03-17T06:00:00Z"); // Wednesday; week starts Monday 2032-03-15
   const ids = { users: [] as number[], seat: 0, issue: 0 };
-  const noPhotos = { save: async () => "", open: () => null, remove: async () => {} };
+  const noPhotos = { save: async () => "", open: async () => null, remove: async () => {} };
 
   beforeAll(async () => {
     await db.execute(sql`INSERT INTO states (name) VALUES ('Voiceland') ON CONFLICT DO NOTHING`);

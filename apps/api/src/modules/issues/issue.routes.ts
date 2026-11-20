@@ -75,7 +75,7 @@ export const issueRoutes =
 
     // ---- Media (re-encoded photos) ----------------------------------------
     app.get<{ Params: { key: string } }>("/media/issues/:key", async (req, reply) => {
-      const stream = photos.open(req.params.key);
+      const stream = await photos.open(req.params.key);
       if (!stream) throw AppError.notFound("Photo not found");
       // The name is random and the content never changes → cache "forever"
       return reply.header("cache-control", "public, max-age=31536000, immutable").type("image/webp").send(stream);

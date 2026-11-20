@@ -16,14 +16,14 @@ function readCookie(header: string | undefined, name: string) {
 }
 
 export const googleRoutes =
-  (google: GoogleAuth, { secureCookies }: { secureCookies: boolean }): FastifyPluginAsync =>
+  (google: GoogleAuth, { secureCookies, email }: { secureCookies: boolean; email: boolean }): FastifyPluginAsync =>
   async (app) => {
     const cookie = (value: string, maxAge: number) =>
       // SameSite=Lax: still sent when Google redirects back (a top-level GET), never on cross-site POSTs.
       `${COOKIE}=${encodeURIComponent(value)}; Path=${COOKIE_PATH}; Max-Age=${maxAge}; HttpOnly; SameSite=Lax${secureCookies ? "; Secure" : ""}`;
 
     /** Which sign-in methods this server offers (the website hides the Google button when it's off). */
-    app.get("/auth/providers", async () => ({ google: google.enabled }));
+    app.get("/auth/providers", async () => ({ google: google.enabled, email }));
 
     app.get<{ Querystring: { next?: string } }>("/auth/google/start", { config: { rateLimit: { max: 20, timeWindow: "1 minute" } } }, async (req, reply) => {
       const { url, cookie: value } = google.start(req.query.next);

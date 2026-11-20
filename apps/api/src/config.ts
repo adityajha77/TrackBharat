@@ -22,6 +22,14 @@ const EnvSchema = z.object({
   UPLOADS_DIR: z.string().default("./.uploads"),
   /** Leader photos (free-licence, from the parties import). Production ships them inside the image. */
   LEADER_PHOTOS_DIR: z.string().optional(),
+  /**
+   * Citizens' photos in Supabase Storage instead of local disk (for hosts without a
+   * persistent disk, e.g. Render's free plan). Both set = on. The service-role key
+   * stays on this server only. Supabase → Project Settings → API.
+   */
+  SUPABASE_URL: z.url().optional(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
+  SUPABASE_PHOTOS_BUCKET: z.string().default("issue-photos"),
   /** Public web address, used in email links. */
   WEB_URL: z.url().default("http://localhost:3000"),
   /** e.g. smtps://user:pass@smtp.example.com:465. Unset = dev outbox (emails kept in memory, shown at /dev/outbox). */
