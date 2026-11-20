@@ -13,8 +13,9 @@ export const DATA_DIR = process.env.IMPORT_DATA_DIR ?? path.resolve(here, "../..
 const USER_AGENT = "TrackBharat-data-import/0.1 (+https://github.com/adityajha77/TrackBharat)";
 
 export async function download(url: string, fileName: string, { maxAgeDays = 30 } = {}): Promise<string> {
-  mkdirSync(DATA_DIR, { recursive: true });
   const file = path.join(DATA_DIR, fileName);
+  // fileName may include a folder (india_ac/India_AC.shp): create it too, or a fresh machine (CI) fails.
+  mkdirSync(path.dirname(file), { recursive: true });
   if (existsSync(file)) {
     const ageDays = (Date.now() - statSync(file).mtimeMs) / 86_400_000;
     if (ageDays < maxAgeDays) {
