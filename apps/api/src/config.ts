@@ -27,7 +27,7 @@ const EnvSchema = z.object({
    * persistent disk, e.g. Render's free plan). Both set = on. The service-role key
    * stays on this server only. Supabase → Project Settings → API.
    */
-  SUPABASE_URL: z.url().optional(),
+  SUPABASE_URL: z.url().refine((u) => /^https:\/\/[^/@]+\/?$/.test(u), "must be the Project URL, like https://abcd.supabase.co (not the database connection string)").optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
   SUPABASE_PHOTOS_BUCKET: z.string().default("issue-photos"),
   /** Public web address, used in email links. */
