@@ -37,7 +37,9 @@ export function createAccountService(db: Database, photos: Pick<PhotoStore, "rem
     },
 
     async deleteAccount(user: PublicUser, password: string) {
-      await checkPassword(user.id, password);
+      // Accounts linked to Google may have no password they know: being signed in is the proof.
+      const [linked] = await db.select({ sub: users.googleSub }).from(users).where(eq(users.id, user.id));
+      if (!(linked?.sub && password === "")) await checkPassword(user.id, password);
       const keys = (await db.select({ k: issues.photoKey }).from(issues).where(and(eq(issues.userId, user.id), isNotNull(issues.photoKey)))).map((r) => r.k!);
       await db.transaction(async (tx) => {
         await recordAudit(tx, { actorId: null, action: "user.delete_self", entityType: "user", entityId: user.id });

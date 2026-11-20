@@ -166,5 +166,6 @@ export const ChangePasswordInput = z.object({
 });
 export type ChangePasswordInput = z.infer<typeof ChangePasswordInput>;
 
-export const DeleteAccountInput = z.object({ password: z.string().min(1).max(200) });
+/** Password accounts confirm with their password; accounts linked to Google may leave it empty (they are signed in). */
+export const DeleteAccountInput = z.object({ password: z.string().max(200).default("") });
 export type DeleteAccountInput = z.infer<typeof DeleteAccountInput>;

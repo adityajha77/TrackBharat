@@ -14,6 +14,8 @@ import { promiseRoutes } from "./modules/promises/promise.routes";
 import type { PromiseService } from "./modules/promises/promise.service";
 import { authPlugin } from "./modules/auth/auth.plugin";
 import { authRoutes } from "./modules/auth/auth.routes";
+import type { GoogleAuth } from "./modules/auth/google";
+import { googleRoutes } from "./modules/auth/google.routes";
 import type { AuthService } from "./modules/auth/auth.service";
 import type { AccountService } from "./modules/auth/account";
 import { leaderboardRoutes } from "./modules/leaderboard/leaderboard.routes";
@@ -57,6 +59,10 @@ export interface AppDeps {
   partiesService: PartiesService;
   netaService: NetaService;
   emailLinks: EmailLinksService;
+  /** "Continue with Google". Absent (tests) = the routes answer "not set up". */
+  googleAuth?: GoogleAuth;
+  /** Production: cookies only over HTTPS. */
+  secureCookies?: boolean;
   leaderPhotos: PhotoStore;
   /** Dev only: exposes GET /v1/dev/outbox so emailed links can be clicked locally. */
   exposeOutbox?: boolean;
@@ -136,6 +142,8 @@ export async function buildApp(deps: AppDeps) {
   await app.register(constituencyRoutes(deps.constituencyService), { prefix: "/v1" });
   await app.register(promiseRoutes(deps.promiseService), { prefix: "/v1" });
   await app.register(authRoutes(deps.authService, deps.accountService, deps.emailLinks), { prefix: "/v1" });
+  if (deps.googleAuth) await app.register(googleRoutes(deps.googleAuth, { secureCookies: deps.secureCookies ?? false }), { prefix: "/v1" });
+  else app.get("/v1/auth/providers", async () => ({ google: false }));
   await app.register(issueRoutes(deps.issueService, deps.photoStore), { prefix: "/v1" });
   await app.register(submissionRoutes(deps.submissionService, deps.issueService), { prefix: "/v1" });
   await app.register(reportCardRoutes(deps.reportCardService, deps.db), { prefix: "/v1" });

@@ -25,6 +25,11 @@ const EnvSchema = z.object({
   /** e.g. smtps://user:pass@smtp.example.com:465. Unset = dev outbox (emails kept in memory, shown at /dev/outbox). */
   SMTP_URL: z.string().optional(),
   MAIL_FROM: z.string().default("TrackBharat <no-reply@trackbharat.local>"),
+  /** This API's public address (Google sends people back to <PUBLIC_API_URL>/v1/auth/google/callback). */
+  PUBLIC_API_URL: z.url().default("http://localhost:4000"),
+  /** "Continue with Google". Both unset = the button is hidden. From Google Cloud → APIs & Services → Clients. */
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
 });
 
 export type Config = z.infer<typeof EnvSchema>;

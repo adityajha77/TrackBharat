@@ -11,6 +11,7 @@ import { createPromiseRepository } from "./modules/promises/promise.repository";
 import { createPromiseService } from "./modules/promises/promise.service";
 import { createAuthRepository } from "./modules/auth/auth.repository";
 import { createAuthService } from "./modules/auth/auth.service";
+import { createGoogleAuth } from "./modules/auth/google";
 import { createIssueRepository } from "./modules/issues/issue.repository";
 import { createIssueService } from "./modules/issues/issue.service";
 import { createPhotoStore } from "./modules/issues/photo-store";
@@ -48,11 +49,15 @@ const issueService = createIssueService(createIssueRepository(db), photoStore);
 if (config.NODE_ENV === "production" && !config.SMTP_URL) throw new Error("SMTP_URL is required in production (verification and reset emails)");
 const mailer = config.SMTP_URL ? createSmtpMailer(config.SMTP_URL, config.MAIL_FROM) : createOutboxMailer();
 
+const authService = createAuthService(createAuthRepository(db));
+
 const app = await buildApp({
   pincodeService,
   constituencyService: createConstituencyService(createConstituencyRepository(db)),
   promiseService,
-  authService: createAuthService(createAuthRepository(db)),
+  authService,
+  googleAuth: createGoogleAuth(db, config, authService),
+  secureCookies: config.NODE_ENV === "production",
   accountService: createAccountService(db, photoStore),
   leaderboardService: createLeaderboardService(db),
   issueService,

@@ -32,7 +32,7 @@ export function deps(overrides: Partial<AppDeps> = {}): AppDeps {
     },
     constituencyService: { forPincode: notUsed, detail: notUsed, index: notUsed },
     promiseService: { get: notUsed, create: notUsed, updateStatus: notUsed, addEvidence: notUsed },
-    authService: { signup: notUsed, login: notUsed, logout: notUsed, resolve: async (token) => USERS[token] ?? null },
+    authService: { signup: notUsed, login: notUsed, logout: notUsed, sessionFor: notUsed, resolve: async (token) => USERS[token] ?? null },
     accountService: { changePassword: notUsed, deleteAccount: notUsed },
     leaderboardService: { get: notUsed },
     issueService: { create: notUsed, list: notUsed, highlights: notUsed, get: notUsed, vote: notUsed, report: notUsed, mine: notUsed, moderate: notUsed, reported: notUsed },

@@ -351,6 +351,8 @@ export const users = pgTable(
     isBlocked: boolean("is_blocked").notNull().default(false),
     /** Set when the person clicks the link we emailed. Only verified accounts' votes count in rankings. */
     emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
+    /** Google's stable account id ("sub") once the person has used "Continue with Google". */
+    googleSub: text("google_sub").unique(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex("users_email_uq").on(t.email)],
@@ -582,7 +584,7 @@ export const evidenceRelations = relations(evidence, ({ one }) => ({
 // ---------------------------------------------------------------------------
 // EMAIL: verification and password-reset links (Phase 3b)
 // ---------------------------------------------------------------------------
-export const emailTokenPurposeEnum = pgEnum("email_token_purpose", ["VERIFY_EMAIL", "RESET_PASSWORD"]);
+export const emailTokenPurposeEnum = pgEnum("email_token_purpose", ["VERIFY_EMAIL", "RESET_PASSWORD", "GOOGLE_LOGIN"]);
 
 /** One-time links. Like sessions, we store only the SHA-256 of the token, so a DB leak can't be replayed. */
 export const emailTokens = pgTable(

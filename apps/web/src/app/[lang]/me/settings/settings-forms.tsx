@@ -37,8 +37,8 @@ export function SettingsForms() {
           but no longer point to you.
         </p>
         <form action={delAction} className="mt-4 space-y-4">
-          <Field label="Password">
-            <Input name="password" type="password" autoComplete="current-password" required />
+          <Field label="Password" hint="Signed up with Google and never set a password? Leave this empty.">
+            <Input name="password" type="password" autoComplete="current-password" />
           </Field>
           <Field label="Type DELETE to confirm">
             <Input name="confirm" autoComplete="off" required pattern="DELETE" placeholder="DELETE" />

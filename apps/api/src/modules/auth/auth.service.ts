@@ -48,6 +48,9 @@ export function createAuthService(repo: AuthRepository, now: () => Date = () => 
       return issueSession({ id: u.id, name: u.name, role: u.role, emailVerified: u.emailVerified }, userAgent);
     },
 
+    /** A session for someone already proven by another method (e.g. Google). */
+    sessionFor: issueSession,
+
     async logout(token: string) {
       await repo.deleteSession(hashToken(token));
     },

@@ -158,8 +158,8 @@ export async function changePasswordAction(_prev: ActionState, form: FormData): 
 }
 
 export async function deleteAccountAction(_prev: ActionState, form: FormData): Promise<ActionState> {
-  const parsed = DeleteAccountInput.safeParse({ password: form.get("password") });
-  if (!parsed.success || form.get("confirm") !== "DELETE") return { error: "Type DELETE and enter your password to confirm" };
+  const parsed = DeleteAccountInput.safeParse({ password: form.get("password") ?? "" });
+  if (!parsed.success || form.get("confirm") !== "DELETE") return { error: "Type DELETE to confirm (and your password, unless you signed up with Google)" };
   try {
     await api.deleteAccount(parsed.data);
   } catch (e) {

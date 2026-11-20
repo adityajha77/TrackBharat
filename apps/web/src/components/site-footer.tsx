@@ -41,6 +41,12 @@ export async function SiteFooter() {
               {t.nav[n.key]}
             </Link>
           ))}
+          <Link href="/privacy" className="block text-muted hover:text-foreground">
+            Privacy
+          </Link>
+          <Link href="/terms" className="block text-muted hover:text-foreground">
+            Terms
+          </Link>
           <a href={site.repo} className="block text-muted hover:text-foreground">
             {t.footer.source}
           </a>
