@@ -39,7 +39,7 @@ test("signup: a new account lands on My activity and the header shows the user",
 
   await expect(page).toHaveURL(/\/me$/);
   await expect(page.getByRole("heading", { name: /Namaste, Asha/ })).toBeVisible();
-  await expect(page.locator("header details.group > summary")).toContainText("Asha");
+  await expect(page.locator("header").getByRole("button", { name: "My account" })).toContainText("Asha");
 });
 
 test("a logged-out visitor is sent to log in, then back where they were going", async ({ page }) => {
@@ -68,7 +68,14 @@ test("logout ends the session on the server too", async ({ page, context }) => {
   const stolen = (await context.cookies()).find((c) => c.name === "tb_session")!;
   expect(stolen.httpOnly).toBe(true); // JavaScript can't read the session cookie
 
-  await page.locator("header details.group > summary").click();
+  // The profile menu opens on click and closes on a click elsewhere, like "More"
+  const profile = page.locator("header").getByRole("button", { name: "My account" });
+  await profile.click();
+  await expect(page.getByRole("button", { name: "Log out" })).toBeVisible();
+  await page.locator("#main").click({ position: { x: 5, y: 5 } });
+  await expect(page.getByRole("button", { name: "Log out" })).toHaveCount(0);
+
+  await profile.click();
   await page.getByRole("button", { name: "Log out" }).click();
   await expect(page).toHaveURL(/\/$/);
   await expect(page.locator("header").getByRole("link", { name: "Log in" })).toBeVisible();

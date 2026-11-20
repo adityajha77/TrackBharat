@@ -2,12 +2,26 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 /**
- * The navbar's "More" dropdown. Opens on click; closes on a click anywhere
- * else, on Escape, or when one of its links is chosen.
+ * A header dropdown ("More", the profile menu). Opens on click; closes on a
+ * click anywhere else, on Escape, or when one of its LINKS is chosen. Buttons
+ * inside (e.g. the log-out form) are left alone, so their action still runs.
  */
-export function MoreMenu({ label, children }: { label: string; children: ReactNode }) {
+export function Dropdown({
+  trigger,
+  label,
+  buttonClassName,
+  children,
+}: {
+  /** What the button shows. */
+  trigger: ReactNode;
+  /** Accessible name for the button. */
+  label: string;
+  buttonClassName?: string;
+  children: ReactNode;
+}) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -29,19 +43,41 @@ export function MoreMenu({ label, children }: { label: string; children: ReactNo
     <div ref={ref} className="relative">
       <button
         type="button"
+        aria-label={label}
         aria-expanded={open}
         aria-haspopup="true"
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-1 rounded-md px-2.5 py-2 text-sm font-medium hover:bg-surface-muted"
+        className={cn("flex items-center gap-1 rounded-md px-2.5 py-2 text-sm font-medium hover:bg-surface-muted", buttonClassName)}
       >
-        {label} <ChevronDown className={`size-3.5 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden />
+        {trigger}
       </button>
       {open && (
-        // A click on a link inside closes the menu too (the page changes underneath)
-        <div className="brutal absolute end-0 z-50 mt-2 w-56 rounded-md bg-surface p-1.5" onClick={() => setOpen(false)}>
+        <div
+          className="brutal absolute end-0 z-50 mt-2 w-56 rounded-md bg-surface p-1.5"
+          onClick={(e) => {
+            // Choosing a link closes the menu (the page changes underneath)
+            if ((e.target as HTMLElement).closest("a")) setOpen(false);
+          }}
+        >
           {children}
         </div>
       )}
     </div>
+  );
+}
+
+/** The navbar's "More" menu. */
+export function MoreMenu({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <Dropdown
+      label={label}
+      trigger={
+        <>
+          {label} <ChevronDown className="size-3.5" aria-hidden />
+        </>
+      }
+    >
+      {children}
+    </Dropdown>
   );
 }
