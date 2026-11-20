@@ -2,7 +2,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ExternalLink, FileText, Quote } from "lucide-react";
+import { ExternalLink, FileText, Quote, Search } from "lucide-react";
 import type { Manifesto, PartyDetail } from "@trackbharat/shared";
 import Link from "@/components/link";
 import { LeaderCard } from "@/components/voices/leader-card";
@@ -131,6 +131,7 @@ async function Party({ slug }: { slug: string }) {
           </Link>
         </section>
       )}
+      <SourcesPanel p={p} t={t} />
     </div>
   );
 }
@@ -170,6 +171,63 @@ function PromisedVsDone({ p, t }: { p: PartyDetail; t: Dictionary }) {
           <h3 className="font-black text-danger">✗ {t.parties.pendingList} ({pending.length})</h3>
           <ul className="mt-2 divide-y-2 divide-ink/10">{pending.map(item)}</ul>
         </div>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * CHECK IT YOURSELF: every link this page relies on, in one place. Manifestos
+ * first (what was promised), then the evidence for each verdict (what happened),
+ * then the history. Anyone can open them and tell us if we got something wrong.
+ */
+function SourcesPanel({ p, t }: { p: PartyDetail; t: Dictionary }) {
+  const groups: { title: string; links: { url: string; label: string }[] }[] = [
+    {
+      title: "What they promised (the manifestos)",
+      links: p.manifestos.map((m) => ({ url: m.sourceUrl, label: `${m.title} · ${m.state ?? "Lok Sabha"} ${m.electionYear}` })),
+    },
+    {
+      title: "What happened (evidence for each verdict)",
+      links: p.manifestos.flatMap((m) => m.promises.filter((pr) => pr.evidenceUrl).map((pr) => ({ url: pr.evidenceUrl!, label: `${t.status[pr.status]} · ${pr.text}` }))),
+    },
+    {
+      title: "History, mission and leaders",
+      links: [{ url: p.ideologySourceUrl, label: "How the party describes itself" }, ...p.events.map((e) => ({ url: e.sourceUrl, label: `${e.date.slice(0, 4)} · ${e.title}` }))],
+    },
+  ];
+  if (p.manifestoNote) groups[0]!.links.push({ url: p.manifestoNote.sourceUrl, label: "Why there is no manifesto to rate" });
+  return (
+    <section className="brutal reveal mt-12 rounded-md bg-surface p-5">
+      <h2 className="flex items-center gap-2 text-xl font-black">
+        <Search className="size-5 text-saffron" aria-hidden /> Check it yourself: every source on this page
+      </h2>
+      <p className="mt-1 text-sm text-muted">
+        TrackBharat is built and checked by a small group of people. We only add a promise or a verdict when a public source supports
+        it, and we link that source so you can verify it. Found a mistake or a better source?{" "}
+        <Link href="/contact" className="font-semibold underline">
+          Tell us
+        </Link>
+        .
+      </p>
+      <div className="mt-5 grid gap-6 lg:grid-cols-3">
+        {groups
+          .filter((g) => g.links.length)
+          .map((g) => (
+            <div key={g.title}>
+              <h3 className="font-bold">{g.title}</h3>
+              <ol className="mt-2 space-y-1.5 text-sm">
+                {g.links.map((l, i) => (
+                  <li key={`${l.url}-${i}`} className="flex gap-1.5">
+                    <ExternalLink className="mt-1 size-3 shrink-0 text-muted" aria-hidden />
+                    <a href={l.url} target="_blank" rel="noopener noreferrer" className="min-w-0 break-words hover:underline">
+                      {l.label} <span className="font-mono text-[11px] text-muted">({new URL(l.url).hostname.replace(/^www\./, "")})</span>
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          ))}
       </div>
     </section>
   );

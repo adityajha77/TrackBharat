@@ -40,7 +40,7 @@ export function deps(overrides: Partial<AppDeps> = {}): AppDeps {
     photoStore: { save: notUsed, open: () => null, remove: notUsed },
     reportCardService: { reportCard: notUsed, insights: notUsed },
     causesService: { current: notUsed, vote: notUsed, update: notUsed },
-    newsService: { published: notUsed, drafts: notUsed, submit: notUsed, review: notUsed, fetchFeeds: notUsed, latest: notUsed },
+    newsService: { published: notUsed, headlines: notUsed, create: notUsed, drafts: notUsed, submit: notUsed, review: notUsed, fetchFeeds: notUsed, latest: notUsed },
     partiesService: { list: notUsed, detail: notUsed, timeline: notUsed },
     netaService: { list: notUsed },
     emailLinks: { sendVerification: async () => {}, verify: notUsed, forgotPassword: notUsed, resetPassword: notUsed, outbox: undefined },

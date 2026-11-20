@@ -20,6 +20,17 @@ the source. News articles are copyrighted, and automated summaries can be wrong 
 - Unreviewed feed drafts older than 30 days are deleted (stale news).
 - Feeds that block automated reading (e.g. returned 403/"Access Denied" when tested) are not used.
 
+## Update (2026-11-21): latest headlines are shown straight away
+- `/news` now has two parts: **Verified by TrackBharat** (our summaries, as above) and **Latest from the press**: the feed
+  headlines themselves, newest first, each with the publisher's name, the time, the state if known, and a link that
+  opens the story **on the publisher's site**. We still store and show only the headline and the link, never the
+  article text or the feed's description, so the publisher keeps the reader and the click.
+- Why this is fine: publishers offer RSS feeds so that others list their headlines with a link back; a headline with
+  attribution and a link is how every news reader and aggregator works. Copying article text or images would not be,
+  and we don't. A publisher who objects is removed from `news-feeds.json` the same day.
+- Citizen suggestions never appear in either list until a verifier publishes them. Staff can also add a story directly
+  (`POST /v1/moderation/news`, the "News desk" page), which publishes at once and is audited.
+
 ## Alternatives considered
 - **AI summaries.** Fast, but can misstate facts about real people; may be added later as a *draft* a human must edit.
 - **Copying the feed's description.** Simple, but it's the publisher's text.

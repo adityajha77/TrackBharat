@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from "fastify";
-import { ReviewNewsInput, SubmitNewsInput } from "@trackbharat/shared";
+import { CreateNewsInput, ReviewNewsInput, SubmitNewsInput } from "@trackbharat/shared";
 import { parseBody, parseId } from "../../lib/validation";
 import { currentUser, requireRole, requireUser } from "../auth/auth.plugin";
 import type { NewsService } from "./news.service";
@@ -12,6 +12,11 @@ export const newsRoutes =
       return service.published({ state: req.query.state?.slice(0, 80), limit: Number(req.query.limit) || undefined });
     });
 
+    app.get<{ Querystring: { state?: string; source?: string; limit?: string } }>("/news/headlines", async (req, reply) => {
+      reply.header("cache-control", "public, max-age=300");
+      return service.headlines({ state: req.query.state?.slice(0, 80), source: req.query.source?.slice(0, 80), limit: Number(req.query.limit) || undefined });
+    });
+
     app.post("/news", { preHandler: requireUser, config: { rateLimit: { max: 5, timeWindow: "10 minutes" } } }, async (req, reply) => {
       const id = await service.submit(currentUser(req), parseBody(SubmitNewsInput, req.body));
       return reply.code(201).send({ id });
@@ -22,6 +27,10 @@ export const newsRoutes =
     app.get("/moderation/news", { preHandler: staff }, async (_req, reply) => {
       reply.header("cache-control", "private, no-store");
       return { items: await service.drafts() };
+    });
+    app.post("/moderation/news", { preHandler: staff }, async (req, reply) => {
+      const id = await service.create(currentUser(req), parseBody(CreateNewsInput, req.body));
+      return reply.code(201).send({ id });
     });
     app.post<{ Params: { id: string } }>("/moderation/news/:id", { preHandler: staff }, async (req, reply) => {
       await service.review(currentUser(req), parseId(req.params.id), parseBody(ReviewNewsInput, req.body));

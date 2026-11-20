@@ -25,6 +25,51 @@ export default function MethodologyPage() {
         </p>
       </header>
 
+      {/* The idea behind the whole site, in the words of Indian law */}
+      <figure className="brutal rounded-md bg-surface p-6">
+        <blockquote className="text-lg font-semibold leading-snug sm:text-xl">
+          &ldquo;Democracy requires an informed citizenry and transparency of information which are vital to its functioning and also to
+          contain corruption and to hold Governments and their instrumentalities accountable to the governed.&rdquo;
+        </blockquote>
+        <figcaption className="mt-3 font-mono text-xs text-muted">
+          Preamble, The Right to Information Act, 2005 ·{" "}
+          <a href="https://en.wikisource.org/wiki/Right_to_Information_Act,_2005" target="_blank" rel="noopener noreferrer" className="underline">
+            source
+          </a>
+        </figcaption>
+      </figure>
+
+      <section className="space-y-3">
+        <h2 className="text-xl font-semibold">Who makes this, and how we check it</h2>
+        <p className="text-muted">
+          TrackBharat is built by one person and a small group of volunteers. We are not from any party or religion, and we do not take
+          money from any. The code is open source, so anyone can read exactly how every number is calculated.
+        </p>
+        <ul className="list-disc space-y-1.5 pl-5 text-muted">
+          <li>
+            <strong className="text-foreground">Nothing goes up without a source.</strong> Every promise links to the manifesto or speech
+            it came from; every verdict (fulfilled, partly done, broken) links to the evidence. No source, no verdict: it stays
+            &ldquo;not yet rated&rdquo;.
+          </li>
+          <li>
+            <strong className="text-foreground">A person checks before it is published.</strong> Data imported from public records is
+            cross-checked automatically (seat numbers and names must match), and news and verdicts are read and approved by a verifier.
+          </li>
+          <li>
+            <strong className="text-foreground">Same rules for everyone.</strong> Every party, seat and MP is measured the same way. A
+            party that did not form the government is never marked as having broken a promise.
+          </li>
+          <li>
+            <strong className="text-foreground">You can check us.</strong> Every page lists its sources. If you find a mistake or a
+            better source,{" "}
+            <Link href="/contact" className="underline">
+              tell us
+            </Link>
+            ; we verify it and fix it.
+          </li>
+        </ul>
+      </section>
+
       <section className="space-y-4">
         <h2 className="text-xl font-semibold">The score has three parts</h2>
         <div className="overflow-x-auto">

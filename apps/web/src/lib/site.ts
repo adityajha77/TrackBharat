@@ -11,12 +11,13 @@ export const site = {
   },
   /** Main navigation. Labels are dictionary keys in `nav.*` (src/i18n/dictionaries). */
   nav: [
+    { href: "/", key: "home" },
+    { href: "/leaderboard", key: "asks" },
     { href: "/neta", key: "neta" },
     { href: "/causes", key: "causes" },
     { href: "/news", key: "news" },
     { href: "/parties", key: "manifestos" },
     { href: "/timeline", key: "timeline" },
-    { href: "/leaderboard", key: "asks" },
   ],
   more: [
     { href: "/ideology", key: "ideology" },

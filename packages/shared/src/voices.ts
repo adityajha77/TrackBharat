@@ -64,11 +64,30 @@ export const NewsItem = z.object({
   responsible: z.string().nullable(),
   status: NewsStatus,
   publishedAt: z.iso.datetime().nullable(),
+  /** true = from a press feed; false = suggested by a citizen (or added by staff). */
+  fromFeed: z.boolean(),
 });
 export type NewsItem = z.infer<typeof NewsItem>;
 
 export const NewsList = z.object({ items: z.array(NewsItem), states: z.array(z.string()) });
 export type NewsList = z.infer<typeof NewsList>;
+
+/**
+ * LATEST HEADLINES straight from the press feeds (The Hindu, Indian Express…):
+ * only the headline, the publisher, the date and the link. The story is read on
+ * the publisher's site. Citizen suggestions never appear here; they wait for review.
+ */
+export const Headline = z.object({
+  id: z.number().int(),
+  headline: z.string(),
+  url: z.string(),
+  sourceName: z.string(),
+  sourcePublishedAt: z.iso.datetime().nullable(),
+  state: z.string().nullable(),
+});
+export type Headline = z.infer<typeof Headline>;
+export const HeadlineList = z.object({ items: z.array(Headline), states: z.array(z.string()), sources: z.array(z.string()) });
+export type HeadlineList = z.infer<typeof HeadlineList>;
 
 export const SubmitNewsInput = z.object({
   url: httpsUrl,
@@ -90,6 +109,18 @@ export const ReviewNewsInput = z.discriminatedUnion("decision", [
   z.object({ decision: z.literal("REJECT") }),
 ]);
 export type ReviewNewsInput = z.infer<typeof ReviewNewsInput>;
+
+/** A verifier/admin adds and publishes a story in one step: the link, the headline and their own summary. */
+export const CreateNewsInput = z.object({
+  url: httpsUrl,
+  headline: z.string().trim().min(10, "Add the headline (at least 10 characters)").max(200),
+  summary: z.string().trim().min(60, "Write at least 2 lines (60 characters)").max(600, "Keep it to 5 lines (600 characters)"),
+  state: z.string().trim().min(2).max(80),
+  district: z.string().trim().max(80).optional(),
+  responsible: z.string().trim().max(160).optional(),
+  category: PromiseCategory,
+});
+export type CreateNewsInput = z.infer<typeof CreateNewsInput>;
 
 // ---- Parties: manifestos and timeline ---------------------------------------
 export const ManifestoStatus = z.enum(["FULFILLED", "PARTIAL", "IN_PROGRESS", "BROKEN", "NOT_RATED", "NOT_IN_POWER"]);

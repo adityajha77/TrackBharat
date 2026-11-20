@@ -1,6 +1,6 @@
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { ArrowRight, Database, Landmark, Megaphone, ScrollText, ShieldCheck, Users, Vote } from "lucide-react";
+import { ArrowRight, Database, ExternalLink, GitPullRequest, Landmark, Megaphone, ScrollText, ShieldCheck, Users, Vote } from "lucide-react";
 import Link from "@/components/link";
 import { PincodeSearch } from "@/components/pincode-search";
 import { TodayTeaser } from "@/components/issues/today-teaser";
@@ -11,7 +11,8 @@ import { fulfilledShare, Ring, StatusBar } from "@/components/voices/progress";
 import { ButtonLink } from "@/components/ui/button";
 import { Badge, Eyebrow, Stamp } from "@/components/ui/card";
 import { getT } from "@/i18n/server";
-import { getNews, getParties } from "@/lib/api";
+import { site } from "@/lib/site";
+import { getHeadlines, getNews, getParties } from "@/lib/api";
 
 /**
  * HOME: the whole idea in one scroll.
@@ -211,19 +212,53 @@ export default async function HomePage() {
           </ButtonLink>
         </div>
       </section>
+
+      {/* ---------------- Open source: suggest, we verify, we add ---------------- */}
+      <section className="border-t-2 border-ink">
+        <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-14 md:flex-row md:items-center md:justify-between">
+          <div className="max-w-2xl">
+            <h2 className="flex items-center gap-2 text-2xl font-black sm:text-3xl">
+              <GitPullRequest className="size-7 text-saffron" aria-hidden /> {t.home.openTitle}
+            </h2>
+            <p className="mt-3 text-muted">{t.home.openBody}</p>
+          </div>
+          <div className="flex shrink-0 flex-wrap gap-3">
+            <ButtonLink href="/contact" size="sm">
+              {t.home.openSuggest} <ArrowRight className="size-4" aria-hidden />
+            </ButtonLink>
+            <a href={site.repo} target="_blank" rel="noopener noreferrer" className="brutal-sm press inline-flex items-center gap-1.5 rounded-md bg-surface px-3 py-1.5 text-sm font-semibold">
+              {t.home.openCode} <ExternalLink className="size-4" aria-hidden />
+            </a>
+          </div>
+        </div>
+      </section>
     </>
   );
 }
 
 async function NewsStrip() {
   await connection();
-  const [{ t }, news] = await Promise.all([getT(), getNews().catch(() => null)]);
+  const [{ t }, news, heads] = await Promise.all([getT(), getNews().catch(() => null), getHeadlines().catch(() => null)]);
   const items = news?.items.slice(0, 4) ?? [];
-  if (!items.length) return <p className="brutal mt-8 rounded-md bg-surface p-6 text-sm text-muted">{t.news.empty}</p>;
+  // Fill the row with the latest press headlines (they open on the publisher's site)
+  const fill = (heads?.items ?? []).slice(0, 4 - items.length);
+  if (!items.length && !fill.length) return <p className="brutal mt-8 rounded-md bg-surface p-6 text-sm text-muted">{t.news.empty}</p>;
   return (
     <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
       {items.map((n) => (
         <NewsCard key={n.id} item={n} t={t} compact />
+      ))}
+      {fill.map((h) => (
+        <a key={h.id} href={h.url} target="_blank" rel="noopener noreferrer" className="brutal press flex flex-col gap-2 rounded-md bg-surface p-4">
+          <span className="font-mono text-[11px] text-muted">
+            <span className="font-bold text-foreground">{h.sourceName}</span>
+            {h.state && ` · ${h.state}`}
+          </span>
+          <span className="font-bold leading-snug">{h.headline}</span>
+          <span className="mt-auto inline-flex items-center gap-1 text-sm font-semibold text-saffron">
+            {t.news.readAt.replace("{source}", h.sourceName.split(":")[0]!)} <ExternalLink className="size-3.5" aria-hidden />
+          </span>
+        </a>
       ))}
     </div>
   );

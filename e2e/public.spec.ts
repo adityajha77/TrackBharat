@@ -54,3 +54,18 @@ test("unknown constituency and promise pages show a proper 404", async ({ page }
   expect(res?.status()).toBeLessThan(500);
   await expect(page.getByText(/couldn.t find that/i)).toBeVisible();
 });
+
+test("navbar: Home first; More opens on click and closes on a click elsewhere", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/leaderboard");
+  const nav = page.getByRole("navigation", { name: "Main", exact: true });
+  await expect(nav.getByRole("link").first()).toHaveText("Home");
+  await expect(nav.getByRole("link").nth(1)).toHaveText("What India asks");
+  const more = nav.getByRole("button", { name: "More" });
+  await more.click();
+  await expect(more).toHaveAttribute("aria-expanded", "true");
+  await expect(nav.getByRole("link", { name: "Our ideology" })).toBeVisible();
+  await page.locator("#main").click({ position: { x: 5, y: 5 } });
+  await expect(more).toHaveAttribute("aria-expanded", "false");
+  await expect(nav.getByRole("link", { name: "Our ideology" })).toHaveCount(0);
+});

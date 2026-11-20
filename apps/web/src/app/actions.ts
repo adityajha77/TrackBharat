@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { refresh, updateTag } from "next/cache";
-import { ChangePasswordInput, DeleteAccountInput, LoginInput, ResetPasswordInput, ReviewNewsInput, SignupInput, SubmitNewsInput } from "@trackbharat/shared";
+import { ChangePasswordInput, CreateNewsInput, DeleteAccountInput, LoginInput, ResetPasswordInput, ReviewNewsInput, SignupInput, SubmitNewsInput } from "@trackbharat/shared";
 import { ApiError } from "@/lib/api";
 import * as api from "@/lib/api-user";
 import { clearSessionCookie, setSessionCookie } from "@/lib/session";
@@ -192,6 +192,29 @@ export async function reviewNewsAction(id: number, _prev: ActionState, form: For
   if (!parsed.success) return { error: parsed.error.issues[0]?.message, values: fieldsOf(form) };
   try {
     await api.reviewNews(id, parsed.data);
+  } catch (e) {
+    return { error: message(e), values: fieldsOf(form) };
+  }
+  updateTag("news");
+  refresh();
+  return { ok: true };
+}
+
+/** Staff add a story and publish it at once (their own summary, the source link). */
+export async function createNewsAction(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const opt = (k: string) => (String(form.get(k) ?? "").trim() || undefined);
+  const parsed = CreateNewsInput.safeParse({
+    url: opt("url"),
+    headline: opt("headline"),
+    summary: opt("summary"),
+    state: opt("state"),
+    district: opt("district"),
+    responsible: opt("responsible"),
+    category: opt("category"),
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message, values: fieldsOf(form) };
+  try {
+    await api.createNews(parsed.data);
   } catch (e) {
     return { error: message(e), values: fieldsOf(form) };
   }

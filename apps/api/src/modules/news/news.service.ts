@@ -1,5 +1,5 @@
 import { and, eq, sql } from "drizzle-orm";
-import { NewsItem, NewsList, type PublicUser, type ReviewNewsInput, type SubmitNewsInput } from "@trackbharat/shared";
+import { HeadlineList, NewsItem, NewsList, type CreateNewsInput, type PublicUser, type ReviewNewsInput, type SubmitNewsInput } from "@trackbharat/shared";
 import type { Database } from "../../db/client";
 import { newsFeeds, newsItems, states } from "../../db/schema";
 import { recordAudit } from "../../lib/audit";
@@ -27,6 +27,7 @@ type Row = {
   responsible: string | null;
   status: NewsItem["status"];
   published_at: Date | null;
+  from_feed: boolean;
 };
 
 const iso = (d: Date | null) => (d ? new Date(d).toISOString() : null);
@@ -43,11 +44,12 @@ const toItem = (r: Row): NewsItem => ({
   responsible: r.responsible,
   status: r.status,
   publishedAt: iso(r.published_at),
+  fromFeed: r.from_feed,
 });
 
 const select = sql`
   SELECT n.id, n.headline, n.url, n.source_name, n.source_published_at, n.summary, n.category,
-         s.name AS state, n.district, n.responsible, n.status, n.published_at
+         s.name AS state, n.district, n.responsible, n.status, n.published_at, n.feed_id IS NOT NULL AS from_feed
   FROM news_items n LEFT JOIN states s ON s.id = n.state_id`;
 
 /** Polite fetch: identify ourselves, time out, never follow a feed into a huge download. */
@@ -75,9 +77,65 @@ export function createNewsService(db: Database, fetchImpl: typeof fetch = fetch)
       return NewsList.parse({ items: rows.map(toItem), states: st.map((r) => r.name) });
     },
 
+    /**
+     * Latest press headlines (feed items only, never citizen suggestions), newest
+     * first. Rejected ones are left out. Headline + link only: read it at the source.
+     */
+    async headlines(opts: { state?: string; source?: string; limit?: number }): Promise<HeadlineList> {
+      const limit = Math.min(opts.limit ?? 60, 120);
+      const conds = [sql`n.feed_id IS NOT NULL`, sql`n.status <> 'REJECTED'`];
+      if (opts.state) conds.push(sql`s.name = ${opts.state}`);
+      if (opts.source) conds.push(sql`n.source_name = ${opts.source}`);
+      const where = sql.join(conds, sql` AND `);
+      const [{ rows }, { rows: st }, { rows: src }] = await Promise.all([
+        db.execute<{ id: number; headline: string; url: string; source_name: string; source_published_at: Date | null; state: string | null }>(
+          sql`SELECT n.id, n.headline, n.url, n.source_name, n.source_published_at, s.name AS state
+              FROM news_items n LEFT JOIN states s ON s.id = n.state_id
+              WHERE ${where} ORDER BY coalesce(n.source_published_at, n.created_at) DESC LIMIT ${limit}`,
+        ),
+        db.execute<{ name: string }>(sql`SELECT DISTINCT s.name FROM news_items n JOIN states s ON s.id = n.state_id WHERE n.feed_id IS NOT NULL AND n.status <> 'REJECTED' ORDER BY s.name`),
+        db.execute<{ name: string }>(sql`SELECT DISTINCT n.source_name AS name FROM news_items n WHERE n.feed_id IS NOT NULL ORDER BY 1`),
+      ]);
+      return HeadlineList.parse({
+        items: rows.map((r) => ({ id: r.id, headline: r.headline, url: r.url, sourceName: r.source_name, sourcePublishedAt: iso(r.source_published_at), state: r.state })),
+        states: st.map((r) => r.name),
+        sources: src.map((r) => r.name),
+      });
+    },
+
+    /** A verifier/admin adds a story and publishes it at once (audited). */
+    async create(actor: PublicUser, input: CreateNewsInput) {
+      return db.transaction(async (tx) => {
+        const [st] = await tx.select({ id: states.id }).from(states).where(eq(states.name, input.state));
+        if (!st) throw AppError.validation(`Unknown state "${input.state}"`);
+        const host = new URL(input.url).hostname.replace(/^www\./, "");
+        const [row] = await tx
+          .insert(newsItems)
+          .values({
+            headline: input.headline,
+            url: input.url,
+            sourceName: host,
+            submittedBy: actor.id,
+            reviewedBy: actor.id,
+            status: "PUBLISHED",
+            summary: input.summary,
+            stateId: st.id,
+            district: input.district || null,
+            responsible: input.responsible || null,
+            category: input.category,
+            publishedAt: sql`now()`,
+          })
+          .onConflictDoNothing({ target: newsItems.url })
+          .returning({ id: newsItems.id });
+        if (!row) throw AppError.conflict("This story is already on TrackBharat (same link)");
+        await recordAudit(tx, { actorId: actor.id, action: "news.create", entityType: "news", entityId: row.id, details: { url: input.url } });
+        return row.id;
+      });
+    },
+
     /** The verifier queue: newest drafts first. */
     async drafts(limit = 50) {
-      const { rows } = await db.execute<Row>(sql`${select} WHERE n.status = 'DRAFT' ORDER BY coalesce(n.source_published_at, n.created_at) DESC LIMIT ${limit}`);
+      const { rows } = await db.execute<Row>(sql`${select} WHERE n.status = 'DRAFT' ORDER BY (n.feed_id IS NULL) DESC, coalesce(n.source_published_at, n.created_at) DESC LIMIT ${limit}`);
       return rows.map(toItem);
     },
 

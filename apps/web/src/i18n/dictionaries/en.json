@@ -19,7 +19,8 @@
     "roadmap": "Roadmap",
     "contact": "Contact",
     "language": "Language",
-    "skip": "Skip to content"
+    "skip": "Skip to content",
+    "home": "Home"
   },
   "account": {
     "login": "Log in",
@@ -77,7 +78,11 @@
     "factVoters": "registered voters",
     "factLs": "Lok Sabha seats",
     "factVs": "assembly seats",
-    "factPins": "PIN codes"
+    "factPins": "PIN codes",
+    "openTitle": "Open source, open to you",
+    "openBody": "TrackBharat is open source and built by citizens. Anyone can read the code, suggest a story, a promise, a correction or a better source. We verify every suggestion before it goes on the website.",
+    "openSuggest": "Suggest something",
+    "openCode": "See the code"
   },
   "search": {
     "label": "Your 6-digit PIN code",
@@ -122,7 +127,13 @@
     "empty": "No stories here yet.",
     "submit": "Suggest a story",
     "submitLead": "Seen an under-reported story? Send the link. A verifier checks it and writes a short summary before it is published.",
-    "pending": "Waiting for a verifier"
+    "pending": "Waiting for a verifier",
+    "verified": "Verified by TrackBharat",
+    "verifiedLead": "Read, summarised and tagged by our verifiers.",
+    "latest": "Latest from the press",
+    "latestLead": "Headlines from public news feeds, newest first. Tap one to read the full story on the publisher's site.",
+    "readAt": "Read on {source}",
+    "allSources": "All sources"
   },
   "parties": {
     "title": "Manifestos: promised vs done",

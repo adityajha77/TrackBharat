@@ -127,6 +127,24 @@ describe("HTTP: votes, causes, news", () => {
     expect(published).toHaveBeenCalledWith({ state: "Odisha", limit: undefined });
   });
 
+  it("staff can add and publish a story directly; citizens can't", async () => {
+    const create = vi.fn().mockResolvedValue(9);
+    app = await buildApp(deps({ newsService: { ...deps().newsService, create } }));
+    const body = { url: "https://www.thehindu.com/news/x", headline: "A headline that is long enough", summary: "y".repeat(80), state: "Odisha", category: "WATER" };
+    expect((await app.inject({ method: "POST", url: "/v1/moderation/news", headers: bearer("CITIZEN"), payload: body })).statusCode).toBe(403);
+    const ok = await app.inject({ method: "POST", url: "/v1/moderation/news", headers: bearer("ADMIN"), payload: body });
+    expect(ok.statusCode).toBe(201);
+    expect(ok.json()).toEqual({ id: 9 });
+  });
+
+  it("GET /news/headlines is public and passes the filters on", async () => {
+    const headlines = vi.fn().mockResolvedValue({ items: [], states: [], sources: [] });
+    app = await buildApp(deps({ newsService: { ...deps().newsService, headlines } }));
+    const res = await app.inject({ url: "/v1/news/headlines?state=Andaman%20and%20Nicobar%20Islands&source=The%20Hindu" });
+    expect(res.statusCode).toBe(200);
+    expect(headlines).toHaveBeenCalledWith({ state: "Andaman and Nicobar Islands", source: "The Hindu", limit: undefined });
+  });
+
   it("forgot-password answers 204 whether or not the email exists", async () => {
     const forgotPassword = vi.fn().mockResolvedValue(undefined);
     app = await buildApp(deps({ emailLinks: { ...deps().emailLinks, forgotPassword } }));

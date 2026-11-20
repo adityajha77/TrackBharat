@@ -84,6 +84,7 @@ export const voteCause = (id: number, value: 1 | -1 | 0) =>
   call(`/v1/causes/${id}/vote`, VoteResponse, value === 0 ? { method: "DELETE" } : { method: "POST", body: json({ value }) });
 export const submitNews = (body: unknown) => call("/v1/news", Created, { method: "POST", body: json(body) });
 export const getNewsQueue = () => call("/v1/moderation/news", z.object({ items: z.array(NewsItem) }));
+export const createNews = (body: unknown) => call("/v1/moderation/news", Created, { method: "POST", body: json(body) });
 export const reviewNews = (id: number, body: unknown) => call(`/v1/moderation/news/${id}`, Nothing, { method: "POST", body: json(body) });
 
 export const verifyEmail = (token: string) => call("/v1/auth/verify-email", Nothing, { method: "POST", body: json({ token }), token: null });

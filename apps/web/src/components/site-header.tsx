@@ -1,10 +1,10 @@
 import { Suspense } from "react";
-import { ChevronDown } from "lucide-react";
 import Link from "@/components/link";
 import { getT } from "@/i18n/server";
 import { site } from "@/lib/site";
 import { UserMenu } from "./auth/user-menu";
 import { LanguageSwitcher } from "./language-switcher";
+import { MoreMenu } from "./more-menu";
 import { ThemeToggle } from "./theme";
 import { Logo } from "./logo";
 
@@ -31,18 +31,13 @@ export async function SiteHeader() {
               {t.nav[item.key]}
             </Link>
           ))}
-          <details className="relative">
-            <summary className="flex cursor-pointer list-none items-center gap-1 rounded-md px-2.5 py-2 text-sm font-medium hover:bg-surface-muted">
-              {t.nav.more} <ChevronDown className="size-3.5" aria-hidden />
-            </summary>
-            <div className="brutal absolute end-0 z-50 mt-2 w-56 rounded-md bg-surface p-1.5">
-              {site.more.map((item) => (
-                <Link key={item.href} href={item.href} className="block rounded-sm px-3 py-2 text-sm hover:bg-surface-muted">
-                  {t.nav[item.key]}
-                </Link>
-              ))}
-            </div>
-          </details>
+          <MoreMenu label={t.nav.more}>
+            {site.more.map((item) => (
+              <Link key={item.href} href={item.href} className="block rounded-sm px-3 py-2 text-sm hover:bg-surface-muted">
+                {t.nav[item.key]}
+              </Link>
+            ))}
+          </MoreMenu>
         </nav>
         <div className="flex items-center gap-1.5">
           {/* Reads the current URL (to switch language on the same page) → its own Suspense boundary */}

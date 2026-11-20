@@ -12,6 +12,7 @@ import {
   ReportCard,
   WeeklyHighlights,
   CausesResponse,
+  HeadlineList,
   NewsList,
   NetaResponse,
   PartiesResponse,
@@ -204,6 +205,20 @@ async function cachedGetNews(state: string | null) {
 }
 export async function getNews(state: string | null = null) {
   return unwrap(await cachedGetNews(state));
+}
+
+/** Latest press headlines (headline + link only); the feed job adds new ones every 2 hours. */
+async function cachedGetHeadlines(state: string | null, source: string | null) {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("news");
+  const q = new URLSearchParams();
+  if (state) q.set("state", state);
+  if (source) q.set("source", source);
+  return capture(() => request(`/v1/news/headlines${q.size ? `?${q}` : ""}`, HeadlineList));
+}
+export async function getHeadlines(state: string | null = null, source: string | null = null) {
+  return unwrap(await cachedGetHeadlines(state, source));
 }
 
 /** Curated party data changes when the import runs: cache for hours. */

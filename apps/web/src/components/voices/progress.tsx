@@ -92,8 +92,9 @@ export function Scorecard({ byStatus, total, t, compact = false }: { byStatus: R
   const parts = (["PARTIAL", "IN_PROGRESS", "BROKEN", "NOT_RATED"] as const).filter((s) => byStatus[s]);
   return (
     <div className="space-y-3">
-      <p className="font-mono text-xs uppercase tracking-wide text-muted">{t.parties.scoreOf.replace("{n}", String(accountable))}</p>
-      <div className="bar-grow flex h-7 overflow-hidden rounded-sm border-2 border-ink font-mono text-xs font-bold">
+      {/* Cards (compact) show only the ✓ / ✗ line; the party page adds the context and the bar */}
+      {!compact && <p className="font-mono text-xs uppercase tracking-wide text-muted">{t.parties.scoreOf.replace("{n}", String(accountable))}</p>}
+      {!compact && <div className="bar-grow flex h-7 overflow-hidden rounded-sm border-2 border-ink font-mono text-xs font-bold">
         {done > 0 && (
           <span className="flex items-center justify-center bg-flag-green text-white" style={{ width: `${pct(done)}%` }}>
             {pct(done)}%
@@ -104,7 +105,7 @@ export function Scorecard({ byStatus, total, t, compact = false }: { byStatus: R
             {pct(notDone)}%
           </span>
         )}
-      </div>
+      </div>}
       <div className={compact ? "flex flex-wrap gap-x-4 gap-y-1 text-sm" : "grid gap-3 sm:grid-cols-2"}>
         <p className={compact ? "" : "brutal-sm rounded-md bg-surface p-3"}>
           <span className="font-black text-flag-green">✓ {done}</span> {t.parties.done} <span className="font-mono text-muted">({pct(done)}%)</span>

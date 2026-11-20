@@ -15,6 +15,7 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: ".",
   testMatch: "**/*.spec.ts",
+  globalTeardown: "./teardown.ts", // removes the test news stories again
   timeout: 60_000,
   // The dev server compiles pages on first visit (slow); a production build is much faster
   expect: { timeout: 20_000 },
