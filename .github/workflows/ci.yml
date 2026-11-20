@@ -121,6 +121,9 @@ jobs:
       # The slow parliamentary-questions crawl is skipped.
       - name: Database
         run: |
+          # sansad.in refuses servers outside India, so CI uses a committed
+          # snapshot of the Lok Sabha member list (e2e/fixtures).
+          mkdir -p apps/api/.data && cp e2e/fixtures/lok_sabha_18_members.json apps/api/.data/
           pnpm db:migrate
           pnpm db:import constituencies assembly pins members parties news-feeds mlas
           pnpm db:seed

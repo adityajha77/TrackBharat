@@ -23,8 +23,19 @@ export async function download(url: string, fileName: string, { maxAgeDays = 30 
     }
   }
   console.log(`  ↳ downloading ${url}`);
-  const res = await fetch(url, { headers: { "user-agent": USER_AGENT, accept: "*/*" }, signal: AbortSignal.timeout(120_000) });
-  if (!res.ok) throw new Error(`Download failed: HTTP ${res.status} for ${url}`);
+  let res: Response;
+  try {
+    res = await fetch(url, { headers: { "user-agent": USER_AGENT, accept: "*/*" }, signal: AbortSignal.timeout(120_000) });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  } catch (e) {
+    // Some government sites refuse servers outside India (e.g. CI). An older
+    // copy is better than no import; the warning makes the staleness visible.
+    if (existsSync(file)) {
+      console.warn(`  ⚠ download failed (${(e as Error).message}); using the older cached ${fileName}`);
+      return file;
+    }
+    throw new Error(`Download failed: ${(e as Error).message} for ${url}`);
+  }
   writeFileSync(file, Buffer.from(await res.arrayBuffer()));
   return file;
 }
