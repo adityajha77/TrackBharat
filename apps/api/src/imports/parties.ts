@@ -129,7 +129,7 @@ export async function commonsPhoto(title: string) {
 export async function importParties(db: Database, opts: { photos?: boolean } = {}) {
   console.log("▶ Parties: profiles, leaders, timeline, manifestos (curated JSON)");
   const { parties: files, national } = loadPartyFiles();
-  const photoStore = createPhotoStore(path.join(process.env.UPLOADS_DIR ?? "./.uploads", "leaders"));
+  const photoStore = createPhotoStore(process.env.LEADER_PHOTOS_DIR ?? path.join(process.env.UPLOADS_DIR ?? "./.uploads", "leaders"));
   let promisesN = 0;
   let photosN = 0;
 

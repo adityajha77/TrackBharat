@@ -153,7 +153,19 @@ jobs:
 
       - name: Install Chromium
         run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm test:e2e
+      - name: Browser tests
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm test:e2e 2>&1 | tee e2e.log
+      # Logs need a GitHub login; annotations don't. Show which test failed and why.
+      - name: Show browser-test errors
+        if: failure()
+        shell: bash
+        run: |
+          [ -f e2e.log ] || exit 0
+          msg=$( (grep -E "^\s+[0-9]+\) |Error:|Expected|Received|Locator" e2e.log | head -n 30; echo "--- api.log ---"; tail -n 15 api.log) | awk 'BEGIN { ORS = "%0A" } { gsub(/%/, "%25"); print }')
+          echo "::error title=Browser tests failed::$msg"
 
       - name: Upload traces and logs on failure
         if: failure()

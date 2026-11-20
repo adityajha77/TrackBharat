@@ -31,6 +31,9 @@ COPY --from=build /out/node_modules ./node_modules
 COPY --from=build /repo/apps/api/dist ./dist
 COPY --from=build /repo/apps/api/drizzle ./drizzle
 COPY --from=build /repo/apps/api/package.json ./
+# Leader photos (free licences, credited on the site) ship with the image: the database only stores their keys.
+COPY --from=build /repo/apps/api/leader-photos ./leader-photos
+ENV LEADER_PHOTOS_DIR=/app/leader-photos UPLOADS_DIR=/data/uploads
 # Never run as root inside the container
 # Writable folder for uploaded photos (mounted as a volume in compose)
 RUN mkdir -p /data/uploads && chown node:node /data/uploads

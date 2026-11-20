@@ -69,7 +69,7 @@ const app = await buildApp({
   partiesService: createPartiesService(db),
   netaService: createNetaService(db),
   emailLinks: createEmailLinksService(db, mailer, config.WEB_URL),
-  leaderPhotos: createPhotoStore(path.join(config.UPLOADS_DIR, "leaders")),
+  leaderPhotos: createPhotoStore(config.LEADER_PHOTOS_DIR ?? path.join(config.UPLOADS_DIR, "leaders")),
   exposeOutbox: config.NODE_ENV !== "production" && !config.SMTP_URL,
   db,
   pingDb: async () => {
