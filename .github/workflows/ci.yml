@@ -120,13 +120,25 @@ jobs:
       # Real public data (constituencies, PIN codes, MPs) + curated data + the seed.
       # The slow parliamentary-questions crawl is skipped.
       - name: Database
+        shell: bash
         run: |
-          # sansad.in refuses servers outside India, so CI uses a committed
-          # snapshot of the Lok Sabha member list (e2e/fixtures).
-          mkdir -p apps/api/.data && cp e2e/fixtures/lok_sabha_18_members.json apps/api/.data/
-          pnpm db:migrate
-          pnpm db:import constituencies assembly pins members parties news-feeds mlas
-          pnpm db:seed
+          set -o pipefail
+          {
+            # sansad.in refuses servers outside India, so CI uses a committed
+            # snapshot of the Lok Sabha member list (e2e/fixtures).
+            mkdir -p apps/api/.data && cp e2e/fixtures/lok_sabha_18_members.json apps/api/.data/
+            pnpm db:migrate
+            pnpm db:import constituencies assembly pins members parties news-feeds mlas
+            pnpm db:seed
+          } 2>&1 | tee db.log
+      # Logs need a GitHub login; annotations don't. Show the end of the output on failure.
+      - name: Show database errors
+        if: failure()
+        shell: bash
+        run: |
+          [ -f db.log ] || exit 0
+          msg=$(tail -n 40 db.log | awk 'BEGIN { ORS = "%0A" } { gsub(/%/, "%25"); print }')
+          echo "::error title=Database step failed::$msg"
 
       # Always a CLEAN production build: a stale build cache once served old CSS.
       - name: Build web
