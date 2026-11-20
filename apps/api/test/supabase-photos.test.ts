@@ -10,7 +10,7 @@ describe("Supabase photo storage", () => {
     const fetchImpl = (async (input: string | URL | Request, init: RequestInit = {}) => {
       const url = String(input);
       const method = init.method ?? "GET";
-      calls.push({ method, url, auth: new Headers(init.headers).get("authorization") });
+      calls.push({ method, url, auth: new Headers(init.headers).get("authorization") ?? new Headers(init.headers).get("apikey") });
       if (url.endsWith("/storage/v1/bucket")) return new Response('{"message":"The resource already exists"}', { status: 409 });
       const key = url.split("/").pop()!;
       if (method === "POST") {
@@ -29,7 +29,7 @@ describe("Supabase photo storage", () => {
 
   it("stores a cleaned WebP in a private bucket, reads it back, and deletes it", async () => {
     const { files, calls, fetchImpl } = fakeStorage();
-    const store = createSupabasePhotoStore({ url: "https://abc.supabase.co/", serviceKey: "service-key", bucket: "issue-photos" }, fetchImpl);
+    const store = createSupabasePhotoStore({ url: "https://abc.supabase.co/", serviceKey: "eyJservice-key", bucket: "issue-photos" }, fetchImpl);
     await store.ensureBucket(); // "already exists" is fine
 
     const jpeg = await sharp({ create: { width: 40, height: 30, channels: 3, background: "#f93" } }).jpeg().toBuffer();
@@ -37,7 +37,7 @@ describe("Supabase photo storage", () => {
     expect(key).toMatch(/^[0-9a-f-]{36}\.webp$/);
     expect(calls.find((c) => c.method === "POST" && c.url.includes("/object/"))).toMatchObject({
       url: `https://abc.supabase.co/storage/v1/object/issue-photos/${key}`,
-      auth: "Bearer service-key",
+      auth: "Bearer eyJservice-key",
     });
     expect((await sharp(files.get(key)!).metadata()).format).toBe("webp");
 
@@ -46,6 +46,13 @@ describe("Supabase photo storage", () => {
 
     await store.remove(key);
     expect(await store.open(key)).toBeNull();
+  });
+
+  it("sends a new-style secret key (sb_secret_…) only as the apikey header", async () => {
+    const { calls, fetchImpl } = fakeStorage();
+    const store = createSupabasePhotoStore({ url: "https://abc.supabase.co", serviceKey: "sb_secret_abc", bucket: "b" }, fetchImpl);
+    await store.open("00000000-0000-0000-0000-000000000000.webp");
+    expect(calls[0]!.auth).toBe("sb_secret_abc"); // no Authorization header, apikey only
   });
 
   it("never asks Storage for a key that isn't one of ours (no path tricks)", async () => {

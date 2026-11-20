@@ -76,7 +76,10 @@ export function createPhotoStore(dir: string): PhotoStore {
  */
 export function createSupabasePhotoStore(opts: { url: string; serviceKey: string; bucket: string }, fetchImpl: typeof fetch = fetch): PhotoStore & { ensureBucket(): Promise<void> } {
   const base = `${opts.url.replace(/\/$/, "")}/storage/v1`;
-  const auth = { authorization: `Bearer ${opts.serviceKey}`, apikey: opts.serviceKey };
+  // New-style secret keys (sb_secret_…) go in the apikey header only; legacy
+  // service_role keys are JWTs (eyJ…) and are also sent as a Bearer token.
+  const isJwt = opts.serviceKey.startsWith("eyJ");
+  const auth: Record<string, string> = isJwt ? { authorization: `Bearer ${opts.serviceKey}`, apikey: opts.serviceKey } : { apikey: opts.serviceKey };
   const object = (key: string) => `${base}/object/${encodeURIComponent(opts.bucket)}/${key}`;
   return {
     /** Create the private bucket once (a 409 "already exists" is fine). */
