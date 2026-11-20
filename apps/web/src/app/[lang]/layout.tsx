@@ -57,6 +57,9 @@ export async function generateMetadata({ params }: LayoutProps<"/[lang]">): Prom
     alternates: {
       languages: Object.fromEntries(LOCALES.map((l) => [l.bcp47, l.code === "en" ? "/" : `/${l.code}`])),
     },
+    // Google Search Console ownership check (also needed for Google sign-in brand verification).
+    // Set GOOGLE_SITE_VERIFICATION to the "content" value of Google's HTML tag.
+    verification: process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : undefined,
   };
 }
 
