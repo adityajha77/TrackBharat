@@ -49,7 +49,7 @@ async function Queue() {
           <a href={n.url} target="_blank" rel="noopener noreferrer" className="mt-1 inline-flex items-start gap-1 text-lg font-bold hover:underline">
             {n.headline} <ExternalLink className="mt-1.5 size-4 shrink-0" aria-hidden />
           </a>
-          <NewsReviewForm id={n.id} states={states} categories={Object.entries(t.category)} />
+          <NewsReviewForm id={n.id} states={states} categories={Object.entries(t.category)} defaultState={n.state} />
         </li>
       ))}
     </ul>

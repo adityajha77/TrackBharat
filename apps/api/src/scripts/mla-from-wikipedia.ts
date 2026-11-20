@@ -45,7 +45,10 @@ const partyOf = (s: string) => s.match(/\{\{\s*party name with colou?r\s*\|\s*([
 
 // The winner's party is either {{party name with color|X}} or a colour cell
 // bgcolor="{{party color|X}}" followed by a link cell. The candidate is the cell before it.
-const colourParty = (s: string) => s.match(/bgcolor="?\{\{\s*party colou?r\s*\|\s*([^}|]+)/i)?.[1]?.replace(/\s+/g, " ").trim() ?? null;
+// Layouts seen: bgcolor="{{party color|X}}" and style="background(-color): {{party color|X}}".
+// …and the {{Party color cell|X}} template.
+const colourParty = (s: string) =>
+  (s.match(/(?:bgcolor|background(?:-color)?)\s*[=:]\s*"?\{\{\s*party colou?r\s*\|\s*([^}|]+)/i) ?? s.match(/\{\{\s*party colou?r cell\s*\|\s*([^}|]+)/i))?.[1]?.replace(/\s+/g, " ").trim() ?? null;
 
 const rows: string[][] = [];
 let sequence = 0;
@@ -53,7 +56,8 @@ for (const block of section.split(/\n\|-/).slice(1)) {
   // Cells start with "|" or "||" at line start; drop header ("!") lines.
   const cells = block
     .split("\n")
-    .filter((l) => l.startsWith("|") && !l.startsWith("|}") && !l.startsWith("|+"))
+    // Some tables put the seat number in a row-header cell ("!12"): keep those as cells too.
+    .filter((l) => (l.startsWith("|") && !l.startsWith("|}") && !l.startsWith("|+")) || /^!\s*\d{1,3}\s*$/.test(l))
     .flatMap((l) => l.slice(1).split("||"));
   let iSeat = cells.findIndex((c) => /Assembly constituency|Vidhan Sabha constituency|constituency\|/i.test(c));
   if (iSeat < 0) {

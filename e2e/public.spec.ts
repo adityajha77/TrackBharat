@@ -27,11 +27,12 @@ test("an invalid PIN code is explained, not sent to the server", async ({ page }
 
 test("leaderboard: Today and This week both load", async ({ page }) => {
   await page.goto("/leaderboard");
-  await expect(page.getByRole("heading", { name: "What India is asking for" })).toBeVisible();
-  await expect(page.getByText("New problems")).toBeVisible();
-  await page.getByRole("link", { name: "This week" }).click();
+  const main = page.locator("#main"); // the board streams in: ignore the hidden copy React swaps in from
+  await expect(main.getByRole("heading", { name: "What India is asking for" })).toBeVisible();
+  await expect(main.getByText("New problems")).toBeVisible();
+  await main.getByRole("link", { name: "This week" }).click();
   await expect(page).toHaveURL(/period=week/);
-  await expect(page.getByText("Votes cast")).toBeVisible();
+  await expect(main.getByText("Votes cast")).toBeVisible();
 });
 
 test("methodology and open-data pages work; a CSV downloads with the right shape", async ({ page, request }) => {

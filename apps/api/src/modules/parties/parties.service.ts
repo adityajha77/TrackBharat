@@ -22,6 +22,8 @@ type SummaryRow = {
   founders: string;
   ideology_quote: string;
   ideology_source_url: string;
+  manifesto_note: string | null;
+  manifesto_note_source_url: string | null;
   seats: number;
   promises: number;
   by_status: Record<string, number> | null;
@@ -29,7 +31,7 @@ type SummaryRow = {
 
 const summarySql = sql`
   SELECT p.id AS party_id, pp.slug, p.name, p.short_name, pp.founded::text AS founded, pp.symbol, pp.color,
-         pp.founders, pp.ideology_quote, pp.ideology_source_url,
+         pp.founders, pp.ideology_quote, pp.ideology_source_url, pp.manifesto_note, pp.manifesto_note_source_url,
          (SELECT count(*) FROM terms t JOIN constituencies c ON c.id = t.constituency_id
            WHERE t.party_id = p.id AND t.legislature = ${CURRENT_LOK_SABHA} AND t.status = 'SITTING' AND c.house = 'LOK_SABHA')::int AS seats,
          (SELECT count(*) FROM manifesto_promises mp JOIN manifestos m ON m.id = mp.manifesto_id WHERE m.party_id = p.id)::int AS promises,
@@ -48,6 +50,7 @@ const toSummary = (r: SummaryRow): PartySummary => ({
   seatsLokSabha: r.seats,
   promises: r.promises,
   byStatus: r.by_status ?? {},
+  manifestoNote: r.manifesto_note ? { text: r.manifesto_note, sourceUrl: r.manifesto_note_source_url ?? "" } : null,
 });
 
 type EventRow = { date: string; precision: TimelineEvent["precision"]; title: string; body: string; source_url: string; party: string | null };

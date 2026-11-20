@@ -2,7 +2,7 @@ import { connection } from "next/server";
 import type { Metadata } from "next";
 import { ArrowRight } from "lucide-react";
 import Link from "@/components/link";
-import { fulfilledShare, Ring, StatusBar } from "@/components/voices/progress";
+import { fulfilledShare, Ring, Scorecard, StatusBar } from "@/components/voices/progress";
 import { Eyebrow } from "@/components/ui/card";
 import { fmt, getT } from "@/i18n/server";
 import { getParties } from "@/lib/api";
@@ -43,10 +43,12 @@ export default async function PartiesPage() {
                   {p.promises > 0 ? (
                     <>
                       <p className="font-mono text-xs">{fmt(t.parties.promises, { n: p.promises })}</p>
-                      <StatusBar byStatus={p.byStatus} t={t} />
+                      {share !== null ? <Scorecard byStatus={p.byStatus} total={p.promises} t={t} compact /> : <StatusBar byStatus={p.byStatus} t={t} />}
                     </>
                   ) : (
-                    <p className="text-sm text-muted">{t.parties.notRated}: manifesto promises not added yet. History and leaders are on the timeline.</p>
+                    <p className="text-sm text-muted">
+                      {p.manifestoNote ? `${t.parties.noManifesto}: ${p.manifestoNote.text}` : `${t.parties.notRated}: manifesto promises not added yet. History and leaders are on the timeline.`}
+                    </p>
                   )}
                   <span className="mt-auto inline-flex items-center gap-1 text-sm font-semibold">
                     {p.seatsLokSabha} Lok Sabha seats <ArrowRight className="size-4" aria-hidden />

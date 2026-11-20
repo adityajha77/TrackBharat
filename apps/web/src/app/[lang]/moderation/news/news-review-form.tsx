@@ -4,7 +4,8 @@ import { useActionState } from "react";
 import { reviewNewsAction, type ActionState } from "@/app/actions";
 import { Field, FormError, Input, Select, Textarea } from "@/components/ui/field";
 
-export function NewsReviewForm({ id, states, categories }: { id: number; states: string[]; categories: [string, string][] }) {
+/** `defaultState`: pre-filled for regional feeds; the verifier confirms or changes it. */
+export function NewsReviewForm({ id, states, categories, defaultState }: { id: number; states: string[]; categories: [string, string][]; defaultState?: string | null }) {
   const [state, action, pending] = useActionState<ActionState, FormData>(reviewNewsAction.bind(null, id), {});
   if (state.ok) return <p className="mt-3 text-sm text-green">Done. Recorded in the audit log.</p>;
   const v = state.values ?? {};
@@ -17,7 +18,7 @@ export function NewsReviewForm({ id, states, categories }: { id: number; states:
         </Field>
         <div className="grid gap-3 sm:grid-cols-3">
           <Field label="State">
-            <Select name="state" defaultValue={v.state ?? ""}>
+            <Select name="state" defaultValue={v.state ?? defaultState ?? ""}>
               <option value="">Choose…</option>
               {states.map((s) => (
                 <option key={s}>{s}</option>

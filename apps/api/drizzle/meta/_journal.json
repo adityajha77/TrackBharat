@@ -64,6 +64,20 @@
       "when": 1795194949744,
       "tag": "0008_manifesto_state",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795197443885,
+      "tag": "0009_party_manifesto_note",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795197725547,
+      "tag": "0010_news_feed_region",
+      "breakpoints": true
     }
   ]
 }

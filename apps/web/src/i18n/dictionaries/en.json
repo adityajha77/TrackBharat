@@ -134,7 +134,14 @@
     "page": "page {n}",
     "manifesto": "Read the manifesto",
     "evidence": "Evidence",
-    "all": "All parties"
+    "all": "All parties",
+    "scoreOf": "Of {n} promises made while in power",
+    "done": "done",
+    "notDoneYet": "not done yet",
+    "didList": "What they did",
+    "pendingList": "What is still not done",
+    "scorecard": "Promised vs done",
+    "noManifesto": "No manifesto to rate"
   },
   "timeline": {
     "title": "How India's parties evolved",

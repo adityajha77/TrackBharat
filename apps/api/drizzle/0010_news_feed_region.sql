@@ -1,0 +1,2 @@
+ALTER TABLE "news_feeds" ADD COLUMN "region_state_id" integer;--> statement-breakpoint
+ALTER TABLE "news_feeds" ADD CONSTRAINT "news_feeds_region_state_id_states_id_fk" FOREIGN KEY ("region_state_id") REFERENCES "public"."states"("id") ON DELETE no action ON UPDATE no action;

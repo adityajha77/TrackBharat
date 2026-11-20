@@ -32,8 +32,8 @@
         "source": "https://www.thehindu.com/elections/kerala-assembly/ldf-manifesto-balances-growth-social-welfare/article34110478.ece",
         "formedGovernment": true,
         "promises": [
-          { "category": "LOCAL_DEVELOPMENT", "text": "Raise welfare pensions to ₹2,500 a month in phases." },
-          { "category": "ROADS_INFRASTRUCTURE", "text": "K-FON: free internet for poor families." },
+          { "category": "LOCAL_DEVELOPMENT", "text": "Raise welfare pensions to ₹2,500 a month in phases.", "status": "PARTIAL", "note": "Raised from ₹1,600 to ₹2,000 a month in October 2025.", "evidence": "https://en.wikipedia.org/wiki/2025_in_Kerala" },
+          { "category": "ROADS_INFRASTRUCTURE", "text": "K-FON: free internet for poor families.", "status": "PARTIAL", "note": "Launched in June 2023; the first phase covers 14,000 households against a target of 20 lakh BPL families.", "evidence": "https://en.wikipedia.org/wiki/Kerala_Fiber_Optic_Network" },
           { "category": "EMPLOYMENT", "text": "20 lakh jobs for educated young people." }
         ]
       }
@@ -72,7 +72,7 @@
           { "category": "LOCAL_DEVELOPMENT", "text": "Free travel for women in ordinary town buses.", "status": "FULFILLED", "note": "Among the first orders after taking office in May 2021.", "evidence": "https://en.wikipedia.org/wiki/M._K._Stalin" },
           { "category": "LOCAL_DEVELOPMENT", "text": "₹4,000 COVID-19 relief to every ration-card holder.", "status": "FULFILLED", "note": "Paid to 2.07 crore ration-card holders in 2021.", "evidence": "https://en.wikipedia.org/wiki/M._K._Stalin" },
           { "category": "LOCAL_DEVELOPMENT", "text": "₹1,000 a month to women heads of families.", "status": "PARTIAL", "note": "Kalaignar Magalir Urimai Thittam launched in September 2023, limited to households earning under ₹2.5 lakh a year.", "evidence": "https://en.wikipedia.org/wiki/M._K._Stalin" },
-          { "category": "EDUCATION", "text": "Exempt Tamil Nadu from the NEET medical entrance exam." }
+          { "category": "EDUCATION", "text": "Exempt Tamil Nadu from the NEET medical entrance exam.", "status": "PARTIAL", "note": "The assembly passed the exemption bill twice; it needs the President's assent, which it did not get during the term.", "evidence": "https://en.wikipedia.org/wiki/R._N._Ravi" }
         ]
       }
     ]
@@ -88,6 +88,7 @@
     "symbol": "Elephant",
     "color": "#22409A",
     "sortOrder": 50,
+    "manifestoNote": { "text": "The BSP does not release election manifestos; before the 2022 Uttar Pradesh election it said it would not publish one. There are no written promises to rate.", "source": "https://en.wikipedia.org/wiki/2022_Uttar_Pradesh_Legislative_Assembly_election" },
     "leaders": [
       { "name": "Kanshi Ram", "role": "Founder", "years": "1984–2006", "wikipedia": "Kanshi_Ram" },
       { "name": "Mayawati", "role": "Chief Minister of Uttar Pradesh (four terms); party president", "years": "1995–2012 (four terms)", "wikipedia": "Mayawati" }
@@ -198,7 +199,7 @@
         "source": "https://en.wikipedia.org/wiki/2022_Punjab_Legislative_Assembly_election",
         "formedGovernment": true,
         "promises": [
-          { "category": "ELECTRICITY", "text": "300 units of free electricity a month for every household." },
+          { "category": "ELECTRICITY", "text": "300 units of free electricity a month for every household.", "status": "FULFILLED", "note": "In force from 1 July 2022 for about 73 lakh domestic consumers.", "evidence": "https://en.wikipedia.org/wiki/Harbhajan_Singh_ETO" },
           { "category": "LOCAL_DEVELOPMENT", "text": "₹1,000 a month to every woman over 18." }
         ]
       },

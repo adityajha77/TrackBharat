@@ -60,6 +60,8 @@ export const PartyFile = z.object({
   leaders: z.array(Leader),
   events: z.array(Event),
   manifestos: z.array(Manifesto).default([]),
+  /** Why there is nothing to rate (e.g. the party publishes no manifesto). Needs a source. */
+  manifestoNote: z.object({ text: z.string().min(10), source: https }).optional(),
 });
 export type PartyFile = z.infer<typeof PartyFile>;
 
@@ -148,6 +150,8 @@ export async function importParties(db: Database, opts: { photos?: boolean } = {
       symbol: f.symbol,
       color: f.color,
       sortOrder: f.sortOrder,
+      manifestoNote: f.manifestoNote?.text ?? null,
+      manifestoNoteSourceUrl: f.manifestoNote?.source ?? null,
     };
     await db.insert(partyProfiles).values(profile).onConflictDoUpdate({ target: partyProfiles.partyId, set: profile });
 

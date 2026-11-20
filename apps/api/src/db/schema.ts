@@ -654,6 +654,8 @@ export const newsFeeds = pgTable("news_feeds", {
   url: text("url").notNull().unique(),
   homepage: text("homepage").notNull(),
   active: boolean("active").notNull().default(true),
+  /** A regional paper (e.g. Andaman Sheekha): its drafts start tagged with this state, for the verifier to confirm. */
+  regionStateId: integer("region_state_id").references(() => states.id),
   lastFetchedAt: timestamp("last_fetched_at", { withTimezone: true }),
   lastError: text("last_error"),
 });
@@ -707,6 +709,9 @@ export const partyProfiles = pgTable("party_profiles", {
   /** Their own words (constitution / official site), with the link. */
   ideologyQuote: text("ideology_quote").notNull(),
   ideologySourceUrl: text("ideology_source_url").notNull(),
+  /** Why a party has no rated promises, e.g. "does not publish a manifesto", with a source. */
+  manifestoNote: text("manifesto_note"),
+  manifestoNoteSourceUrl: text("manifesto_note_source_url"),
   symbol: text("symbol").notNull(),
   /** Brand colour for small accents only; never used to rank or judge. */
   color: text("color").notNull(),

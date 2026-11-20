@@ -11,6 +11,8 @@ the source. News articles are copyrighted, and automated summaries can be wrong 
 - A worker job (every 2 hours, `pnpm job:news`) reads a curated list of public RSS feeds (`apps/api/data/news-feeds.json`)
   and stores **only the headline, link, feed item id and date** as DRAFTs. Feed descriptions (often the article's first
   paragraphs) are deliberately dropped. Duplicates are impossible (`guid` and `url` are unique).
+- Regional papers (e.g. Andaman Sheekha, Greater Kashmir, The Hindu's state pages) carry a `region`; their drafts start
+  tagged with that state so verifiers only confirm it. National feeds stay untagged until a verifier picks the state.
 - Citizens can suggest a story (link + headline). It also becomes a DRAFT.
 - A **verifier** writes 2–5 lines **in their own words** (60–600 characters, enforced by the contract), picks the state,
   optional district, the responsible office if the report names it, and a category, then publishes. The database refuses a

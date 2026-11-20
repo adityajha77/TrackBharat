@@ -34,6 +34,25 @@ export const MlaRow = z.object({
 export type MlaRow = z.infer<typeof MlaRow>;
 
 /** Parse one CSV file into validated rows, reporting line numbers on error. */
+/**
+ * seat-aliases.csv: reviewed pairs of spellings for the SAME numbered seat
+ * (e.g. Odisha "Cuttack Sadar" / "Kataka Sadar"). Exact pairs only, never fuzzy.
+ */
+const ALIAS_FILE = "seat-aliases.csv";
+export function loadSeatAliases(dir = MLA_DIR) {
+  const map = new Map<string, { ours: string; alias: string }[]>();
+  const file = path.join(dir, ALIAS_FILE);
+  if (!existsSync(file)) return map;
+  for (const line of readFileSync(file, "utf8").split(/\r?\n/).slice(1)) {
+    if (!line.trim() || line.startsWith("#") || line.startsWith("state,")) continue;
+    const [state, num, ours, alias] = parseCsvLine(line);
+    if (!state || !num || !ours || !alias) continue;
+    const key = `${state}|${Number(num)}`;
+    map.set(key, [...(map.get(key) ?? []), { ours, alias }]);
+  }
+  return map;
+}
+
 export function parseMlaCsv(text: string, file = "input.csv"): MlaRow[] {
   const [header, ...lines] = text.split(/\r?\n/).filter((l) => l.trim() && !l.startsWith("#"));
   if (!header) return [];
@@ -48,7 +67,8 @@ export function parseMlaCsv(text: string, file = "input.csv"): MlaRow[] {
 
 export async function importMlas(db: Database) {
   console.log("▶ MLAs (curated CSV files)");
-  const files = existsSync(MLA_DIR) ? readdirSync(MLA_DIR).filter((f) => f.endsWith(".csv")) : [];
+  const files = existsSync(MLA_DIR) ? readdirSync(MLA_DIR).filter((f) => f.endsWith(".csv") && f !== ALIAS_FILE) : [];
+  const aliases = loadSeatAliases();
   if (!files.length) {
     console.log(`  ↳ no CSV files in ${MLA_DIR}: nothing to import (see data/mlas/README.md)`);
     return;
@@ -61,6 +81,9 @@ export async function importMlas(db: Database) {
     const [x, y] = [normalizeName(a), normalizeName(b)];
     return x === y || x.startsWith(y) || y.startsWith(x) || looseName(a) === looseName(b);
   };
+  /** Same seat number and a reviewed spelling variant from seat-aliases.csv? */
+  const isAlias = (state: string, num: number, ours: string, theirs: string) =>
+    aliases.get(`${state}|${num}`)?.some((x) => normalizeName(x.ours) === normalizeName(ours) && normalizeName(x.alias) === normalizeName(theirs)) ?? false;
 
   await db.transaction(async (tx) => {
     for (const file of files) {
@@ -74,7 +97,7 @@ export async function importMlas(db: Database) {
           .innerJoin(states, eq(states.id, constituencies.stateId))
           .where(and(eq(constituencies.house, "VIDHAN_SABHA"), eq(states.name, r.state), eq(constituencies.number, r.ac_number)));
         if (!seat) skipped.push(`${file}: no seat #${r.ac_number} (${r.ac_name}) in our ${r.state} map`);
-        else if (!sameSeat(seat.name, r.ac_name)) skipped.push(`${file}: #${r.ac_number} is "${seat.name}" in our map, "${r.ac_name}" in the file`);
+        else if (!sameSeat(seat.name, r.ac_name) && !isAlias(r.state, r.ac_number, seat.name, r.ac_name)) skipped.push(`${file}: #${r.ac_number} is "${seat.name}" in our map, "${r.ac_name}" in the file`);
         else checked.push({ r, seatId: seat.id });
       }
       // Many mismatches = the numbering in the file is off: load nothing from it rather than wrong MLAs.

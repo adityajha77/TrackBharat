@@ -130,7 +130,7 @@ export function createNewsService(db: Database, fetchImpl: typeof fetch = fetch)
           for (const e of entries) {
             const res = await db
               .insert(newsItems)
-              .values({ feedId: feed.id, guid: `${feed.id}:${e.guid}`, headline: e.headline, url: e.url, sourceName: feed.name, sourcePublishedAt: e.publishedAt })
+              .values({ feedId: feed.id, guid: `${feed.id}:${e.guid}`, headline: e.headline, url: e.url, sourceName: feed.name, sourcePublishedAt: e.publishedAt, stateId: feed.regionStateId })
               .onConflictDoNothing() // same guid or same URL = already have it
               .returning({ id: newsItems.id });
             added += res.length;

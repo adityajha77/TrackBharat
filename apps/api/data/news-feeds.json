@@ -2,5 +2,19 @@
   { "name": "The Hindu", "url": "https://www.thehindu.com/news/national/feeder/default.rss", "homepage": "https://www.thehindu.com" },
   { "name": "The Indian Express", "url": "https://indianexpress.com/section/india/feed/", "homepage": "https://indianexpress.com" },
   { "name": "Scroll", "url": "https://feeds.feedburner.com/ScrollinArticles.rss", "homepage": "https://scroll.in" },
-  { "name": "Mongabay India", "url": "https://india.mongabay.com/feed/", "homepage": "https://india.mongabay.com" }
+  { "name": "Mongabay India", "url": "https://india.mongabay.com/feed/", "homepage": "https://india.mongabay.com" },
+  { "name": "Andaman Sheekha", "url": "https://andamansheekha.com/feed/", "homepage": "https://andamansheekha.com", "region": "Andaman and Nicobar Islands" },
+  { "name": "Andaman Chronicle", "url": "https://www.andamanchronicle.net/feed/", "homepage": "https://www.andamanchronicle.net", "region": "Andaman and Nicobar Islands" },
+  { "name": "EastMojo", "url": "https://www.eastmojo.com/feed/", "homepage": "https://www.eastmojo.com" },
+  { "name": "Northeast Now", "url": "https://nenow.in/feed", "homepage": "https://nenow.in" },
+  { "name": "Greater Kashmir", "url": "https://www.greaterkashmir.com/feed/", "homepage": "https://www.greaterkashmir.com", "region": "Jammu and Kashmir" },
+  { "name": "Gaon Connection", "url": "https://www.gaonconnection.com/feed", "homepage": "https://www.gaonconnection.com" },
+  { "name": "Newslaundry", "url": "https://www.newslaundry.com/feed", "homepage": "https://www.newslaundry.com" },
+  { "name": "The Hindu: other states", "url": "https://www.thehindu.com/news/national/other-states/feeder/default.rss", "homepage": "https://www.thehindu.com" },
+  { "name": "The Hindu: cities", "url": "https://www.thehindu.com/news/cities/feeder/default.rss", "homepage": "https://www.thehindu.com" },
+  { "name": "The Hindu: Tamil Nadu", "url": "https://www.thehindu.com/news/national/tamil-nadu/feeder/default.rss", "homepage": "https://www.thehindu.com", "region": "Tamil Nadu" },
+  { "name": "The Hindu: Kerala", "url": "https://www.thehindu.com/news/national/kerala/feeder/default.rss", "homepage": "https://www.thehindu.com", "region": "Kerala" },
+  { "name": "The Hindu: Karnataka", "url": "https://www.thehindu.com/news/national/karnataka/feeder/default.rss", "homepage": "https://www.thehindu.com", "region": "Karnataka" },
+  { "name": "The Hindu: Andhra Pradesh", "url": "https://www.thehindu.com/news/national/andhra-pradesh/feeder/default.rss", "homepage": "https://www.thehindu.com", "region": "Andhra Pradesh" },
+  { "name": "The Hindu: Telangana", "url": "https://www.thehindu.com/news/national/telangana/feeder/default.rss", "homepage": "https://www.thehindu.com", "region": "Telangana" }
 ]

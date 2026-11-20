@@ -1,0 +1,41 @@
+# Reviewed spelling variants: the same seat (same official number) spelt differently by two sources.
+# Only these exact pairs are accepted by `pnpm db:import mlas`; add a line only after checking the seat number.
+state,ac_number,our_name,alias
+Odisha,3,Bargarh,Baragada
+Odisha,12,Rourkela,Raurkela
+Odisha,14,Bonai,Banaigada
+Odisha,18,Rairakhol,Redhakhol
+Odisha,19,Deogarh,Debagada
+Odisha,23,Patna,Patana
+Odisha,24,Keonjhar,Kendujhar
+Odisha,34,Morada,Moroda
+Odisha,38,Balasore,Baleshwar
+Odisha,40,Nilgiri,Nilagiri
+Odisha,41,Soro,Sora
+Odisha,50,Barachana,Badachana
+Odisha,52,Jajpur,Jajapur
+Odisha,58,Parjanga,Parajanga
+Odisha,59,Pallahara,Palalahada
+Odisha,60,Talcher,Talacher
+Odisha,61,Angul,Anugola
+Odisha,65,Sonepur,Subarnapur
+Odisha,67,Patnagarh,Patanagad
+Odisha,68,Bolangir,Balangir
+Odisha,69,Titlagarh,Titilagad
+Odisha,72,Khariar,Khadial
+Odisha,73,Umerkote,Umarkot
+Odisha,80,Bhawanipatna,Bhabanipatana
+Odisha,83,G. Udayagiri,Ghumusur Udayagiri
+Odisha,84,Phulbani,Kandhamala
+Odisha,87,Baramba,Badamba
+Odisha,93,Cuttack Sadar,Kataka Sadar
+Odisha,94,Salipur,Salepur
+Odisha,98,Aul,Aali
+Odisha,108,Brahmagiri,Bramhagiri
+Odisha,117,Khurda,Khordha
+Odisha,121,Daspalla,Dashapalla
+Odisha,128,Aska,Asika
+Odisha,129,Surada,Sorada
+Odisha,133,Berhampur,Brahmapur
+Odisha,141,Lakshmipur,Lakhmipur
+Odisha,143,Jeypore,Jayapur

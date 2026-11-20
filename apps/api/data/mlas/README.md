@@ -37,3 +37,9 @@ elected*: fix by-elections and defections by hand.
 
 The import cross-checks every row: the seat **number and name** must match our map. Rows that don't match are skipped
 with a warning, and a file where fewer than 80% of rows match is skipped entirely (the numbering is probably off).
+
+## Spelling variants (`seat-aliases.csv`)
+
+Some sources spell the same numbered seat differently (Odisha: "Cuttack Sadar" / "Kataka Sadar", "Balasore" / "Baleshwar").
+`seat-aliases.csv` lists reviewed pairs: state, seat number, our spelling, the other spelling. The import accepts a row
+only when the number matches **and** the pair is listed exactly; nothing fuzzy. Add a pair only after checking the number.

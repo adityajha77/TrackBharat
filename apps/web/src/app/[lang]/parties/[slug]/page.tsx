@@ -3,10 +3,10 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ExternalLink, FileText, Quote } from "lucide-react";
-import type { Manifesto } from "@trackbharat/shared";
+import type { Manifesto, PartyDetail } from "@trackbharat/shared";
 import Link from "@/components/link";
 import { LeaderCard } from "@/components/voices/leader-card";
-import { fulfilledShare, MANIFESTO_TONE, Ring, StatusBar } from "@/components/voices/progress";
+import { fulfilledShare, MANIFESTO_TONE, Ring, Scorecard, StatusBar } from "@/components/voices/progress";
 import { ShareBar } from "@/components/voices/share-bar";
 import { Badge, Eyebrow } from "@/components/ui/card";
 import { fmt, getT, type Dictionary } from "@/i18n/server";
@@ -85,9 +85,22 @@ async function Party({ slug }: { slug: string }) {
         </section>
       )}
 
+      {/* The headline: of what they promised while in power, what is done and what is not */}
+      {share !== null && <PromisedVsDone p={p} t={t} />}
+
       <section className="mt-12">
         <Eyebrow>{t.nav.manifestos}</Eyebrow>
-        {p.manifestos.length === 0 && <p className="brutal mt-5 rounded-md bg-surface p-6 text-muted">{t.parties.notRated}: no manifesto promises added yet.</p>}
+        {p.manifestoNote ? (
+          <p className="brutal mt-5 rounded-md bg-surface p-6 text-muted">
+            <span className="font-bold text-foreground">{t.parties.noManifesto}. </span>
+            {p.manifestoNote.text}{" "}
+            <a href={p.manifestoNote.sourceUrl} target="_blank" rel="noopener noreferrer" className="font-mono text-xs underline">
+              {t.common.source}
+            </a>
+          </p>
+        ) : (
+          p.manifestos.length === 0 && <p className="brutal mt-5 rounded-md bg-surface p-6 text-muted">{t.parties.notRated}: no manifesto promises added yet.</p>
+        )}
         <div className="mt-5 space-y-10">
           {p.manifestos.map((m) => (
             <ManifestoBlock key={m.id} m={m} t={t} party={p.shortName ?? p.name} slug={p.slug} />
@@ -119,6 +132,46 @@ async function Party({ slug }: { slug: string }) {
         </section>
       )}
     </div>
+  );
+}
+
+/**
+ * PROMISED vs DONE across every manifesto this party could deliver on (it led
+ * the government afterwards): the score, then two plain lists, done and not done.
+ */
+function PromisedVsDone({ p, t }: { p: PartyDetail; t: Dictionary }) {
+  const accountable = p.manifestos
+    .filter((m) => m.formedGovernment)
+    .flatMap((m) => m.promises.map((pr) => ({ ...pr, election: `${m.state ?? "Lok Sabha"} ${m.electionYear}` })));
+  const done = accountable.filter((pr) => pr.status === "FULFILLED");
+  const pending = accountable.filter((pr) => pr.status !== "FULFILLED");
+  const item = (pr: (typeof accountable)[number]) => (
+    <li key={pr.id} className="flex items-start justify-between gap-3 py-2">
+      <span className="min-w-0 text-sm">
+        {pr.text} <span className="font-mono text-[11px] text-muted">· {pr.election}</span>
+      </span>
+      <span className={`shrink-0 rounded-sm border-2 border-ink px-1.5 py-px font-mono text-[10px] font-bold uppercase ${MANIFESTO_TONE[pr.status]} ${pr.status === "FULFILLED" || pr.status === "BROKEN" || pr.status === "IN_PROGRESS" ? "text-white" : "text-ink dark:text-foreground"}`}>
+        {t.status[pr.status]}
+      </span>
+    </li>
+  );
+  return (
+    <section className="brutal reveal mt-12 rounded-md bg-surface p-5">
+      <Eyebrow>{t.parties.scorecard}</Eyebrow>
+      <div className="mt-4">
+        <Scorecard byStatus={p.byStatus} total={p.promises} t={t} />
+      </div>
+      <div className="mt-6 grid gap-6 md:grid-cols-2">
+        <div>
+          <h3 className="font-black text-flag-green">✓ {t.parties.didList} ({done.length})</h3>
+          <ul className="mt-2 divide-y-2 divide-ink/10">{done.map(item)}</ul>
+        </div>
+        <div>
+          <h3 className="font-black text-danger">✗ {t.parties.pendingList} ({pending.length})</h3>
+          <ul className="mt-2 divide-y-2 divide-ink/10">{pending.map(item)}</ul>
+        </div>
+      </div>
+    </section>
   );
 }
 

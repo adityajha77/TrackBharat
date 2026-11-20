@@ -106,6 +106,8 @@ export const PartySummary = z.object({
   promises: z.number().int(),
   /** Count per manifesto status across all this party's manifestos. */
   byStatus: z.record(z.string(), z.number().int()),
+  /** Why there is nothing to rate, with a source (e.g. the party publishes no manifesto). */
+  manifestoNote: z.object({ text: z.string(), sourceUrl: z.string() }).nullable(),
 });
 export type PartySummary = z.infer<typeof PartySummary>;
 
