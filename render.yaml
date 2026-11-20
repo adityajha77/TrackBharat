@@ -13,8 +13,8 @@ services:
     region: singapore # closest Render region to India
     dockerfilePath: ./apps/api/Dockerfile
     dockerContext: .
-    # Apply any new database migrations, then start the API (Render sets PORT itself).
-    dockerCommand: sh -c "node dist/migrate.js && node dist/server.js"
+    # dist/start.js applies any new database migrations, then starts the API (Render sets PORT itself).
+    dockerCommand: node dist/start.js
     healthCheckPath: /health
     autoDeploy: true
     buildFilter:
