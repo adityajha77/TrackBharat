@@ -25,8 +25,8 @@ export const googleRoutes =
     /** Which sign-in methods this server offers (the website hides the Google button when it's off). */
     app.get("/auth/providers", async () => ({ google: google.enabled, email }));
 
-    app.get<{ Querystring: { next?: string } }>("/auth/google/start", { config: { rateLimit: { max: 20, timeWindow: "1 minute" } } }, async (req, reply) => {
-      const { url, cookie: value } = google.start(req.query.next);
+    app.get<{ Querystring: { next?: string; client?: string } }>("/auth/google/start", { config: { rateLimit: { max: 20, timeWindow: "1 minute" } } }, async (req, reply) => {
+      const { url, cookie: value } = google.start(req.query.next, req.query.client === "app");
       reply.header("set-cookie", cookie(value, 600)); // 10 minutes to finish on Google's page
       return reply.redirect(url);
     });

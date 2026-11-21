@@ -88,6 +88,7 @@ export const WeeklyHighlights = z.object({
 export type WeeklyHighlights = z.infer<typeof WeeklyHighlights>;
 
 export const VoteResponse = z.object({ myVote: MyVote, up: z.number().int(), down: z.number().int(), counted: z.boolean() });
+export type VoteResponse = z.infer<typeof VoteResponse>;
 
 export const ReportReason = z.enum(["SPAM", "ABUSIVE", "FALSE_INFORMATION", "PERSONAL_INFORMATION", "DUPLICATE", "OTHER"]);
 export const ReportIssueInput = z.object({ reason: ReportReason });

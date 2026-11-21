@@ -68,6 +68,17 @@ describe.skipIf(!url)("Continue with Google (Postgres)", () => {
     await expect(account.deleteAccount({ id: pw!.id, name: "Pw", role: "CITIZEN" }, "")).rejects.toThrow(/Incorrect password/);
   });
 
+  it("started from the mobile app, the one-time code goes back to the app's fixed address", async () => {
+    const g = createGoogleAuth(db, config, auth, fakeGoogle({ sub: "g-app-1", email: "google-app@test.local", email_verified: true, name: "App" }));
+    const { cookie } = g.start("/me", true);
+    const { state } = JSON.parse(cookie) as { state: string };
+    const to = await g.callback({ code: "c", state }, cookie);
+    expect(to).toMatch(/^trackbharat:\/\/auth\?code=/);
+    const session = await g.exchange(new URL(to).searchParams.get("code")!, "TrackBharat app");
+    expect(session.user.name).toBe("App");
+    expect(await g.callback({ error: "access_denied" }, cookie)).toBe("trackbharat://auth?error=google_cancelled");
+  });
+
   it("refuses an email Google hasn't verified", async () => {
     const g = createGoogleAuth(db, config, auth, fakeGoogle({ sub: "g-x", email: "google-unverified@test.local", email_verified: false }));
     const { cookie } = g.start("/me");

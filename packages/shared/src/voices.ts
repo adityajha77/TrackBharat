@@ -198,6 +198,7 @@ export const PartyDetail = PartySummary.extend({
 export type PartyDetail = z.infer<typeof PartyDetail>;
 
 export const PartiesResponse = z.object({ parties: z.array(PartySummary) });
+export type PartiesResponse = z.infer<typeof PartiesResponse>;
 export const Timeline = z.object({
   parties: z.array(PartyDetail.omit({ manifestos: true })),
   national: z.array(TimelineEvent),

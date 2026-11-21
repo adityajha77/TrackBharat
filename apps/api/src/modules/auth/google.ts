@@ -28,6 +28,8 @@ const GOOGLE_AUTH = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO = "https://openidconnect.googleapis.com/v1/userinfo";
 const CODE_TTL_MS = 2 * 60_000;
+/** The mobile app's own address (app.json "scheme"). Fixed here, never taken from a request. */
+export const APP_RETURN_URL = "trackbharat://auth";
 
 const sha256 = (s: string) => createHash("sha256").update(s).digest("hex");
 const b64url = (b: Buffer) => b.toString("base64url");
@@ -73,7 +75,8 @@ export function createGoogleAuth(db: Database, config: Config, auth: AuthService
     enabled,
 
     /** Step 1: where to send the browser, plus what to keep in the short-lived cookie. */
-    start(next: unknown) {
+    /** `app`: started from the mobile app, so the one-time code goes back to the app, not the website. */
+    start(next: unknown, app = false) {
       if (!enabled) throw AppError.notFound("Google sign-in is not set up on this server");
       const state = b64url(randomBytes(24));
       const verifier = b64url(randomBytes(32));
@@ -89,19 +92,22 @@ export function createGoogleAuth(db: Database, config: Config, auth: AuthService
         code_challenge_method: "S256",
         prompt: "select_account",
       }).toString();
-      return { url: url.toString(), cookie: JSON.stringify({ state, verifier, next: safeNext(next) }) };
+      return { url: url.toString(), cookie: JSON.stringify({ state, verifier, next: safeNext(next), app }) };
     },
 
     /** Steps 2–4: returns where to send the browser (the website, with a one-time code). */
     async callback(query: { code?: string; state?: string; error?: string }, cookie: string | undefined): Promise<string> {
-      if (query.error) return web("/login?error=google_cancelled");
-      let saved: { state: string; verifier: string; next: string };
+      let saved: { state: string; verifier: string; next: string; app?: boolean } | null = null;
       try {
         saved = JSON.parse(cookie ?? "");
       } catch {
-        return web("/login?error=google_expired");
+        saved = null;
       }
-      if (!query.code || !query.state || query.state !== saved.state) return web("/login?error=google_state");
+      // Errors go back to where the sign-in started: the app or the website's login page.
+      const fail = (reason: string) => (saved?.app ? `${APP_RETURN_URL}?error=${reason}` : web(`/login?error=${reason}`));
+      if (query.error) return fail("google_cancelled");
+      if (!saved) return fail("google_expired");
+      if (!query.code || !query.state || query.state !== saved.state) return fail("google_state");
 
       const tokenRes = await fetchImpl(GOOGLE_TOKEN, {
         method: "POST",
@@ -116,18 +122,19 @@ export function createGoogleAuth(db: Database, config: Config, auth: AuthService
         }),
         signal: AbortSignal.timeout(15_000),
       });
-      if (!tokenRes.ok) return web("/login?error=google_failed");
+      if (!tokenRes.ok) return fail("google_failed");
       const { access_token } = (await tokenRes.json()) as { access_token?: string };
       const infoRes = await fetchImpl(GOOGLE_USERINFO, { headers: { authorization: `Bearer ${access_token}` }, signal: AbortSignal.timeout(15_000) });
-      if (!infoRes.ok) return web("/login?error=google_failed");
+      if (!infoRes.ok) return fail("google_failed");
       const profile = (await infoRes.json()) as GoogleProfile;
 
       const user = await upsertUser(profile).catch(() => null);
-      if (!user) return web("/login?error=google_unverified");
-      if (user.isBlocked) return web("/login?error=blocked");
+      if (!user) return fail("google_unverified");
+      if (user.isBlocked) return fail("blocked");
 
       const code = b64url(randomBytes(32));
       await db.insert(emailTokens).values({ userId: user.id, purpose: "GOOGLE_LOGIN", tokenHash: sha256(code), expiresAt: new Date(Date.now() + CODE_TTL_MS) });
+      if (saved.app) return `${APP_RETURN_URL}?code=${encodeURIComponent(code)}`; // the app swaps it via /auth/google/exchange
       return web(`/api/auth/google?code=${encodeURIComponent(code)}&next=${encodeURIComponent(saved.next)}`);
     },
 

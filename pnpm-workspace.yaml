@@ -1,6 +1,9 @@
 packages:
   - "apps/*"
   - "packages/*"
+  # The mobile app (Expo) installs with npm on its own: React Native tooling
+  # expects a flat node_modules, and keeping it apart can't break the web/API.
+  - "!apps/mobile"
 
 # Native build scripts we have reviewed and allow to run on install.
 onlyBuiltDependencies:

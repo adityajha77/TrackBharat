@@ -61,6 +61,31 @@ jobs:
 
       - run: pnpm build
 
+  mobile:
+    name: Mobile app (types, lint, Android bundle)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: apps/mobile/package-lock.json
+      # The app installs with npm on its own (outside the pnpm workspace); its
+      # types come from packages/shared, which needs zod from the workspace.
+      - uses: pnpm/action-setup@v4
+      - run: pnpm install --frozen-lockfile --filter @trackbharat/shared
+        working-directory: .
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npx expo lint
+      - name: The whole app bundles for Android
+        run: npx expo export --platform android --output-dir /tmp/mobile-export
+
   docker:
     name: Docker images build
     runs-on: ubuntu-latest
