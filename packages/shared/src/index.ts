@@ -14,3 +14,4 @@ export * from "./civic";
 export * from "./citizen";
 export * from "./report-card";
 export * from "./voices";
+export * from "./admin";

@@ -12,6 +12,7 @@ import { createPromiseService } from "./modules/promises/promise.service";
 import { createAuthRepository } from "./modules/auth/auth.repository";
 import { createAuthService } from "./modules/auth/auth.service";
 import { createGoogleAuth } from "./modules/auth/google";
+import { createAdminService } from "./modules/admin/admin.service";
 import { createIssueRepository } from "./modules/issues/issue.repository";
 import { createIssueService } from "./modules/issues/issue.service";
 import { createPhotoStore, createSupabasePhotoStore } from "./modules/issues/photo-store";
@@ -81,6 +82,7 @@ const app = await buildApp({
   newsService: createNewsService(db),
   partiesService: createPartiesService(db),
   netaService: createNetaService(db),
+  adminService: createAdminService(db),
   emailLinks: createEmailLinksService(db, mailer, config.WEB_URL),
   leaderPhotos: createPhotoStore(config.LEADER_PHOTOS_DIR ?? path.join(config.UPLOADS_DIR, "leaders")),
   exposeOutbox: config.NODE_ENV !== "production" && !emailEnabled,

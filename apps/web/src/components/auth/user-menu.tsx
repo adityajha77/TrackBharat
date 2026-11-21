@@ -1,5 +1,5 @@
 import Link from "@/components/link";
-import { LogOut, Newspaper, Settings, ShieldCheck, UserRound } from "lucide-react";
+import { LayoutDashboard, LogOut, Newspaper, Settings, ShieldCheck, UserRound } from "lucide-react";
 import { getMe } from "@/lib/api-user";
 import { logoutAction } from "@/app/actions";
 import { getT } from "@/i18n/server";
@@ -41,6 +41,11 @@ export async function UserMenu() {
         <Link href="/me/settings" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-surface-muted">
           <Settings className="size-4 text-muted" aria-hidden /> {t.account.settings}
         </Link>
+        {staff && (
+          <Link href="/admin" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold hover:bg-surface-muted">
+            <LayoutDashboard className="size-4 text-saffron" aria-hidden /> Admin panel
+          </Link>
+        )}
         {staff && (
           <Link href="/moderation" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-surface-muted">
             <ShieldCheck className="size-4 text-muted" aria-hidden /> {t.account.moderation}

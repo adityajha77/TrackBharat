@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { refresh, updateTag } from "next/cache";
-import { ChangePasswordInput, CreateNewsInput, DeleteAccountInput, LoginInput, ResetPasswordInput, ReviewNewsInput, SignupInput, SubmitNewsInput } from "@trackbharat/shared";
+import { AddEvidenceInput, ChangePasswordInput, CreateNewsInput, UpdateCauseInput, UpdatePromiseStatusInput, UpdateUserInput, DeleteAccountInput, LoginInput, ResetPasswordInput, ReviewNewsInput, SignupInput, SubmitNewsInput } from "@trackbharat/shared";
 import { ApiError } from "@/lib/api";
 import * as api from "@/lib/api-user";
 import { clearSessionCookie, setSessionCookie } from "@/lib/session";
@@ -254,4 +254,68 @@ export async function resendVerificationAction(): Promise<ActionState> {
   } catch (e) {
     return { error: message(e) };
   }
+}
+
+// ---- Admin panel ------------------------------------------------------------------
+const str = (form: FormData, k: string) => String(form.get(k) ?? "").trim();
+const opt = (form: FormData, k: string) => str(form, k) || undefined;
+const sourceOf = (form: FormData) => ({ url: str(form, "sourceUrl"), title: str(form, "sourceTitle"), publisher: str(form, "sourcePublisher"), kind: str(form, "sourceKind") || "NEWS" });
+
+/** Change a user's role and/or block or unblock them (admins only; audited with the note). */
+export async function updateUserAction(id: number, _prev: ActionState, form: FormData): Promise<ActionState> {
+  const blocked = form.get("blocked");
+  const parsed = UpdateUserInput.safeParse({
+    role: opt(form, "role"),
+    blocked: blocked === "1" ? true : blocked === "0" ? false : undefined,
+    note: str(form, "note"),
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message, values: fieldsOf(form) };
+  try {
+    await api.updateAdminUser(id, parsed.data);
+  } catch (e) {
+    return { error: message(e), values: fieldsOf(form) };
+  }
+  refresh();
+  return { ok: true };
+}
+
+/** New status for a report-card promise, with a note and a source. */
+export async function promiseStatusAction(id: number, _prev: ActionState, form: FormData): Promise<ActionState> {
+  const parsed = UpdatePromiseStatusInput.safeParse({ status: str(form, "status"), note: str(form, "note"), source: sourceOf(form) });
+  if (!parsed.success) return { error: `${parsed.error.issues[0]?.path.join(".")}: ${parsed.error.issues[0]?.message}`, values: fieldsOf(form) };
+  try {
+    await api.updatePromiseStatus(id, parsed.data);
+  } catch (e) {
+    return { error: message(e), values: fieldsOf(form) };
+  }
+  updateTag("constituencies");
+  refresh();
+  return { ok: true };
+}
+
+/** Evidence for a promise: what a source shows, and whether it shows progress. */
+export async function promiseEvidenceAction(id: number, _prev: ActionState, form: FormData): Promise<ActionState> {
+  const parsed = AddEvidenceInput.safeParse({ summary: str(form, "summary"), stance: str(form, "stance"), source: sourceOf(form) });
+  if (!parsed.success) return { error: `${parsed.error.issues[0]?.path.join(".")}: ${parsed.error.issues[0]?.message}`, values: fieldsOf(form) };
+  try {
+    await api.addPromiseEvidence(id, parsed.data);
+  } catch (e) {
+    return { error: message(e), values: fieldsOf(form) };
+  }
+  refresh();
+  return { ok: true };
+}
+
+/** Reword or pin a Cause of the Week (empty title/blurb = back to the automatic text). */
+export async function updateCauseAction(id: number, _prev: ActionState, form: FormData): Promise<ActionState> {
+  const parsed = UpdateCauseInput.safeParse({ title: str(form, "title") || null, blurb: str(form, "blurb") || null, pinned: form.get("pinned") === "on" });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message, values: fieldsOf(form) };
+  try {
+    await api.updateCause(id, parsed.data);
+  } catch (e) {
+    return { error: message(e), values: fieldsOf(form) };
+  }
+  updateTag("causes");
+  refresh();
+  return { ok: true };
 }

@@ -1,5 +1,9 @@
 import "server-only";
 import {
+  AdminOverview,
+  AdminPromiseList,
+  AdminUserList,
+  AuditLogResponse,
   ApiErrorBody,
   AuthResponse,
   IssueDetail,
@@ -93,3 +97,18 @@ export const forgotPassword = (email: string) => call("/v1/auth/forgot-password"
 export const resetPassword = (body: unknown) => call("/v1/auth/reset-password", Nothing, { method: "POST", body: json(body), token: null });
 export const getOutbox = () =>
   call("/v1/dev/outbox", z.object({ emails: z.array(z.object({ to: z.string(), subject: z.string(), text: z.string(), sentAt: z.string() })) }), { token: null });
+
+// ---- Admin panel ------------------------------------------------------------------
+const q = (params: Record<string, string | number | undefined>) => {
+  const u = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== "") u.set(k, String(v));
+  return u.size ? `?${u}` : "";
+};
+export const getAdminOverview = () => call("/v1/admin/overview", AdminOverview);
+export const getAdminUsers = (p: { q?: string; role?: string; blocked?: string; offset?: number }) => call(`/v1/admin/users${q(p)}`, AdminUserList);
+export const updateAdminUser = (id: number, body: unknown) => call(`/v1/admin/users/${id}`, Nothing, { method: "PATCH", body: json(body) });
+export const getAdminPromises = (p: { q?: string; status?: string; offset?: number }) => call(`/v1/admin/promises${q(p)}`, AdminPromiseList);
+export const updatePromiseStatus = (id: number, body: unknown) => call(`/v1/admin/promises/${id}/status`, Created, { method: "POST", body: json(body) });
+export const addPromiseEvidence = (id: number, body: unknown) => call(`/v1/admin/promises/${id}/evidence`, Created, { method: "POST", body: json(body) });
+export const updateCause = (id: number, body: unknown) => call(`/v1/moderation/causes/${id}`, Nothing, { method: "PATCH", body: json(body) });
+export const getAuditLog = () => call("/v1/admin/audit", AuditLogResponse);

@@ -7,7 +7,8 @@ import type { AccountService } from "./account";
 import type { AuthService } from "./auth.service";
 
 // Much stricter limit than the global one: slows down password guessing.
-const AUTH_RATE_LIMIT = { config: { rateLimit: { max: 10, timeWindow: "1 minute" } } };
+// (Relaxed outside production so the browser tests can log in many times a minute.)
+const AUTH_RATE_LIMIT = { config: { rateLimit: { max: process.env.NODE_ENV === "production" ? 10 : 100, timeWindow: "1 minute" } } };
 
 export const authRoutes =
   (service: AuthService, account: AccountService, links: EmailLinksService): FastifyPluginAsync =>

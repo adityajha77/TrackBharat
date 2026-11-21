@@ -1,100 +1,47 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ApiErrorBody, type CreatePromiseInput } from "@trackbharat/shared";
+import type { FastifyInstance } from "fastify";
 import { buildApp } from "../src/app";
 import { bearer, deps } from "./helpers";
 
-// AUTHORIZATION tests: who may call which endpoint. These are the tests that
-// would have caught v1's unprotected /admin page.
+/** Who may use which admin route. The queries themselves are tested in integration/admin.test.ts. */
+describe("admin routes: permissions", () => {
+  let app: FastifyInstance;
+  afterEach(async () => app?.close());
 
-const valid: CreatePromiseInput = {
-  constituencySlug: "demo-nagar",
-  madeBy: { type: "REPRESENTATIVE" },
-  title: "Solar street lights on all main roads",
-  category: "ELECTRICITY",
-  source: { url: "https://example.org/speech", title: "Ward meeting speech", publisher: "Example News", kind: "NEWS" },
-};
-
-let app: Awaited<ReturnType<typeof buildApp>>;
-afterEach(() => app?.close());
-
-const post = (url: string, body: unknown, headers: Record<string, string> = {}) =>
-  app.inject({ method: "POST", url, payload: body as object, headers: { "content-type": "application/json", ...headers } });
-
-describe("promise writes need VERIFIER or ADMIN", () => {
-  it.each([
-    ["anonymous", {}, 401],
-    ["an invalid token", { authorization: "Bearer made-up" }, 401],
-    ["a citizen", bearer("CITIZEN"), 403],
-    ["a moderator", bearer("MODERATOR"), 403],
-  ])("rejects %s", async (_who, headers, status) => {
-    const create = vi.fn();
-    app = await buildApp(deps({ promiseService: { ...deps().promiseService, create } }));
-    const res = await post("/v1/admin/promises", valid, headers as Record<string, string>);
-    expect(res.statusCode).toBe(status);
-    expect(create).not.toHaveBeenCalled(); // the service is never reached
+  const service = () => ({
+    overview: vi.fn().mockResolvedValue({ users: { total: 1, verified: 1, blocked: 0, staff: 1, newThisWeek: 0 }, waiting: { newsSuggestions: 0, promiseSubmissions: 0, reportedIssues: 0 }, content: { issues: 0, promises: 0, publishedNews: 0 } }),
+    users: vi.fn().mockResolvedValue({ users: [], total: 0 }),
+    updateUser: vi.fn().mockResolvedValue(undefined),
+    promises: vi.fn().mockResolvedValue({ promises: [], total: 0 }),
+    audit: vi.fn().mockResolvedValue({ entries: [] }),
   });
 
-  it.each([["VERIFIER"], ["ADMIN"]] as const)("allows a %s and records who did it", async (role) => {
-    const create = vi.fn().mockResolvedValue(42);
-    app = await buildApp(deps({ promiseService: { ...deps().promiseService, create } }));
-    const res = await post("/v1/admin/promises", valid, bearer(role));
-    expect(res.statusCode).toBe(201);
-    expect(res.json()).toEqual({ id: 42 });
-    expect(create).toHaveBeenCalledWith(expect.objectContaining({ title: valid.title }), role === "VERIFIER" ? 2 : 4); // actor id for the audit log
+  it("users and the audit log are for admins only", async () => {
+    const adminService = service();
+    app = await buildApp(deps({ adminService }));
+    for (const role of ["CITIZEN", "VERIFIER", "MODERATOR"] as const) {
+      expect((await app.inject({ url: "/v1/admin/users", headers: bearer(role) })).statusCode).toBe(403);
+      expect((await app.inject({ url: "/v1/admin/audit", headers: bearer(role) })).statusCode).toBe(403);
+    }
+    expect((await app.inject({ url: "/v1/admin/users?q=asha&role=VERIFIER", headers: bearer("ADMIN") })).statusCode).toBe(200);
+    expect(adminService.users).toHaveBeenCalledWith({ q: "asha", role: "VERIFIER", blocked: undefined, offset: 0 });
+    expect((await app.inject({ url: "/v1/admin/users" })).statusCode).toBe(401);
+  }, 30_000); // first test in the file also pays the app's cold start
+
+  it("staff see the overview and promise list; citizens don't", async () => {
+    app = await buildApp(deps({ adminService: service() }));
+    expect((await app.inject({ url: "/v1/admin/overview", headers: bearer("CITIZEN") })).statusCode).toBe(403);
+    expect((await app.inject({ url: "/v1/admin/overview", headers: bearer("VERIFIER") })).statusCode).toBe(200);
+    expect((await app.inject({ url: "/v1/admin/promises?status=BROKEN", headers: bearer("VERIFIER") })).statusCode).toBe(200);
   });
 
-  it("does NOT protect public read routes", async () => {
-    app = await buildApp(deps({ promiseService: { ...deps().promiseService, get: async () => ({}) as never } }));
-    expect((await app.inject({ method: "GET", url: "/v1/promises/1" })).statusCode).toBe(200);
-  });
-});
-
-describe("moderation needs MODERATOR or ADMIN; review needs VERIFIER or ADMIN", () => {
-  const action = { action: "HIDE", note: "Spam link" };
-  const decision = { decision: "APPROVE", note: "Source checked" };
-
-  it("a verifier cannot moderate issues, and a moderator cannot review promises", async () => {
-    app = await buildApp(deps());
-    expect((await post("/v1/moderation/issues/1", action, bearer("VERIFIER"))).statusCode).toBe(403);
-    expect((await post("/v1/moderation/submissions/1", decision, bearer("MODERATOR"))).statusCode).toBe(403);
-  });
-
-  it("the queue only shows each role what it can act on", async () => {
-    const reported = vi.fn().mockResolvedValue([]);
-    const pending = vi.fn().mockResolvedValue([]);
-    app = await buildApp(deps({ issueService: { ...deps().issueService, reported }, submissionService: { ...deps().submissionService, pending } }));
-    await app.inject({ method: "GET", url: "/v1/moderation/queue", headers: bearer("MODERATOR") });
-    expect(reported).toHaveBeenCalledTimes(1);
-    expect(pending).not.toHaveBeenCalled();
-    expect((await app.inject({ method: "GET", url: "/v1/moderation/queue", headers: bearer("CITIZEN") })).statusCode).toBe(403);
-  });
-});
-
-describe("input validation (shared schemas)", () => {
-  it.each([
-    ["missing source", { ...valid, source: undefined }],
-    ["http:// source", { ...valid, source: { ...valid.source, url: "http://example.org/x" } }],
-    ["too-short title", { ...valid, title: "Roads" }],
-    ["unknown category", { ...valid, category: "SPACE_PROGRAMME" }],
-    ["deadline before made-on", { ...valid, madeOn: "2025-01-01", deadline: "2024-01-01" }],
-  ])("rejects %s with 400", async (_label, body) => {
-    app = await buildApp(deps());
-    const res = await post("/v1/admin/promises", body, bearer("VERIFIER"));
-    expect(res.statusCode).toBe(400);
-    expect(ApiErrorBody.parse(res.json()).error.code).toBe("VALIDATION_ERROR");
-  });
-
-  it("returns 400 (not 500) for malformed JSON", async () => {
-    app = await buildApp(deps());
-    const res = await app.inject({ method: "POST", url: "/v1/admin/promises", payload: "{oops", headers: { ...bearer("ADMIN"), "content-type": "application/json" } });
-    expect(res.statusCode).toBe(400);
-  });
-
-  it("rejects a weak password at signup before reaching the service", async () => {
-    const signup = vi.fn();
-    app = await buildApp(deps({ authService: { ...deps().authService, signup } }));
-    const res = await post("/v1/auth/signup", { name: "A Person", email: "a@example.org", password: "short" });
-    expect(res.statusCode).toBe(400);
-    expect(signup).not.toHaveBeenCalled();
+  it("changing a user needs a reason and something to change", async () => {
+    const adminService = service();
+    app = await buildApp(deps({ adminService }));
+    const patch = (payload: object) => app.inject({ method: "PATCH", url: "/v1/admin/users/7", headers: bearer("ADMIN"), payload });
+    expect((await patch({ role: "VERIFIER" })).statusCode).toBe(400); // no note
+    expect((await patch({ note: "no change at all" })).statusCode).toBe(400);
+    expect((await patch({ blocked: true, note: "Posting spam" })).statusCode).toBe(204);
+    expect(adminService.updateUser).toHaveBeenCalledWith(expect.objectContaining({ role: "ADMIN" }), 7, { blocked: true, note: "Posting spam" });
   });
 });

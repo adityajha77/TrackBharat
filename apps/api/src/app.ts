@@ -14,6 +14,8 @@ import { promiseRoutes } from "./modules/promises/promise.routes";
 import type { PromiseService } from "./modules/promises/promise.service";
 import { authPlugin } from "./modules/auth/auth.plugin";
 import { authRoutes } from "./modules/auth/auth.routes";
+import { adminRoutes } from "./modules/admin/admin.routes";
+import type { AdminService } from "./modules/admin/admin.service";
 import type { GoogleAuth } from "./modules/auth/google";
 import { googleRoutes } from "./modules/auth/google.routes";
 import type { AuthService } from "./modules/auth/auth.service";
@@ -59,6 +61,7 @@ export interface AppDeps {
   partiesService: PartiesService;
   netaService: NetaService;
   emailLinks: EmailLinksService;
+  adminService: AdminService;
   /** "Continue with Google". Absent (tests) = the routes answer "not set up". */
   googleAuth?: GoogleAuth;
   /** false = no SMTP: the website says email links are off (default true). */
@@ -151,6 +154,7 @@ export async function buildApp(deps: AppDeps) {
   await app.register(reportCardRoutes(deps.reportCardService, deps.db), { prefix: "/v1" });
   await app.register(leaderboardRoutes(deps.leaderboardService), { prefix: "/v1" });
   await app.register(causesRoutes(deps.causesService), { prefix: "/v1" });
+  await app.register(adminRoutes(deps.adminService), { prefix: "/v1" });
   await app.register(newsRoutes(deps.newsService), { prefix: "/v1" });
   await app.register(partiesRoutes(deps.partiesService, deps.netaService, deps.leaderPhotos), { prefix: "/v1" });
 
