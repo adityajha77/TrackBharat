@@ -12,25 +12,32 @@ and check every promise against the evidence, in 12 Indian languages.
 | **Web** | Next.js 16 (App Router, Server Components, Cache Components), React 19, Tailwind CSS v4 |
 | **API** | Fastify 5, TypeScript, Zod, Drizzle ORM |
 | **Data** | PostgreSQL 17 + PostGIS (spatial joins, GiST indexes), versioned SQL migrations, an idempotent import pipeline |
-| **DevOps** | pnpm monorepo, Docker multi-stage builds, Docker Compose, GitHub Actions CI |
+| **Mobile** | Expo SDK 58 (React Native, Expo Router) for Android and iPhone, same API |
+| **DevOps** | pnpm monorepo, Docker multi-stage builds, Docker Compose, GitHub Actions CI and scheduled jobs |
+| **Live** | [track-bharat.vercel.app](https://track-bharat.vercel.app) (Vercel) · API on Render · Postgres on Supabase |
 | **Tests** | Vitest (unit, HTTP contract, security, PostGIS/SQL integration) · Playwright end-to-end |
 
-📐 **How it's built and why:** [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) · decisions in [`docs/adr/`](docs/adr)
+📖 **The story of the build, the obstacles and how it all works:** [`docs/BUILD-STORY.md`](docs/BUILD-STORY.md)
+
+📐 **How it's built and why:** [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) · decisions in [`docs/adr/`](docs/adr) · mobile app: [`apps/mobile/README.md`](apps/mobile/README.md)
 
 ## Status
 
-**Phases 0–3b are built.**
-- **Your area:** PIN code → Lok Sabha and assembly seat, your MP (and MLA in 14 states), report cards with a published formula.
+**Live, with phases 0–5 built:** the website, the API, an admin panel and the mobile app.
+- **Your area:** PIN code → Lok Sabha and assembly seat, your MP (and MLA in 19 states/UTs), report cards with a published formula.
 - **Raise your voice:** report local problems with photos; neighbours vote **"faced this too" / "not accurate"**; every Monday
   the most common problems become **India's Causes of the Week** (vote up/down, share to X, WhatsApp, Facebook, Telegram).
 - **News that needs a voice:** RSS headlines → a verifier writes a short sourced summary (state, district, who is responsible).
 - **Manifestos, promised vs done** with evidence links, and **how India's parties evolved**: a neutral, sourced timeline with
   credited free-licence photos.
 - **Know Your Neta:** every sitting MP and MLA, by state and party.
+- **Admin panel** (website and app): users and roles, blocking, News desk, promises, causes, audit log.
+- **Mobile app** (Expo): PIN → representatives, causes, news, manifestos, account and admin.
+- **Sign in with Google** or email; verification and reset emails.
 - **12 languages** (English, हिन्दी, मराठी, ગુજરાતી, বাংলা, தமிழ், తెలుగు, ಕನ್ನಡ, മലയാളം, ਪੰਜਾਬੀ, ଓଡ଼ିଆ, اردو), email verification,
   password reset, moderation, open-data CSVs, and browser tests in CI.
 
-Next: going live (Phase 4) and the mobile app (Phase 5). See the [roadmap](docs/ARCHITECTURE.md#11-roadmap).
+Next: publish the Android app, and a domain of our own. See the [roadmap](docs/ARCHITECTURE.md#11-roadmap).
 
 ## Run it locally
 
